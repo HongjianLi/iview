@@ -1,0 +1,22 @@
+{
+  "name": "istar",
+  "description": "SaaS platform for idock and igrep",
+  "keywords": [ "idock", "igrep", "SaaS", "framework", "web", "RESTful" ],
+  "version": "0.0.2",
+  "author": {
+    "name": "Jacky Lee",
+    "email": "JackyLeeHongJian@Gmail.com"
+  },
+  "dependencies": {
+    "express": ">= 3.0.0rc1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/HongjianLi/istar.git"
+  },
+  "bugs": {
+    "email": "JackyLeeHongJian@Gmail.com",
+    "url": "http://github.com/HongjianLi/istar/issues"
+  },
+  "engines": { "node": ">= 0.8.0 < 0.9.0" }
+}
