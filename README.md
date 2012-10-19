@@ -1,16 +1,16 @@
 iview
 =====
 
-iview is an interactive visualizer of protein-ligand complex. It is written in HTML5 and Javascript.
+iview is an interactive HTML5 visualizer of protein-ligand complex.
 
 
 License
 -------
 
-* Code licensed under [GPLv3].
+[GPLv3]
 
 
-Contact Author
+Author
 --------------
 
 [Jacky Lee]
