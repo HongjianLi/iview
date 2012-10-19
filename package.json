@@ -1,8 +1,8 @@
 {
-  "name": "istar",
-  "description": "SaaS platform for idock and igrep",
-  "keywords": [ "idock", "igrep", "SaaS", "framework", "web", "RESTful" ],
-  "version": "0.0.2",
+  "name": "iview",
+  "description": "interactive HTML5 visualizer of protein-ligand complex",
+  "keywords": [ "HTML5", "visualizer", "protein", "ligand" ],
+  "version": "0.0.1",
   "author": {
     "name": "Jacky Lee",
     "email": "JackyLeeHongJian@Gmail.com"
@@ -12,11 +12,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/HongjianLi/istar.git"
+    "url": "git://github.com/HongjianLi/iview.git"
   },
   "bugs": {
     "email": "JackyLeeHongJian@Gmail.com",
-    "url": "http://github.com/HongjianLi/istar/issues"
+    "url": "http://github.com/HongjianLi/iview/issues"
   },
   "engines": { "node": ">= 0.8.0 < 0.9.0" }
 }
