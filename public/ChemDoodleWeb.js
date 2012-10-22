@@ -555,7 +555,7 @@ ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
 
 // all symbols
 ChemDoodle.SYMBOLS = [ 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl',
-		'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Uut', 'Uuq', 'Uup', 'Uuh', 'Uus', 'Uuo' ];
+		'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn' ];
 
 ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	var E = [];
@@ -679,12 +679,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'] = new Element('Ds', 'Darmstadtium', 110);
 	E['Rg'] = new Element('Rg', 'Roentgenium', 111);
 	E['Cn'] = new Element('Cn', 'Copernicium', 112);
-	E['Uut'] = new Element('Uut', 'Ununtrium', 113);
-	E['Uuq'] = new Element('Uuq', 'Ununquadium', 114);
-	E['Uup'] = new Element('Uup', 'Ununpentium', 115);
-	E['Uuh'] = new Element('Uuh', 'Ununhexium', 116);
-	E['Uus'] = new Element('Uus', 'Ununseptium', 117);
-	E['Uuo'] = new Element('Uuo', 'Ununoctium', 118);
 
 	// set up jmol colors
 	E['H'].jmolColor = '#FFFFFF';
@@ -799,12 +793,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'].jmolColor = '#000000';
 	E['Rg'].jmolColor = '#000000';
 	E['Cn'].jmolColor = '#000000';
-	E['Uut'].jmolColor = '#000000';
-	E['Uuq'].jmolColor = '#000000';
-	E['Uup'].jmolColor = '#000000';
-	E['Uuh'].jmolColor = '#000000';
-	E['Uus'].jmolColor = '#000000';
-	E['Uuo'].jmolColor = '#000000';
 
 	for ( var i = 0, ii = SYMBOLS.length; i < ii; i++) {
 		E[SYMBOLS[i]].pymolColor = E[SYMBOLS[i]].jmolColor;
@@ -930,12 +918,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'].covalentRadius = 0.0;
 	E['Rg'].covalentRadius = 0.0;
 	E['Cn'].covalentRadius = 0.0;
-	E['Uut'].covalentRadius = 0.0;
-	E['Uuq'].covalentRadius = 0.0;
-	E['Uup'].covalentRadius = 0.0;
-	E['Uuh'].covalentRadius = 0.0;
-	E['Uus'].covalentRadius = 0.0;
-	E['Uuo'].covalentRadius = 0.0;
 
 	// set up vdW radii
 	E['H'].vdWRadius = 1.2;
@@ -1050,12 +1032,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'].vdWRadius = 0.0;
 	E['Rg'].vdWRadius = 0.0;
 	E['Cn'].vdWRadius = 0.0;
-	E['Uut'].vdWRadius = 0.0;
-	E['Uuq'].vdWRadius = 0.0;
-	E['Uup'].vdWRadius = 0.0;
-	E['Uuh'].vdWRadius = 0.0;
-	E['Uus'].vdWRadius = 0.0;
-	E['Uuo'].vdWRadius = 0.0;
 
 	E['H'].valency = 1;
 	E['He'].valency = 0;
@@ -1169,12 +1145,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'].valency = 0;
 	E['Rg'].valency = 0;
 	E['Cn'].valency = 0;
-	E['Uut'].valency = 0;
-	E['Uuq'].valency = 0;
-	E['Uup'].valency = 0;
-	E['Uuh'].valency = 0;
-	E['Uus'].valency = 0;
-	E['Uuo'].valency = 0;
 
 	E['H'].mass = 1;
 	E['He'].mass = 4;
@@ -1288,12 +1258,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Ds'].mass = 0;
 	E['Rg'].mass = 0;
 	E['Cn'].mass = 0;
-	E['Uut'].mass = 0;
-	E['Uuq'].mass = 0;
-	E['Uup'].mass = 0;
-	E['Uuh'].mass = 0;
-	E['Uus'].mass = 0;
-	E['Uuo'].mass = 0;
 
 	return E;
 
@@ -5381,7 +5345,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	m.ALT = false;
 	m.SHIFT = false;
 	m.META = false;
-/*
+
 	if (!featureDetection.supports_touch()) {
 		q(document).ready(function() {
 			// handles dragging beyond the canvas bounds
@@ -5447,7 +5411,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			});
 		});
 	}
-*/
+
 	return m;
 
 })(ChemDoodle.featureDetection, jQuery, document);
@@ -5744,12 +5708,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 					me.prehandleEvent(e);
 					me.mousemove(e);
 				}
-				if (monitor.CANVAS_DRAGGING != null) {
-					if (monitor.CANVAS_DRAGGING.drag) {
-						monitor.CANVAS_DRAGGING.prehandleEvent(e);
-						monitor.CANVAS_DRAGGING.drag(e);
-					}
-				}
 			});
 			jqCapsule.mouseout(function(e) {
 				monitor.CANVAS_OVER = null;
@@ -5789,13 +5747,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 					}
 					break;
 				}
-				if (monitor.CANVAS_DRAGGING != null && monitor.CANVAS_DRAGGING != monitor.CANVAS_OVER) {
-					if (monitor.CANVAS_DRAGGING.mouseup) {
-						monitor.CANVAS_DRAGGING.prehandleEvent(e);
-						monitor.CANVAS_DRAGGING.mouseup(e);
-					}
-				}
-				monitor.CANVAS_DRAGGING = null;
 			});
 			jqCapsule.mousewheel(function(e, delta) {
 				if (me.mousewheel) {
@@ -6167,7 +6118,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 				this.gl.scale(pixelRatio, pixelRatio);
 			}*/
 			// setup viewport
-			this.gl.viewport(0, 0, this.width, this.height);
 			this.gl.program = this.gl.createProgram();
 			// this is the shader
 			this.gl.shader = new structures.Shader();
