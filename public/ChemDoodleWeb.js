@@ -297,47 +297,6 @@ ChemDoodle.math = (function(extensions, structures, m) {
 })(ChemDoodle.extensions, ChemDoodle.structures, Math);
 
 //
-//  Copyright 2006-2010 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3385 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
-//
-
-ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
-	
-	var features = {};
-
-	features.supportsCanvas = function() {
-		return !!document.createElement('canvas').getContext;
-	};
-
-	features.supportsCanvas_text = function() {
-		if (!features.supportsCanvas()) {
-			return false;
-		}
-		var dummyCanvas = document.createElement('canvas');
-		var context = dummyCanvas.getContext('2d');
-		return typeof context.fillText == 'function';
-	};
-
-	features.supports_xhr2 = function() {
-		return q.support.cors;
-	};
-
-	features.supports_touch = function() {
-		return 'ontouchstart' in window;
-	};
-
-	features.supports_gesture = function() {
-		return 'ongesturestart' in window;
-	};
-
-	return features;
-	
-})(ChemDoodle.iChemLabs, jQuery, document, window);
-
-//
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
 //  $Revision: 3470 $
@@ -345,11 +304,7 @@ ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
 //  $LastChangedDate: 2012-01-22 13:15:22 -0500 (Sun, 22 Jan 2012) $
 //
 
-// all symbols
-ChemDoodle.SYMBOLS = [ 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn' ];
-
-ChemDoodle.ELEMENT = (function(SYMBOLS) {
-	var E = [];
+ChemDoodle.ELEMENT = (function() {
 
 	function Element(symbol, name, atomicNumber) {
 		this.symbol = symbol;
@@ -358,232 +313,59 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 		return true;
 	}
 
+	var E = [];
 	E['H'] = new Element('H', 'Hydrogen', 1);
-	E['He'] = new Element('He', 'Helium', 2);
-	E['Li'] = new Element('Li', 'Lithium', 3);
-	E['Be'] = new Element('Be', 'Beryllium', 4);
-	E['B'] = new Element('B', 'Boron', 5);
 	E['C'] = new Element('C', 'Carbon', 6);
 	E['N'] = new Element('N', 'Nitrogen', 7);
 	E['O'] = new Element('O', 'Oxygen', 8);
 	E['F'] = new Element('F', 'Fluorine', 9);
-	E['Ne'] = new Element('Ne', 'Neon', 10);
 	E['Na'] = new Element('Na', 'Sodium', 11);
 	E['Mg'] = new Element('Mg', 'Magnesium', 12);
-	E['Al'] = new Element('Al', 'Aluminum', 13);
-	E['Si'] = new Element('Si', 'Silicon', 14);
 	E['P'] = new Element('P', 'Phosphorus', 15);
 	E['S'] = new Element('S', 'Sulfur', 16);
 	E['Cl'] = new Element('Cl', 'Chlorine', 17);
-	E['Ar'] = new Element('Ar', 'Argon', 18);
 	E['K'] = new Element('K', 'Potassium', 19);
 	E['Ca'] = new Element('Ca', 'Calcium', 20);
-	E['Sc'] = new Element('Sc', 'Scandium', 21);
-	E['Ti'] = new Element('Ti', 'Titanium', 22);
-	E['V'] = new Element('V', 'Vanadium', 23);
-	E['Cr'] = new Element('Cr', 'Chromium', 24);
 	E['Mn'] = new Element('Mn', 'Manganese', 25);
 	E['Fe'] = new Element('Fe', 'Iron', 26);
 	E['Co'] = new Element('Co', 'Cobalt', 27);
 	E['Ni'] = new Element('Ni', 'Nickel', 28);
 	E['Cu'] = new Element('Cu', 'Copper', 29);
 	E['Zn'] = new Element('Zn', 'Zinc', 30);
-	E['Ga'] = new Element('Ga', 'Gallium', 31);
-	E['Ge'] = new Element('Ge', 'Germanium', 32);
 	E['As'] = new Element('As', 'Arsenic', 33);
 	E['Se'] = new Element('Se', 'Selenium', 34);
 	E['Br'] = new Element('Br', 'Bromine', 35);
-	E['Kr'] = new Element('Kr', 'Krypton', 36);
-	E['Rb'] = new Element('Rb', 'Rubidium', 37);
 	E['Sr'] = new Element('Sr', 'Strontium', 38);
-	E['Y'] = new Element('Y', 'Yttrium', 39);
-	E['Zr'] = new Element('Zr', 'Zirconium', 40);
-	E['Nb'] = new Element('Nb', 'Niobium', 41);
-	E['Mo'] = new Element('Mo', 'Molybdenum', 42);
-	E['Tc'] = new Element('Tc', 'Technetium', 43);
-	E['Ru'] = new Element('Ru', 'Ruthenium', 44);
-	E['Rh'] = new Element('Rh', 'Rhodium', 45);
-	E['Pd'] = new Element('Pd', 'Palladium', 46);
-	E['Ag'] = new Element('Ag', 'Silver', 47);
 	E['Cd'] = new Element('Cd', 'Cadmium', 48);
-	E['In'] = new Element('In', 'Indium', 49);
-	E['Sn'] = new Element('Sn', 'Tin', 50);
-	E['Sb'] = new Element('Sb', 'Antimony', 51);
-	E['Te'] = new Element('Te', 'Tellurium', 52);
 	E['I'] = new Element('I', 'Iodine', 53);
-	E['Xe'] = new Element('Xe', 'Xenon', 54);
-	E['Cs'] = new Element('Cs', 'Cesium', 55);
-	E['Ba'] = new Element('Ba', 'Barium', 56);
-	E['La'] = new Element('La', 'Lanthanum', 57);
-	E['Ce'] = new Element('Ce', 'Cerium', 58);
-	E['Pr'] = new Element('Pr', 'Praseodymium', 59);
-	E['Nd'] = new Element('Nd', 'Neodymium', 60);
-	E['Pm'] = new Element('Pm', 'Promethium', 61);
-	E['Sm'] = new Element('Sm', 'Samarium', 62);
-	E['Eu'] = new Element('Eu', 'Europium', 63);
-	E['Gd'] = new Element('Gd', 'Gadolinium', 64);
-	E['Tb'] = new Element('Tb', 'Terbium', 65);
-	E['Dy'] = new Element('Dy', 'Dysprosium', 66);
-	E['Ho'] = new Element('Ho', 'Holmium', 67);
-	E['Er'] = new Element('Er', 'Erbium', 68);
-	E['Tm'] = new Element('Tm', 'Thulium', 69);
-	E['Yb'] = new Element('Yb', 'Ytterbium', 70);
-	E['Lu'] = new Element('Lu', 'Lutetium', 71);
-	E['Hf'] = new Element('Hf', 'Hafnium', 72);
-	E['Ta'] = new Element('Ta', 'Tantalum', 73);
-	E['W'] = new Element('W', 'Tungsten', 74);
-	E['Re'] = new Element('Re', 'Rhenium', 75);
-	E['Os'] = new Element('Os', 'Osmium', 76);
-	E['Ir'] = new Element('Ir', 'Iridium', 77);
-	E['Pt'] = new Element('Pt', 'Platinum', 78);
-	E['Au'] = new Element('Au', 'Gold', 79);
 	E['Hg'] = new Element('Hg', 'Mercury', 80);
-	E['Tl'] = new Element('Tl', 'Thallium', 81);
-	E['Pb'] = new Element('Pb', 'Lead', 82);
-	E['Bi'] = new Element('Bi', 'Bismuth', 83);
-	E['Po'] = new Element('Po', 'Polonium', 84);
-	E['At'] = new Element('At', 'Astatine', 85);
-	E['Rn'] = new Element('Rn', 'Radon', 86);
-	E['Fr'] = new Element('Fr', 'Francium', 87);
-	E['Ra'] = new Element('Ra', 'Radium', 88);
-	E['Ac'] = new Element('Ac', 'Actinium', 89);
-	E['Th'] = new Element('Th', 'Thorium', 90);
-	E['Pa'] = new Element('Pa', 'Protactinium', 91);
-	E['U'] = new Element('U', 'Uranium', 92);
-	E['Np'] = new Element('Np', 'Neptunium', 93);
-	E['Pu'] = new Element('Pu', 'Plutonium', 94);
-	E['Am'] = new Element('Am', 'Americium', 95);
-	E['Cm'] = new Element('Cm', 'Curium', 96);
-	E['Bk'] = new Element('Bk', 'Berkelium', 97);
-	E['Cf'] = new Element('Cf', 'Californium', 98);
-	E['Es'] = new Element('Es', 'Einsteinium', 99);
-	E['Fm'] = new Element('Fm', 'Fermium', 100);
-	E['Md'] = new Element('Md', 'Mendelevium', 101);
-	E['No'] = new Element('No', 'Nobelium', 102);
-	E['Lr'] = new Element('Lr', 'Lawrencium', 103);
-	E['Rf'] = new Element('Rf', 'Rutherfordium', 104);
-	E['Db'] = new Element('Db', 'Dubnium', 105);
-	E['Sg'] = new Element('Sg', 'Seaborgium', 106);
-	E['Bh'] = new Element('Bh', 'Bohrium', 107);
-	E['Hs'] = new Element('Hs', 'Hassium', 108);
-	E['Mt'] = new Element('Mt', 'Meitnerium', 109);
-	E['Ds'] = new Element('Ds', 'Darmstadtium', 110);
-	E['Rg'] = new Element('Rg', 'Roentgenium', 111);
-	E['Cn'] = new Element('Cn', 'Copernicium', 112);
 
 	// set up jmol colors
 	E['H'].jmolColor = '#FFFFFF';
-	E['He'].jmolColor = '#D9FFFF';
-	E['Li'].jmolColor = '#CC80FF';
-	E['Be'].jmolColor = '#C2FF00';
-	E['B'].jmolColor = '#FFB5B5';
 	E['C'].jmolColor = '#909090';
 	E['N'].jmolColor = '#3050F8';
 	E['O'].jmolColor = '#FF0D0D';
 	E['F'].jmolColor = '#90E050';
-	E['Ne'].jmolColor = '#B3E3F5';
 	E['Na'].jmolColor = '#AB5CF2';
 	E['Mg'].jmolColor = '#8AFF00';
-	E['Al'].jmolColor = '#BFA6A6';
-	E['Si'].jmolColor = '#F0C8A0';
 	E['P'].jmolColor = '#FF8000';
 	E['S'].jmolColor = '#FFFF30';
 	E['Cl'].jmolColor = '#1FF01F';
-	E['Ar'].jmolColor = '#80D1E3';
 	E['K'].jmolColor = '#8F40D4';
 	E['Ca'].jmolColor = '#3DFF00';
-	E['Sc'].jmolColor = '#E6E6E6';
-	E['Ti'].jmolColor = '#BFC2C7';
-	E['V'].jmolColor = '#A6A6AB';
-	E['Cr'].jmolColor = '#8A99C7';
 	E['Mn'].jmolColor = '#9C7AC7';
 	E['Fe'].jmolColor = '#E06633';
 	E['Co'].jmolColor = '#F090A0';
 	E['Ni'].jmolColor = '#50D050';
 	E['Cu'].jmolColor = '#C88033';
 	E['Zn'].jmolColor = '#7D80B0';
-	E['Ga'].jmolColor = '#C28F8F';
-	E['Ge'].jmolColor = '#668F8F';
 	E['As'].jmolColor = '#BD80E3';
 	E['Se'].jmolColor = '#FFA100';
 	E['Br'].jmolColor = '#A62929';
-	E['Kr'].jmolColor = '#5CB8D1';
-	E['Rb'].jmolColor = '#702EB0';
 	E['Sr'].jmolColor = '#00FF00';
-	E['Y'].jmolColor = '#94FFFF';
-	E['Zr'].jmolColor = '#94E0E0';
-	E['Nb'].jmolColor = '#73C2C9';
-	E['Mo'].jmolColor = '#54B5B5';
-	E['Tc'].jmolColor = '#3B9E9E';
-	E['Ru'].jmolColor = '#248F8F';
-	E['Rh'].jmolColor = '#0A7D8C';
-	E['Pd'].jmolColor = '#006985';
-	E['Ag'].jmolColor = '#C0C0C0';
 	E['Cd'].jmolColor = '#FFD98F';
-	E['In'].jmolColor = '#A67573';
-	E['Sn'].jmolColor = '#668080';
-	E['Sb'].jmolColor = '#9E63B5';
-	E['Te'].jmolColor = '#D47A00';
 	E['I'].jmolColor = '#940094';
-	E['Xe'].jmolColor = '#429EB0';
-	E['Cs'].jmolColor = '#57178F';
-	E['Ba'].jmolColor = '#00C900';
-	E['La'].jmolColor = '#70D4FF';
-	E['Ce'].jmolColor = '#FFFFC7';
-	E['Pr'].jmolColor = '#D9FFC7';
-	E['Nd'].jmolColor = '#C7FFC7';
-	E['Pm'].jmolColor = '#A3FFC7';
-	E['Sm'].jmolColor = '#8FFFC7';
-	E['Eu'].jmolColor = '#61FFC7';
-	E['Gd'].jmolColor = '#45FFC7';
-	E['Tb'].jmolColor = '#30FFC7';
-	E['Dy'].jmolColor = '#1FFFC7';
-	E['Ho'].jmolColor = '#00FF9C';
-	E['Er'].jmolColor = '#00E675';
-	E['Tm'].jmolColor = '#00D452';
-	E['Yb'].jmolColor = '#00BF38';
-	E['Lu'].jmolColor = '#00AB24';
-	E['Hf'].jmolColor = '#4DC2FF';
-	E['Ta'].jmolColor = '#4DA6FF';
-	E['W'].jmolColor = '#2194D6';
-	E['Re'].jmolColor = '#267DAB';
-	E['Os'].jmolColor = '#266696';
-	E['Ir'].jmolColor = '#175487';
-	E['Pt'].jmolColor = '#D0D0E0';
-	E['Au'].jmolColor = '#FFD123';
 	E['Hg'].jmolColor = '#B8B8D0';
-	E['Tl'].jmolColor = '#A6544D';
-	E['Pb'].jmolColor = '#575961';
-	E['Bi'].jmolColor = '#9E4FB5';
-	E['Po'].jmolColor = '#AB5C00';
-	E['At'].jmolColor = '#754F45';
-	E['Rn'].jmolColor = '#428296';
-	E['Fr'].jmolColor = '#420066';
-	E['Ra'].jmolColor = '#007D00';
-	E['Ac'].jmolColor = '#70ABFA';
-	E['Th'].jmolColor = '#00BAFF';
-	E['Pa'].jmolColor = '#00A1FF';
-	E['U'].jmolColor = '#008FFF';
-	E['Np'].jmolColor = '#0080FF';
-	E['Pu'].jmolColor = '#006BFF';
-	E['Am'].jmolColor = '#545CF2';
-	E['Cm'].jmolColor = '#785CE3';
-	E['Bk'].jmolColor = '#8A4FE3';
-	E['Cf'].jmolColor = '#A136D4';
-	E['Es'].jmolColor = '#B31FD4';
-	E['Fm'].jmolColor = '#B31FBA';
-	E['Md'].jmolColor = '#B30DA6';
-	E['No'].jmolColor = '#BD0D87';
-	E['Lr'].jmolColor = '#C70066';
-	E['Rf'].jmolColor = '#CC0059';
-	E['Db'].jmolColor = '#D1004F';
-	E['Sg'].jmolColor = '#D90045';
-	E['Bh'].jmolColor = '#E00038';
-	E['Hs'].jmolColor = '#E6002E';
-	E['Mt'].jmolColor = '#EB0026';
-	E['Ds'].jmolColor = '#000000';
-	E['Rg'].jmolColor = '#000000';
-	E['Cn'].jmolColor = '#000000';
 
 /* Uncomment these lines to substitute PyMOL colors
 	E['H'].jmolColor = '#E6E6E6';
@@ -595,461 +377,113 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 */
 	// set up covalent radii
 	E['H'].covalentRadius = 0.31;
-	E['He'].covalentRadius = 0.28;
-	E['Li'].covalentRadius = 1.28;
-	E['Be'].covalentRadius = 0.96;
-	E['B'].covalentRadius = 0.84;
 	E['C'].covalentRadius = 0.76;
 	E['N'].covalentRadius = 0.71;
 	E['O'].covalentRadius = 0.66;
 	E['F'].covalentRadius = 0.57;
-	E['Ne'].covalentRadius = 0.58;
 	E['Na'].covalentRadius = 1.66;
 	E['Mg'].covalentRadius = 1.41;
-	E['Al'].covalentRadius = 1.21;
-	E['Si'].covalentRadius = 1.11;
 	E['P'].covalentRadius = 1.07;
 	E['S'].covalentRadius = 1.05;
 	E['Cl'].covalentRadius = 1.02;
-	E['Ar'].covalentRadius = 1.06;
 	E['K'].covalentRadius = 2.03;
 	E['Ca'].covalentRadius = 1.76;
-	E['Sc'].covalentRadius = 1.7;
-	E['Ti'].covalentRadius = 1.6;
-	E['V'].covalentRadius = 1.53;
-	E['Cr'].covalentRadius = 1.39;
 	E['Mn'].covalentRadius = 1.39;
 	E['Fe'].covalentRadius = 1.32;
 	E['Co'].covalentRadius = 1.26;
 	E['Ni'].covalentRadius = 1.24;
 	E['Cu'].covalentRadius = 1.32;
 	E['Zn'].covalentRadius = 1.22;
-	E['Ga'].covalentRadius = 1.22;
-	E['Ge'].covalentRadius = 1.2;
 	E['As'].covalentRadius = 1.19;
 	E['Se'].covalentRadius = 1.2;
 	E['Br'].covalentRadius = 1.2;
-	E['Kr'].covalentRadius = 1.16;
-	E['Rb'].covalentRadius = 2.2;
 	E['Sr'].covalentRadius = 1.95;
-	E['Y'].covalentRadius = 1.9;
-	E['Zr'].covalentRadius = 1.75;
-	E['Nb'].covalentRadius = 1.64;
-	E['Mo'].covalentRadius = 1.54;
-	E['Tc'].covalentRadius = 1.47;
-	E['Ru'].covalentRadius = 1.46;
-	E['Rh'].covalentRadius = 1.42;
-	E['Pd'].covalentRadius = 1.39;
-	E['Ag'].covalentRadius = 1.45;
 	E['Cd'].covalentRadius = 1.44;
-	E['In'].covalentRadius = 1.42;
-	E['Sn'].covalentRadius = 1.39;
-	E['Sb'].covalentRadius = 1.39;
-	E['Te'].covalentRadius = 1.38;
 	E['I'].covalentRadius = 1.39;
-	E['Xe'].covalentRadius = 1.4;
-	E['Cs'].covalentRadius = 2.44;
-	E['Ba'].covalentRadius = 2.15;
-	E['La'].covalentRadius = 2.07;
-	E['Ce'].covalentRadius = 2.04;
-	E['Pr'].covalentRadius = 2.03;
-	E['Nd'].covalentRadius = 2.01;
-	E['Pm'].covalentRadius = 1.99;
-	E['Sm'].covalentRadius = 1.98;
-	E['Eu'].covalentRadius = 1.98;
-	E['Gd'].covalentRadius = 1.96;
-	E['Tb'].covalentRadius = 1.94;
-	E['Dy'].covalentRadius = 1.92;
-	E['Ho'].covalentRadius = 1.92;
-	E['Er'].covalentRadius = 1.89;
-	E['Tm'].covalentRadius = 1.9;
-	E['Yb'].covalentRadius = 1.87;
-	E['Lu'].covalentRadius = 1.87;
-	E['Hf'].covalentRadius = 1.75;
-	E['Ta'].covalentRadius = 1.7;
-	E['W'].covalentRadius = 1.62;
-	E['Re'].covalentRadius = 1.51;
-	E['Os'].covalentRadius = 1.44;
-	E['Ir'].covalentRadius = 1.41;
-	E['Pt'].covalentRadius = 1.36;
-	E['Au'].covalentRadius = 1.36;
 	E['Hg'].covalentRadius = 1.32;
-	E['Tl'].covalentRadius = 1.45;
-	E['Pb'].covalentRadius = 1.46;
-	E['Bi'].covalentRadius = 1.48;
-	E['Po'].covalentRadius = 1.4;
-	E['At'].covalentRadius = 1.5;
-	E['Rn'].covalentRadius = 1.5;
-	E['Fr'].covalentRadius = 2.6;
-	E['Ra'].covalentRadius = 2.21;
-	E['Ac'].covalentRadius = 2.15;
-	E['Th'].covalentRadius = 2.06;
-	E['Pa'].covalentRadius = 2.0;
-	E['U'].covalentRadius = 1.96;
-	E['Np'].covalentRadius = 1.9;
-	E['Pu'].covalentRadius = 1.87;
-	E['Am'].covalentRadius = 1.8;
-	E['Cm'].covalentRadius = 1.69;
-	E['Bk'].covalentRadius = 0.0;
-	E['Cf'].covalentRadius = 0.0;
-	E['Es'].covalentRadius = 0.0;
-	E['Fm'].covalentRadius = 0.0;
-	E['Md'].covalentRadius = 0.0;
-	E['No'].covalentRadius = 0.0;
-	E['Lr'].covalentRadius = 0.0;
-	E['Rf'].covalentRadius = 0.0;
-	E['Db'].covalentRadius = 0.0;
-	E['Sg'].covalentRadius = 0.0;
-	E['Bh'].covalentRadius = 0.0;
-	E['Hs'].covalentRadius = 0.0;
-	E['Mt'].covalentRadius = 0.0;
-	E['Ds'].covalentRadius = 0.0;
-	E['Rg'].covalentRadius = 0.0;
-	E['Cn'].covalentRadius = 0.0;
 
 	// set up vdW radii
 	E['H'].vdWRadius = 1.2;
-	E['He'].vdWRadius = 1.4;
-	E['Li'].vdWRadius = 1.82;
-	E['Be'].vdWRadius = 0.0;
-	E['B'].vdWRadius = 0.0;
 	E['C'].vdWRadius = 1.7;
 	E['N'].vdWRadius = 1.55;
 	E['O'].vdWRadius = 1.52;
 	E['F'].vdWRadius = 1.47;
-	E['Ne'].vdWRadius = 1.54;
 	E['Na'].vdWRadius = 2.27;
 	E['Mg'].vdWRadius = 1.73;
-	E['Al'].vdWRadius = 0.0;
-	E['Si'].vdWRadius = 2.1;
 	E['P'].vdWRadius = 1.8;
 	E['S'].vdWRadius = 1.8;
 	E['Cl'].vdWRadius = 1.75;
-	E['Ar'].vdWRadius = 1.88;
 	E['K'].vdWRadius = 2.75;
 	E['Ca'].vdWRadius = 0.0;
-	E['Sc'].vdWRadius = 0.0;
-	E['Ti'].vdWRadius = 0.0;
-	E['V'].vdWRadius = 0.0;
-	E['Cr'].vdWRadius = 0.0;
 	E['Mn'].vdWRadius = 0.0;
 	E['Fe'].vdWRadius = 0.0;
 	E['Co'].vdWRadius = 0.0;
 	E['Ni'].vdWRadius = 1.63;
 	E['Cu'].vdWRadius = 1.4;
 	E['Zn'].vdWRadius = 1.39;
-	E['Ga'].vdWRadius = 1.87;
-	E['Ge'].vdWRadius = 0.0;
 	E['As'].vdWRadius = 1.85;
 	E['Se'].vdWRadius = 1.9;
 	E['Br'].vdWRadius = 1.85;
-	E['Kr'].vdWRadius = 2.02;
-	E['Rb'].vdWRadius = 0.0;
 	E['Sr'].vdWRadius = 0.0;
-	E['Y'].vdWRadius = 0.0;
-	E['Zr'].vdWRadius = 0.0;
-	E['Nb'].vdWRadius = 0.0;
-	E['Mo'].vdWRadius = 0.0;
-	E['Tc'].vdWRadius = 0.0;
-	E['Ru'].vdWRadius = 0.0;
-	E['Rh'].vdWRadius = 0.0;
-	E['Pd'].vdWRadius = 1.63;
-	E['Ag'].vdWRadius = 1.72;
 	E['Cd'].vdWRadius = 1.58;
-	E['In'].vdWRadius = 1.93;
-	E['Sn'].vdWRadius = 2.17;
-	E['Sb'].vdWRadius = 0.0;
-	E['Te'].vdWRadius = 2.06;
 	E['I'].vdWRadius = 1.98;
-	E['Xe'].vdWRadius = 2.16;
-	E['Cs'].vdWRadius = 0.0;
-	E['Ba'].vdWRadius = 0.0;
-	E['La'].vdWRadius = 0.0;
-	E['Ce'].vdWRadius = 0.0;
-	E['Pr'].vdWRadius = 0.0;
-	E['Nd'].vdWRadius = 0.0;
-	E['Pm'].vdWRadius = 0.0;
-	E['Sm'].vdWRadius = 0.0;
-	E['Eu'].vdWRadius = 0.0;
-	E['Gd'].vdWRadius = 0.0;
-	E['Tb'].vdWRadius = 0.0;
-	E['Dy'].vdWRadius = 0.0;
-	E['Ho'].vdWRadius = 0.0;
-	E['Er'].vdWRadius = 0.0;
-	E['Tm'].vdWRadius = 0.0;
-	E['Yb'].vdWRadius = 0.0;
-	E['Lu'].vdWRadius = 0.0;
-	E['Hf'].vdWRadius = 0.0;
-	E['Ta'].vdWRadius = 0.0;
-	E['W'].vdWRadius = 0.0;
-	E['Re'].vdWRadius = 0.0;
-	E['Os'].vdWRadius = 0.0;
-	E['Ir'].vdWRadius = 0.0;
-	E['Pt'].vdWRadius = 1.75;
-	E['Au'].vdWRadius = 1.66;
 	E['Hg'].vdWRadius = 1.55;
-	E['Tl'].vdWRadius = 1.96;
-	E['Pb'].vdWRadius = 2.02;
-	E['Bi'].vdWRadius = 0.0;
-	E['Po'].vdWRadius = 0.0;
-	E['At'].vdWRadius = 0.0;
-	E['Rn'].vdWRadius = 0.0;
-	E['Fr'].vdWRadius = 0.0;
-	E['Ra'].vdWRadius = 0.0;
-	E['Ac'].vdWRadius = 0.0;
-	E['Th'].vdWRadius = 0.0;
-	E['Pa'].vdWRadius = 0.0;
-	E['U'].vdWRadius = 1.86;
-	E['Np'].vdWRadius = 0.0;
-	E['Pu'].vdWRadius = 0.0;
-	E['Am'].vdWRadius = 0.0;
-	E['Cm'].vdWRadius = 0.0;
-	E['Bk'].vdWRadius = 0.0;
-	E['Cf'].vdWRadius = 0.0;
-	E['Es'].vdWRadius = 0.0;
-	E['Fm'].vdWRadius = 0.0;
-	E['Md'].vdWRadius = 0.0;
-	E['No'].vdWRadius = 0.0;
-	E['Lr'].vdWRadius = 0.0;
-	E['Rf'].vdWRadius = 0.0;
-	E['Db'].vdWRadius = 0.0;
-	E['Sg'].vdWRadius = 0.0;
-	E['Bh'].vdWRadius = 0.0;
-	E['Hs'].vdWRadius = 0.0;
-	E['Mt'].vdWRadius = 0.0;
-	E['Ds'].vdWRadius = 0.0;
-	E['Rg'].vdWRadius = 0.0;
-	E['Cn'].vdWRadius = 0.0;
 
 	E['H'].valency = 1;
-	E['He'].valency = 0;
-	E['Li'].valency = 1;
-	E['Be'].valency = 2;
-	E['B'].valency = 3;
 	E['C'].valency = 4;
 	E['N'].valency = 3;
 	E['O'].valency = 2;
 	E['F'].valency = 1;
-	E['Ne'].valency = 0;
 	E['Na'].valency = 1;
 	E['Mg'].valency = 0;
-	E['Al'].valency = 0;
-	E['Si'].valency = 4;
 	E['P'].valency = 3;
 	E['S'].valency = 2;
 	E['Cl'].valency = 1;
-	E['Ar'].valency = 0;
 	E['K'].valency = 0;
 	E['Ca'].valency = 0;
-	E['Sc'].valency = 0;
-	E['Ti'].valency = 1;
-	E['V'].valency = 1;
-	E['Cr'].valency = 2;
 	E['Mn'].valency = 3;
 	E['Fe'].valency = 2;
 	E['Co'].valency = 1;
 	E['Ni'].valency = 1;
 	E['Cu'].valency = 0;
 	E['Zn'].valency = 0;
-	E['Ga'].valency = 0;
-	E['Ge'].valency = 4;
 	E['As'].valency = 3;
 	E['Se'].valency = 2;
 	E['Br'].valency = 1;
-	E['Kr'].valency = 0;
-	E['Rb'].valency = 0;
 	E['Sr'].valency = 0;
-	E['Y'].valency = 0;
-	E['Zr'].valency = 0;
-	E['Nb'].valency = 1;
-	E['Mo'].valency = 2;
-	E['Tc'].valency = 3;
-	E['Ru'].valency = 2;
-	E['Rh'].valency = 1;
-	E['Pd'].valency = 0;
-	E['Ag'].valency = 0;
 	E['Cd'].valency = 0;
-	E['In'].valency = 0;
-	E['Sn'].valency = 4;
-	E['Sb'].valency = 3;
-	E['Te'].valency = 2;
 	E['I'].valency = 1;
-	E['Xe'].valency = 0;
-	E['Cs'].valency = 0;
-	E['Ba'].valency = 0;
-	E['La'].valency = 0;
-	E['Ce'].valency = 0;
-	E['Pr'].valency = 0;
-	E['Nd'].valency = 0;
-	E['Pm'].valency = 0;
-	E['Sm'].valency = 0;
-	E['Eu'].valency = 0;
-	E['Gd'].valency = 0;
-	E['Tb'].valency = 0;
-	E['Dy'].valency = 0;
-	E['Ho'].valency = 0;
-	E['Er'].valency = 0;
-	E['Tm'].valency = 0;
-	E['Yb'].valency = 0;
-	E['Lu'].valency = 0;
-	E['Hf'].valency = 0;
-	E['Ta'].valency = 1;
-	E['W'].valency = 2;
-	E['Re'].valency = 3;
-	E['Os'].valency = 2;
-	E['Ir'].valency = 3;
-	E['Pt'].valency = 0;
-	E['Au'].valency = 1;
 	E['Hg'].valency = 0;
-	E['Tl'].valency = 0;
-	E['Pb'].valency = 4;
-	E['Bi'].valency = 3;
-	E['Po'].valency = 2;
-	E['At'].valency = 1;
-	E['Rn'].valency = 0;
-	E['Fr'].valency = 0;
-	E['Ra'].valency = 0;
-	E['Ac'].valency = 0;
-	E['Th'].valency = 0;
-	E['Pa'].valency = 0;
-	E['U'].valency = 0;
-	E['Np'].valency = 0;
-	E['Pu'].valency = 0;
-	E['Am'].valency = 0;
-	E['Cm'].valency = 0;
-	E['Bk'].valency = 0;
-	E['Cf'].valency = 0;
-	E['Es'].valency = 0;
-	E['Fm'].valency = 0;
-	E['Md'].valency = 0;
-	E['No'].valency = 0;
-	E['Lr'].valency = 0;
-	E['Rf'].valency = 0;
-	E['Db'].valency = 0;
-	E['Sg'].valency = 0;
-	E['Bh'].valency = 0;
-	E['Hs'].valency = 0;
-	E['Mt'].valency = 0;
-	E['Ds'].valency = 0;
-	E['Rg'].valency = 0;
-	E['Cn'].valency = 0;
 
 	E['H'].mass = 1;
-	E['He'].mass = 4;
-	E['Li'].mass = 7;
-	E['Be'].mass = 9;
-	E['B'].mass = 11;
 	E['C'].mass = 12;
 	E['N'].mass = 14;
 	E['O'].mass = 16;
 	E['F'].mass = 19;
-	E['Ne'].mass = 20;
 	E['Na'].mass = 23;
 	E['Mg'].mass = 24;
-	E['Al'].mass = 27;
-	E['Si'].mass = 28;
 	E['P'].mass = 31;
 	E['S'].mass = 32;
 	E['Cl'].mass = 35;
-	E['Ar'].mass = 40;
 	E['K'].mass = 39;
 	E['Ca'].mass = 40;
-	E['Sc'].mass = 45;
-	E['Ti'].mass = 48;
-	E['V'].mass = 51;
-	E['Cr'].mass = 52;
 	E['Mn'].mass = 55;
 	E['Fe'].mass = 56;
 	E['Co'].mass = 59;
 	E['Ni'].mass = 58;
 	E['Cu'].mass = 63;
 	E['Zn'].mass = 64;
-	E['Ga'].mass = 69;
-	E['Ge'].mass = 74;
 	E['As'].mass = 75;
 	E['Se'].mass = 80;
 	E['Br'].mass = 79;
-	E['Kr'].mass = 84;
-	E['Rb'].mass = 85;
 	E['Sr'].mass = 88;
-	E['Y'].mass = 89;
-	E['Zr'].mass = 90;
-	E['Nb'].mass = 93;
-	E['Mo'].mass = 98;
-	E['Tc'].mass = 0;
-	E['Ru'].mass = 102;
-	E['Rh'].mass = 103;
-	E['Pd'].mass = 106;
-	E['Ag'].mass = 107;
 	E['Cd'].mass = 114;
-	E['In'].mass = 115;
-	E['Sn'].mass = 120;
-	E['Sb'].mass = 121;
-	E['Te'].mass = 130;
 	E['I'].mass = 127;
-	E['Xe'].mass = 132;
-	E['Cs'].mass = 133;
-	E['Ba'].mass = 138;
-	E['La'].mass = 139;
-	E['Ce'].mass = 140;
-	E['Pr'].mass = 141;
-	E['Nd'].mass = 142;
-	E['Pm'].mass = 0;
-	E['Sm'].mass = 152;
-	E['Eu'].mass = 153;
-	E['Gd'].mass = 158;
-	E['Tb'].mass = 159;
-	E['Dy'].mass = 164;
-	E['Ho'].mass = 165;
-	E['Er'].mass = 166;
-	E['Tm'].mass = 169;
-	E['Yb'].mass = 174;
-	E['Lu'].mass = 175;
-	E['Hf'].mass = 180;
-	E['Ta'].mass = 181;
-	E['W'].mass = 184;
-	E['Re'].mass = 187;
-	E['Os'].mass = 192;
-	E['Ir'].mass = 193;
-	E['Pt'].mass = 195;
-	E['Au'].mass = 197;
 	E['Hg'].mass = 202;
-	E['Tl'].mass = 205;
-	E['Pb'].mass = 208;
-	E['Bi'].mass = 209;
-	E['Po'].mass = 0;
-	E['At'].mass = 0;
-	E['Rn'].mass = 0;
-	E['Fr'].mass = 0;
-	E['Ra'].mass = 0;
-	E['Ac'].mass = 0;
-	E['Th'].mass = 232;
-	E['Pa'].mass = 231;
-	E['U'].mass = 238;
-	E['Np'].mass = 0;
-	E['Pu'].mass = 0;
-	E['Am'].mass = 0;
-	E['Cm'].mass = 0;
-	E['Bk'].mass = 0;
-	E['Cf'].mass = 0;
-	E['Es'].mass = 0;
-	E['Fm'].mass = 0;
-	E['Md'].mass = 0;
-	E['No'].mass = 0;
-	E['Lr'].mass = 0;
-	E['Rf'].mass = 0;
-	E['Db'].mass = 0;
-	E['Sg'].mass = 0;
-	E['Bh'].mass = 0;
-	E['Hs'].mass = 0;
-	E['Mt'].mass = 0;
-	E['Ds'].mass = 0;
-	E['Rg'].mass = 0;
-	E['Cn'].mass = 0;
 
 	return E;
 
-})(ChemDoodle.SYMBOLS);
+})();
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1059,8 +493,6 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 //  $LastChangedDate: 2011-01-07 21:28:00 -0500 (Fri, 07 Jan 2011) $
 //
 ChemDoodle.RESIDUE = (function() {
-	
-	var R = [];
 
 	function Residue(symbol, name) {
 		this.symbol = symbol;
@@ -1068,6 +500,7 @@ ChemDoodle.RESIDUE = (function() {
 		return true;
 	}
 
+	var R = [];
 	R['Ala'] = new Residue('Ala', 'Alanine');
 	R['Arg'] = new Residue('Arg', 'Arginine');
 	R['Asn'] = new Residue('Asn', 'Asparagine');
@@ -2977,10 +2410,7 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_lightDirection_3D = [ -.1, -.1, -1 ];
 	c.default_lightDiffuseColor_3D = '#FFFFFF';
 	c.default_lightSpecularColor_3D = '#FFFFFF';
-	c.default_projectionPerspective_3D = true;
 	c.default_projectionPerspectiveVerticalFieldOfView_3D = 45;
-	c.default_projectionOrthoWidth_3D = 40;
-	c.default_projectionWidthHeightRatio_3D = null;
 	c.default_projectionFrontCulling_3D = .1;
 	c.default_projectionBackCulling_3D = 10000;
 
@@ -3070,10 +2500,7 @@ ChemDoodle.RESIDUE = (function() {
 		this.lightDirection_3D = c.default_lightDirection_3D;
 		this.lightDiffuseColor_3D = c.default_lightDiffuseColor_3D;
 		this.lightSpecularColor_3D = c.default_lightSpecularColor_3D;
-		this.projectionPerspective_3D = c.default_projectionPerspective_3D;
 		this.projectionPerspectiveVerticalFieldOfView_3D = c.default_projectionPerspectiveVerticalFieldOfView_3D;
-		this.projectionOrthoWidth_3D = c.default_projectionOrthoWidth_3D;
-		this.projectionWidthHeightRatio_3D = c.default_projectionWidthHeightRatio_3D;
 		this.projectionFrontCulling_3D = c.default_projectionFrontCulling_3D;
 		this.projectionBackCulling_3D = c.default_projectionBackCulling_3D;
 
@@ -3493,7 +2920,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	m.SHIFT = false;
 	m.META = false;
 
-	if (!featureDetection.supports_touch()) {
+	if (!('ontouchstart' in window)) {
 		q(document).ready(function() {
 			// handles dragging beyond the canvas bounds
 			q(document).mousemove(function(e) {
@@ -3584,7 +3011,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
 		var me = this;
-		if (featureDetection.supports_touch()) {
+		if ('ontouchstart' in window) {
 			// for iPhone OS and Android devices (and other mobile browsers that
 			// support mobile events)
 			jqCapsule.bind('touchstart', function(e) {
@@ -3810,9 +3237,10 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	c.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
 		this.center();
-		if (this.afterLoadMolecule) {
-			this.afterLoadMolecule();
-		}
+		var d = this.molecule.getDimension();
+		this.maxDimension = m.max(d.x, d.y);
+		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
+		this.setupScene();
 		this.repaint();
 	};
 	c.Canvas.prototype.prehandleEvent = function(e) {
@@ -3823,12 +3251,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		e.preventDefault();
 		e.offset = q('#' + this.id).offset();
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
-	};
-	c.Canvas.prototype.afterLoadMolecule = function() {
-		var d = this.molecule.getDimension();
-		this.maxDimension = m.max(d.x, d.y);
-		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
-		this.setupScene();
 	};
 	c.Canvas.prototype.setViewDistance = function(distance) {
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -distance ]);
@@ -3863,122 +3285,116 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		}
 	};
 	c.Canvas.prototype.setupScene = function() {
-		if (this.gl) {
-			// clear the canvas
-			var cs = math.getRGB(this.specs.backgroundColor, 1);
-			this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
-			this.gl.clearDepth(1.0);
-			this.gl.enable(this.gl.DEPTH_TEST);
-			this.gl.depthFunc(this.gl.LEQUAL);
-			// here is the sphere buffer to be drawn, make it once, then scale
-			// and translate to draw atoms
-			this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
-			this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
-			this.gl.lineBuffer = new structures.Line();
-			if (this.molecule && this.molecule!=this.previousMolecule) {
-				this.previousMolecule = this.molecule;
-				if (this.molecule.chains) {
-					this.molecule.ribbons = [];
-					this.molecule.cartoons = [];
-					// set up ribbon diagram if available and not already setup
-					for ( var j = 0, jj = this.molecule.chains.length; j < jj; j++) {
-						var rs = this.molecule.chains[j];
-						var isNucleotide = rs.length > 2 && RESIDUE[rs[2].name] && RESIDUE[rs[2].name].aminoColor == '#BEA06E';
-						if (rs.length > 0 && !rs[0].lineSegments) {
-							for ( var i = 0, ii = rs.length - 1; i < ii; i++) {
-								rs[i].setup(rs[i + 1].cp1, isNucleotide?1:this.specs.proteins_horizontalResolution);
-							}
-							if (!isNucleotide) {
-								for ( var i = 1, ii = rs.length - 1; i < ii; i++) {
-									// reverse guide points if carbonyl
-									// orientation
-									// flips
-									if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > m.PI / 2) {
-										rs[i].guidePointsSmall.reverse();
-										rs[i].guidePointsLarge.reverse();
-										v3.scale(rs[i].D, -1);
-									}
+		// clear the canvas
+		var cs = math.getRGB(this.specs.backgroundColor, 1);
+		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
+		this.gl.clearDepth(1.0);
+		this.gl.enable(this.gl.DEPTH_TEST);
+		this.gl.depthFunc(this.gl.LEQUAL);
+		// here is the sphere buffer to be drawn, make it once, then scale
+		// and translate to draw atoms
+		this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
+		this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
+		this.gl.lineBuffer = new structures.Line();
+		if (this.molecule && this.molecule!=this.previousMolecule) {
+			this.previousMolecule = this.molecule;
+			if (this.molecule.chains) {
+				this.molecule.ribbons = [];
+				this.molecule.cartoons = [];
+				// set up ribbon diagram if available and not already setup
+				for ( var j = 0, jj = this.molecule.chains.length; j < jj; j++) {
+					var rs = this.molecule.chains[j];
+					var isNucleotide = rs.length > 2 && RESIDUE[rs[2].name] && RESIDUE[rs[2].name].aminoColor == '#BEA06E';
+					if (rs.length > 0 && !rs[0].lineSegments) {
+						for ( var i = 0, ii = rs.length - 1; i < ii; i++) {
+							rs[i].setup(rs[i + 1].cp1, isNucleotide?1:this.specs.proteins_horizontalResolution);
+						}
+						if (!isNucleotide) {
+							for ( var i = 1, ii = rs.length - 1; i < ii; i++) {
+								// reverse guide points if carbonyl
+								// orientation
+								// flips
+								if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > m.PI / 2) {
+									rs[i].guidePointsSmall.reverse();
+									rs[i].guidePointsLarge.reverse();
+									v3.scale(rs[i].D, -1);
 								}
 							}
-							for ( var i = 1, ii = rs.length - 3; i < ii; i++) {
-								// compute line segments
-								rs[i].computeLineSegments(rs[i - 1], rs[i + 1], rs[i + 2], !isNucleotide, isNucleotide?this.specs.nucleics_verticalResolution:this.specs.proteins_verticalResolution);
-							}
-							// remove unneeded dummies
-							rs.pop();
-							rs.pop();
-							rs.pop();
-							rs.shift();
 						}
-						// create the hsl color for the chain
-						var rgb = math.hsl2rgb(jj==1?.5:j / jj, 1, .5);
-						var chainColor = 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
-						rs.chainColor = chainColor;
-						var r = {
-							front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, false),
-							back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, false)
-						};
-						r.front.chainColor = chainColor;
-						r.back.chainColor = chainColor;
-						for ( var i = 0, ii = r.front.segments.length; i < ii; i++) {
-							r.front.segments[i].chainColor = chainColor;
+						for ( var i = 1, ii = rs.length - 3; i < ii; i++) {
+							// compute line segments
+							rs[i].computeLineSegments(rs[i - 1], rs[i + 1], rs[i + 2], !isNucleotide, isNucleotide?this.specs.nucleics_verticalResolution:this.specs.proteins_verticalResolution);
 						}
-						for ( var i = 0, ii = r.back.segments.length; i < ii; i++) {
-							r.back.segments[i].chainColor = chainColor;
-						}
-						this.molecule.ribbons.push(r);
-						var c = {
-							front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, true),
-							back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, true)
-						};
-						c.front.chainColor = chainColor;
-						c.back.chainColor = chainColor;
-						for ( var i = 0, ii = c.front.segments.length; i < ii; i++) {
-							c.front.segments[i].chainColor = chainColor;
-						}
-						for ( var i = 0, ii = c.back.segments.length; i < ii; i++) {
-							c.back.segments[i].chainColor = chainColor;
-						}
-						for ( var i = 0, ii = c.front.cartoonSegments.length; i < ii; i++) {
-							c.front.cartoonSegments[i].chainColor = chainColor;
-						}
-						for ( var i = 0, ii = c.back.cartoonSegments.length; i < ii; i++) {
-							c.back.cartoonSegments[i].chainColor = chainColor;
-						}
-						this.molecule.cartoons.push(c);
+						// remove unneeded dummies
+						rs.pop();
+						rs.pop();
+						rs.pop();
+						rs.shift();
 					}
+					// create the hsl color for the chain
+					var rgb = math.hsl2rgb(jj==1?.5:j / jj, 1, .5);
+					var chainColor = 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
+					rs.chainColor = chainColor;
+					var r = {
+						front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, false),
+						back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, false)
+					};
+					r.front.chainColor = chainColor;
+					r.back.chainColor = chainColor;
+					for ( var i = 0, ii = r.front.segments.length; i < ii; i++) {
+						r.front.segments[i].chainColor = chainColor;
+					}
+					for ( var i = 0, ii = r.back.segments.length; i < ii; i++) {
+						r.back.segments[i].chainColor = chainColor;
+					}
+					this.molecule.ribbons.push(r);
+					var c = {
+						front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, true),
+						back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, true)
+					};
+					c.front.chainColor = chainColor;
+					c.back.chainColor = chainColor;
+					for ( var i = 0, ii = c.front.segments.length; i < ii; i++) {
+						c.front.segments[i].chainColor = chainColor;
+					}
+					for ( var i = 0, ii = c.back.segments.length; i < ii; i++) {
+						c.back.segments[i].chainColor = chainColor;
+					}
+					for ( var i = 0, ii = c.front.cartoonSegments.length; i < ii; i++) {
+						c.front.cartoonSegments[i].chainColor = chainColor;
+					}
+					for ( var i = 0, ii = c.back.cartoonSegments.length; i < ii; i++) {
+						c.back.cartoonSegments[i].chainColor = chainColor;
+					}
+					this.molecule.cartoons.push(c);
 				}
 			}
-			// set up lighting
-			this.gl.lighting = new structures.Light(this.specs.lightDiffuseColor_3D, this.specs.lightSpecularColor_3D, this.specs.lightDirection_3D);
-			this.gl.lighting.lightScene(this.gl);
-			// set up material
-			this.gl.material = new structures.Material(this.gl);
-			// projection matrix
-			// arg1: vertical field of view (degrees)
-			// arg2: width to height ratio
-			// arg3: front culling
-			// arg4: back culling
-			var widthHeightRatio = this.width/this.height;
-			if(this.specs.projectionWidthHeightRatio_3D){
-				widthHeightRatio = this.specs.projectionWidthHeightRatio_3D;
-			}
-			this.gl.projectionMatrix = this.specs.projectionPerspective_3D ? m4.perspective(this.specs.projectionPerspectiveVerticalFieldOfView_3D, widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D) : m4.ortho(-this.specs.projectionOrthoWidth_3D / 2, this.specs.projectionOrthoWidth_3D / 2, -this.specs.projectionOrthoWidth_3D / 2 / widthHeightRatio, this.specs.projectionOrthoWidth_3D / 2
-					/ widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D);
-			// push the projection matrix to the graphics card
-			var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
-			this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
-			// matrix setup functions
-			var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
-			var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
-			this.gl.setMatrixUniforms = function(mvMatrix) {
-				// push the model-view matrix to the graphics card
-				this.uniformMatrix4fv(mvUL, false, mvMatrix);
-				// create the normal matrix and push it to the graphics card
-				var normalMatrix = m3.transpose(m4.toInverseMat3(mvMatrix, []));
-				this.uniformMatrix3fv(nUL, false, normalMatrix);
-			};
 		}
+		// set up lighting
+		this.gl.lighting = new structures.Light(this.specs.lightDiffuseColor_3D, this.specs.lightSpecularColor_3D, this.specs.lightDirection_3D);
+		this.gl.lighting.lightScene(this.gl);
+		// set up material
+		this.gl.material = new structures.Material(this.gl);
+		// projection matrix
+		// arg1: vertical field of view (degrees)
+		// arg2: width to height ratio
+		// arg3: front culling
+		// arg4: back culling
+		var widthHeightRatio = this.width/this.height;
+		this.gl.projectionMatrix = m4.perspective(this.specs.projectionPerspectiveVerticalFieldOfView_3D, widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D);
+		// push the projection matrix to the graphics card
+		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
+		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
+		// matrix setup functions
+		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
+		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
+		this.gl.setMatrixUniforms = function(mvMatrix) {
+			// push the model-view matrix to the graphics card
+			this.uniformMatrix4fv(mvUL, false, mvMatrix);
+			// create the normal matrix and push it to the graphics card
+			var normalMatrix = m3.transpose(m4.toInverseMat3(mvMatrix, []));
+			this.uniformMatrix3fv(nUL, false, normalMatrix);
+		};
 	};
 	c.Canvas.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
@@ -4005,14 +3421,8 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	};
 	c.Canvas.prototype.mousewheel = function(e, delta) {
 		var dz = delta * this.maxDimension/8;
-		if(this.specs.projectionPerspective_3D){
-			m4.translate(this.translationMatrix, [ 0, 0, dz ]);
-		}else{
-			this.specs.projectionOrthoWidth_3D-=dz;
-			this.setupScene();
-		}
+		m4.translate(this.translationMatrix, [ 0, 0, dz ]);
 		this.repaint();
 	};
 
 })(ChemDoodle, ChemDoodle.featureDetection, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, jQuery, jQuery.browser, Math, document, mat4, mat3, vec3, window);
-
