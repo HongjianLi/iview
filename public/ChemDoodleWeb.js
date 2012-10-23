@@ -4495,65 +4495,6 @@ ChemDoodle.RESIDUE = (function() {
 //  $Author: kevin $
 //  $LastChangedDate: 2011-02-20 12:58:08 -0500 (Sun, 20 Feb 2011) $
 //
-(function(informatics) {
-
-	informatics.HydrogenDeducer = function() {
-		this.removeHydrogens = function(molecule) {
-			var atoms = [];
-			var bonds = [];
-			for ( var i = 0, ii = molecule.bonds.length; i < ii; i++) {
-				if (molecule.bonds[i].a1.label != 'H' && molecule.bonds[i].a2.label != 'H') {
-					bonds.push(molecule.bonds[i]);
-				}
-			}
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				if (molecule.atoms[i].label != 'H') {
-					atoms.push(molecule.atoms[i]);
-				}
-			}
-			molecule.atoms = atoms;
-			molecule.bonds = bonds;
-		};
-		return true;
-	};
-
-})(ChemDoodle.informatics);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3078 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
-//
-(function(informatics, structures) {
-
-	informatics.StructureBuilder = function() {
-		this.copy = function(molecule) {
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				molecule.atoms[i].metaID = i;
-			}
-			var newMol = new structures.Molecule();
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				newMol.atoms[i] = new structures.Atom(molecule.atoms[i].label, molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z);
-			}
-			for ( var i = 0, ii = molecule.bonds.length; i < ii; i++) {
-				newMol.bonds[i] = new structures.Bond(newMol.atoms[molecule.bonds[i].a1.metaID], newMol.atoms[molecule.bonds[i].a2.metaID], molecule.bonds[i].bondOrder);
-			}
-			return newMol;
-		};
-		return true;
-	};
-
-})(ChemDoodle.informatics, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3103 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-20 12:58:08 -0500 (Sun, 20 Feb 2011) $
-//
 
 (function(informatics, inArray) {
 	
