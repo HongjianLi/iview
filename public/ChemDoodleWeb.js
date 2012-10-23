@@ -2097,132 +2097,6 @@ ChemDoodle.RESIDUE = (function() {
 			}
 			return new structures.Point(maxX - minX, maxY - minY);
 		};
-		this.check = function(force) {
-			// using force improves efficiency, so changes will not be checked
-			// until a render occurs
-			// you can force a check by sending true to this function after
-			// calling check with a false
-			if (force && this.doChecks) {
-				// only check if the number of atoms or bonds has changed
-				if (this.atoms.length != this.atomNumCache && this.bonds.length != this.bondNumCache) {
-					// find lones
-					for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-						this.atoms[i].isLone = false;
-						if (this.atoms[i].label == 'C') {
-							var counter = 0;
-							for ( var j = 0, jj = this.bonds.length; j < jj; j++) {
-								if (this.bonds[j].a1 == this.atoms[i] || this.bonds[j].a2 == this.atoms[i]) {
-									counter++;
-								}
-							}
-							if (counter == 0) {
-								this.atoms[i].isLone = true;
-							}
-						}
-					}
-				}
-				// sort
-				var sort = false;
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					if (this.atoms[i].z != 0) {
-						sort = true;
-					}
-				}
-				if (sort) {
-					this.sortAtomsByZ();
-					this.sortBondsByZ();
-				}
-				// setup metadata
-				this.setupMetaData();
-				this.atomNumCache = this.atoms.length;
-				this.bondNumCache = this.bonds.length;
-				// fj number cache doesnt care if there are separate molecules, as the change will signal a need to check for rings; the accuracy doesn't matter
-				this.fjNumCache = this.bonds.length-this.atoms.length;
-			}
-			this.doChecks = !force;
-		};
-		this.getAngles = function(a) {
-			var angles = [];
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				if (this.bonds[i].contains(a)) {
-					angles.push(a.angle(this.bonds[i].getNeighbor(a)));
-				}
-			}
-			angles.sort();
-			return angles;
-		};
-		this.getCoordinationNumber = function(bs) {
-			var coordinationNumber = 0;
-			for ( var i = 0, ii = bs.length; i < ii; i++) {
-				coordinationNumber += bs[i].bondOrder;
-			}
-			return coordinationNumber;
-		};
-		this.getBonds = function(a) {
-			var bonds = [];
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				if (this.bonds[i].contains(a)) {
-					bonds.push(this.bonds[i]);
-				}
-			}
-			return bonds;
-		};
-		this.sortAtomsByZ = function() {
-			for ( var i = 1, ii = this.atoms.length; i < ii; i++) {
-				var index = i;
-				while (index > 0 && this.atoms[index].z < this.atoms[index - 1].z) {
-					var hold = this.atoms[index];
-					this.atoms[index] = this.atoms[index - 1];
-					this.atoms[index - 1] = hold;
-					index--;
-				}
-			}
-		};
-		this.sortBondsByZ = function() {
-			for ( var i = 1, ii = this.bonds.length; i < ii; i++) {
-				var index = i;
-				while (index > 0 && (this.bonds[index].a1.z + this.bonds[index].a2.z) < (this.bonds[index - 1].a1.z + this.bonds[index - 1].a2.z)) {
-					var hold = this.bonds[index];
-					this.bonds[index] = this.bonds[index - 1];
-					this.bonds[index - 1] = hold;
-					index--;
-				}
-			}
-		};
-		this.setupMetaData = function() {
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				var a = this.atoms[i];
-				var bonds = this.getBonds(a);
-				var angles = this.getAngles(a);
-				a.isHidden = bonds.length == 2 && m.abs(m.abs(angles[1] - angles[0]) - m.PI) < m.PI / 30 && bonds[0].bondOrder == bonds[1].bondOrder;
-				var angleData = c.math.angleBetweenLargest(angles);
-				a.angleOfLeastInterference = angleData.angle % (m.PI * 2);
-				a.largestAngle = angleData.largest;
-				a.coordinationNumber = this.getCoordinationNumber(bonds);
-				a.bondNumber = bonds.length;
-			}
-		};
-		this.scaleToAverageBondLength = function(length) {
-			var avBondLength = this.getAverageBondLength();
-			if (avBondLength != 0) {
-				var scale = length / avBondLength;
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					this.atoms[i].x *= scale;
-					this.atoms[i].y *= scale;
-				}
-			}
-		};
-		this.getAverageBondLength = function() {
-			if (this.bonds.length == 0) {
-				return 0;
-			}
-			var tot = 0;
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				tot += this.bonds[i].getLength();
-			}
-			tot /= this.bonds.length;
-			return tot;
-		};
 		return true;
 	};
 
@@ -3710,26 +3584,14 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, featureDetection, monitor, structures, q, browser, m, document, window) {
+(function(c, featureDetection, monitor, extensions, math, structures, RESIDUE, q, browser, m, document, m4, m3, v3, window) {
 
-	c.Canvas = function() {
-		this.molecule = null;
-		this.emptyMessage = null;
+	c.Canvas = function(id) {
 		this.image = null;
-		return true;
-	};
-	c.Canvas.prototype.loadMolecule = function(molecule) {
-		this.molecule = molecule;
-		this.center();
-		if (!(this instanceof ChemDoodle.Canvas3D)) {
-			this.molecule.check();
-		}
-		if (this.afterLoadMolecule) {
-			this.afterLoadMolecule();
-		}
-		this.repaint();
-	};
-	c.Canvas.prototype.create = function(id) {
+		this.rotationMatrix = m4.identity([]);
+		this.translationMatrix = m4.identity([]);
+		this.lastPoint = null;
+		this.emptyMessage = 'WebGL is Unavailable!';
 		this.id = id;
 		var jqCapsule = q('#' + id);
 		this.width = jqCapsule.attr('width');
@@ -3959,9 +3821,33 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 				}
 			});
 		}
-		if (this.subCreate) {
-			this.subCreate();
+		// setup gl object
+		try {
+			var canvas = document.getElementById(this.id);
+			this.gl = canvas.getContext('webgl');
+			if (!this.gl) {
+				this.gl = canvas.getContext('experimental-webgl');
+			}
+		} catch (e) {
 		}
+		if (this.gl) {
+			this.gl.program = this.gl.createProgram();
+			this.gl.shader = new structures.Shader();
+			this.gl.shader.init(this.gl);
+			this.setupScene();
+		} else {
+			this.molecule = null;
+			this.displayMessage();
+		}
+		return true;
+	};
+	c.Canvas.prototype.loadMolecule = function(molecule) {
+		this.molecule = molecule;
+		this.center();
+		if (this.afterLoadMolecule) {
+			this.afterLoadMolecule();
+		}
+		this.repaint();
 	};
 	c.Canvas.prototype.prehandleEvent = function(e) {
 		if (e.originalEvent.changedTouches) {
@@ -3972,37 +3858,16 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		e.offset = q('#' + this.id).offset();
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
 	};
-
-})(ChemDoodle, ChemDoodle.featureDetection, ChemDoodle.monitor, ChemDoodle.structures, jQuery, jQuery.browser, Math, document, window);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3524 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-04 22:27:39 -0400 (Fri, 04 May 2012) $
-
-(function(c, extensions, math, structures, RESIDUE, m, document, m4, m3, v3, window) {
-
-	c.Canvas3D = function(id, width, height) {
-		this.create(id, width, height);
-		this.rotationMatrix = m4.identity([]);
-		this.translationMatrix = m4.identity([]);
-		this.lastPoint = null;
-		this.emptyMessage = 'WebGL is Unavailable!';
-		return true;
-	};
-	c.Canvas3D.prototype = new c.Canvas();
-	c.Canvas3D.prototype.afterLoadMolecule = function() {
+	c.Canvas.prototype.afterLoadMolecule = function() {
 		var d = this.molecule.getDimension();
 		this.maxDimension = m.max(d.x, d.y);
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		this.setupScene();
 	};
-	c.Canvas3D.prototype.setViewDistance = function(distance) {
+	c.Canvas.prototype.setViewDistance = function(distance) {
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -distance ]);
 	};
-	c.Canvas3D.prototype.repaint = function() {
+	c.Canvas.prototype.repaint = function() {
 		if (this.gl) {
 			// ready the bits for rendering
 			this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -4020,7 +3885,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.gl.flush();
 		}
 	};
-	c.Canvas3D.prototype.center = function() {
+	c.Canvas.prototype.center = function() {
 		var canvas = document.getElementById(this.id);
 		var p = this.molecule.getCenter3D();
 		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
@@ -4042,35 +3907,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			}
 		}
 	};
-	c.Canvas3D.prototype.subCreate = function() {
-		// setup gl object
-		try {
-			var canvas = document.getElementById(this.id);
-			this.gl = canvas.getContext('webgl');
-			if (!this.gl) {
-				this.gl = canvas.getContext('experimental-webgl');
-			}
-		} catch (e) {
-		}
-		if (this.gl) {
-			// suport the pixel ratio - no way to test this yet
-			/*var pixelRatio = window.devicePixelRatio ? window.devicePixelRatio : 1;
-			if (pixelRatio != 1) {
-				canvas.width = this.width * pixelRatio;
-				canvas.height = this.height * pixelRatio;
-				this.gl.scale(pixelRatio, pixelRatio);
-			}*/
-			// setup viewport
-			this.gl.program = this.gl.createProgram();
-			// this is the shader
-			this.gl.shader = new structures.Shader();
-			this.gl.shader.init(this.gl);
-			this.setupScene();
-		} else {
-			this.molecule = null;
-			this.displayMessage();
-		}
-	};
 	c.Canvas.prototype.displayMessage = function() {
 		var canvas = document.getElementById(this.id);
 		if (canvas.getContext) {
@@ -4088,7 +3924,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			}
 		}
 	};
-	c.Canvas3D.prototype.setupScene = function() {
+	c.Canvas.prototype.setupScene = function() {
 		if (this.gl) {
 			// clear the canvas
 			var cs = math.getRGB(this.specs.backgroundColor, 1);
@@ -4206,13 +4042,13 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			};
 		}
 	};
-	c.Canvas3D.prototype.mousedown = function(e) {
+	c.Canvas.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c.Canvas3D.prototype.rightmousedown = function(e) {
+	c.Canvas.prototype.rightmousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c.Canvas3D.prototype.drag = function(e) {
+	c.Canvas.prototype.drag = function(e) {
 		if (c.monitor.ALT) {
 			var t = new structures.Point(e.p.x, e.p.y);
 			t.sub(this.lastPoint);
@@ -4229,7 +4065,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.repaint();
 		}
 	};
-	c.Canvas3D.prototype.mousewheel = function(e, delta) {
+	c.Canvas.prototype.mousewheel = function(e, delta) {
 		var dz = delta * this.maxDimension/8;
 		if(this.specs.projectionPerspective_3D){
 			m4.translate(this.translationMatrix, [ 0, 0, dz ]);
@@ -4240,5 +4076,5 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, Math, document, mat4, mat3, vec3, window);
+})(ChemDoodle, ChemDoodle.featureDetection, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, jQuery, jQuery.browser, Math, document, mat4, mat3, vec3, window);
 
