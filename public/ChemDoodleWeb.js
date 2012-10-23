@@ -1102,8 +1102,8 @@ ChemDoodle.RESIDUE = (function() {
 	R['Trp'] = new Residue('Trp', 'Tryptophan');
 	R['Tyr'] = new Residue('Tyr', 'Tyrosine');
 	R['Val'] = new Residue('Val', 'Valine');
-	R['Asx'] = new Residue('Asx', 'Asparagine/Aspartic Acid');
-	R['Glx'] = new Residue('Glx', 'Glutamine/Glutamic Acid');
+	R['Asx'] = new Residue('Asx', 'Asparagine');
+	R['Glx'] = new Residue('Glx', 'Glutamine');
 	R['*'] = new Residue('*', 'Other');
 
 	return R;
@@ -1495,7 +1495,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.bondOrder = bondOrder ? bondOrder : 1;
 		this.stereo = structures.Bond.STEREO_NONE;
 		this.isHover = false;
-		this.ring = null;
 		this.getCenter = function() {
 			return new structures.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
 		};
@@ -1878,42 +1877,6 @@ ChemDoodle.RESIDUE = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3078 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
-//
-
-(function(structures, m) {
-
-	structures.Ring = function() {
-		this.atoms = [];
-		this.bonds = [];
-		this.center = null;
-		this.setupBonds = function() {
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				this.bonds[i].ring = this;
-			}
-			this.center = this.getCenter();
-		};
-		this.getCenter = function() {
-			var minX = minY = Infinity;
-			var maxX = maxY = -Infinity;
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = m.min(this.atoms[i].x, minX);
-				minY = m.min(this.atoms[i].y, minY);
-				maxX = m.max(this.atoms[i].x, maxX);
-				maxY = m.max(this.atoms[i].y, maxY);
-			}
-			return new structures.Point((maxX + minX) / 2, (maxY + minY) / 2);
-		};
-		return true;
-	};
-
-})(ChemDoodle.structures, Math);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3519 $
 //  $Author: kevin $
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
@@ -1924,7 +1887,6 @@ ChemDoodle.RESIDUE = (function() {
 	structures.Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
-		this.rings = [];
 		this.draw = function(ctx, specs) {
 			if (this.specs) {
 				specs = this.specs;
