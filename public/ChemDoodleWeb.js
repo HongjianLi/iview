@@ -2487,26 +2487,6 @@ ChemDoodle.RESIDUE = (function() {
 				// render
 				gl.drawElements(gl.LINES, this.unitCell.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 			}
-			if (this.surface && specs.surfaces_display) {
-				gl.setMatrixUniforms(gl.modelViewMatrix);
-				// gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-				// gl.enable(gl.BLEND);
-				// gl.disable(gl.DEPTH_TEST);
-				this.surface.bindBuffers(gl);
-				gl.material.setTempColors(specs.surfaces_materialAmbientColor_3D, specs.surfaces_color, specs.surfaces_materialSpecularColor_3D, specs.surfaces_materialShininess_3D);
-				// gl.material.setAlpha(.2);
-				if (specs.surfaces_style == 'Dot') {
-					gl.drawArrays(gl.POINTS, 0, this.surface.vertexPositionBuffer.numItems);
-					// } else if (specs.surfaces_style == 'Mesh') {
-					// gl.drawElements(gl.LINES,
-					// this.surface.vertexIndexBuffer.numItems,
-					// gl.UNSIGNED_SHORT, 0);
-				} else {
-					gl.drawElements(gl.TRIANGLES, this.surface.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-				}
-				// gl.disable(gl.BLEND);
-				// gl.enable(gl.DEPTH_TEST);
-			}
 		};
 		this.getCenter3D = function() {
 			if (this.atoms.length == 1) {
@@ -3434,178 +3414,6 @@ ChemDoodle.RESIDUE = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3387 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-09-25 08:54:07 -0400 (Sun, 25 Sep 2011) $
-//
-
-(function(structures, ELEMENT, m) {
-
-	structures.MolecularSurface = function(molecule, latitudeBands, longitudeBands, probeRadius, atomRadius) {
-		var positionData = [];
-		var normalData = [];
-		var indexData = [];
-
-		// determine a generic set of normals to define a single atom surface
-		var genericSurface = [];
-		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-			var theta = latNumber * m.PI / latitudeBands;
-			var sinTheta = m.sin(theta);
-			var cosTheta = m.cos(theta);
-			for ( var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-				var phi = longNumber * 2 * m.PI / longitudeBands;
-				genericSurface.push(m.cos(phi) * sinTheta, cosTheta, m.sin(phi) * sinTheta);
-			}
-		}
-
-		// add surfaces for each atom, to be post processed
-		var atomSurfaces = [];
-		for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-			var atomSurface = [];
-			var atom = molecule.atoms[i];
-
-			// cache the atoms within distance, so that we don't need to waste
-			// calculations later
-			var radius = ELEMENT[atom.label][atomRadius] + probeRadius;
-			var checks = [];
-			for ( var j = 0, jj = molecule.atoms.length; j < jj; j++) {
-				if (j != i) {
-					var check = molecule.atoms[j];
-					check.index = j;
-					if (atom.distance3D(check) < radius + ELEMENT[check.label][atomRadius] + probeRadius) {
-						checks.push(check);
-					}
-				}
-			}
-
-			for ( var j = 0, jj = genericSurface.length; j < jj; j += 3) {
-				var p = new structures.Atom('C', atom.x + radius * genericSurface[j], atom.y + radius * genericSurface[j + 1], atom.z + radius * genericSurface[j + 2]);
-				for ( var k = 0, kk = checks.length; k < kk; k++) {
-					var check = checks[k];
-					if (p.distance3D(check) < ELEMENT[check.label][atomRadius] + probeRadius) {
-						p.contained = true;
-						break;
-					}
-				}
-				atomSurface.push(p);
-			}
-
-			atomSurfaces.push(atomSurface);
-		}
-
-		// set up the mesh vectors
-		var genericIndexes = [];
-		longitudeBands++;
-		for ( var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-			for ( var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-				var first = (latNumber * longitudeBands) + (longNumber % longitudeBands);
-				var second = first + longitudeBands;
-				genericIndexes.push(first);
-				genericIndexes.push(second);
-				genericIndexes.push(first + 1);
-				if (longNumber < longitudeBands - 1) {
-					genericIndexes.push(second);
-					genericIndexes.push(second + 1);
-					genericIndexes.push(first + 1);
-				}
-			}
-		}
-
-		var indexCounter = 0;
-		// connect discrete sphere parts
-		for ( var i = 0, ii = atomSurfaces.length; i < ii; i++) {
-			var atomSurface = atomSurfaces[i];
-			for ( var j = 0, jj = atomSurface.length; j < jj; j++) {
-				var p = atomSurface[j];
-				if (!p.contained) {
-					p.index = indexCounter;
-					indexCounter++;
-					positionData.push(p.x, p.y, p.z);
-					normalData.push(genericSurface[j * 3], genericSurface[j * 3 + 1], genericSurface[j * 3 + 2]);
-				}
-			}
-			for ( var j = 0, jj = genericIndexes.length; j < jj; j += 3) {
-				var first = atomSurface[genericIndexes[j]];
-				var second = atomSurface[genericIndexes[j + 1]];
-				var third = atomSurface[genericIndexes[j + 2]];
-				if (!first.contained && !second.contained && !third.contained) {
-					indexData.push(first.index, second.index, third.index);
-				}
-			}
-		}
-		// sow together spheres
-		function findClosestPoint(pNotContained, checks, exclude1, exclude2) {
-			var index = pNotContained.index;
-			if (pNotContained.contained) {
-				index = -1;
-				var dist = Infinity;
-				for ( var k = 0, kk = checks.length; k < kk; k++) {
-					var check = checks[k];
-					for ( var l = 0, ll = check.length; l < ll; l++) {
-						var p = check[l];
-						if (!p.contained && p.index!=exclude1 && p.index!=exclude2) {
-							var distCheck = p.distance3D(pNotContained);
-							if (distCheck < dist) {
-								index = p.index;
-								dist = distCheck;
-							}
-						}
-					}
-				}
-			}
-			return index;
-		}
-		var seams = [];
-		for ( var i = 0, ii = atomSurfaces.length; i < ii; i++) {
-			var atomSurface = atomSurfaces[i];
-			for ( var j = 0, jj = genericIndexes.length; j < jj; j += 3) {
-				var first = atomSurface[genericIndexes[j]];
-				var second = atomSurface[genericIndexes[j + 1]];
-				var third = atomSurface[genericIndexes[j + 2]];
-				var checks = [];
-				for ( var k = 0, kk = atomSurfaces.length; k < kk; k++) {
-					if (k != i) {
-						checks.push(atomSurfaces[k]);
-					}
-				}
-				if (!(first.contained && second.contained && third.contained) && (first.contained || second.contained || third.contained)) {
-					var fi = findClosestPoint(first, checks, -1, -1);
-					var si = findClosestPoint(second, checks, fi, -1);
-					var ti = findClosestPoint(third, checks, fi, si);
-					if(fi!=-1 && si!=-1 && ti!=-1){
-						var already = false;
-						for ( var k = 0, kk = seams.length; k < kk; k += 3) {
-							var already1 = seams[k];
-							var already2 = seams[k + 1];
-							var already3 = seams[k + 2];
-							var f1 = fi == already1 || fi == already2 || fi == already3;
-							var f2 = si == already1 || si == already2 || si == already3;
-							var f3 = ti == already1 || ti == already2 || ti == already3;
-							if (f1 && f2 && f3) {
-								already = true;
-								break;
-							}
-						}
-						if (!already) {
-							seams.push(fi, si, ti);
-						}
-					}
-				}
-			}
-		}
-		indexData = indexData.concat(seams);
-
-		this.storeData(positionData, normalData, indexData);
-
-		return true;
-	};
-	structures.MolecularSurface.prototype = new structures._Mesh();
-
-})(ChemDoodle.structures, ChemDoodle.ELEMENT, Math);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3462 $
 //  $Author: kevin $
 //  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
@@ -3882,10 +3690,8 @@ ChemDoodle.RESIDUE = (function() {
 (function(structures, m, v3) {
 
 	structures.Star = function() {
-		var ps = [ .8944, .4472, 0, .2764, .4472, .8506, .2764, .4472, -.8506, -.7236, .4472, .5257, -.7236, .4472, -.5257, -.3416, .4472, 0, -.1056, .4472, .3249, -.1056, .4472, -.3249, .2764, .4472, .2008, .2764, .4472, -.2008, -.8944, -.4472, 0, -.2764, -.4472, .8506, -.2764, -.4472, -.8506, .7236, -.4472, .5257, .7236, -.4472, -.5257, .3416, -.4472, 0, .1056, -.4472, .3249, .1056, -.4472, -.3249, -.2764, -.4472, .2008, -.2764, -.4472, -.2008, -.5527, .1058, 0, -.1708, .1058,
-				.5527, -.1708, .1058, -.5527, .4471, .1058, .3249, .4471, .1058, -.3249, .5527, -.1058, 0, .1708, -.1058, .5527, .1708, -.1058, -.5527, -.4471, -.1058, .3249, -.4471, -.1058, -.3249, 0, 1, 0, 0, -1, 0 ];
-		var is = [ 0, 9, 8, 2, 7, 9, 4, 5, 7, 3, 6, 5, 1, 8, 6, 0, 8, 23, 30, 6, 8, 3, 21, 6, 11, 26, 21, 13, 23, 26, 2, 9, 24, 30, 8, 9, 1, 23, 8, 13, 25, 23, 14, 24, 25, 4, 7, 22, 30, 9, 7, 0, 24, 9, 14, 27, 24, 12, 22, 27, 3, 5, 20, 30, 7, 5, 2, 22, 7, 12, 29, 22, 10, 20, 29, 1, 6, 21, 30, 5, 6, 4, 20, 5, 10, 28, 20, 11, 21, 28, 10, 19, 18, 12, 17, 19, 14, 15, 17, 13, 16, 15, 11, 18, 16, 31, 19, 17, 14, 17, 27, 2, 27, 22, 4, 22, 29, 10, 29, 19, 31, 18, 19, 12, 19, 29, 4, 29, 20, 3,
-		  				20, 28, 11, 28, 18, 31, 16, 18, 10, 18, 28, 3, 28, 21, 1, 21, 26, 13, 26, 16, 31, 15, 16, 11, 16, 26, 1, 26, 23, 0, 23, 25, 14, 25, 15, 31, 17, 15, 13, 15, 25, 0, 25, 24, 2, 24, 27, 12, 27, 17 ];
+		var ps = [ .8944, .4472, 0, .2764, .4472, .8506, .2764, .4472, -.8506, -.7236, .4472, .5257, -.7236, .4472, -.5257, -.3416, .4472, 0, -.1056, .4472, .3249, -.1056, .4472, -.3249, .2764, .4472, .2008, .2764, .4472, -.2008, -.8944, -.4472, 0, -.2764, -.4472, .8506, -.2764, -.4472, -.8506, .7236, -.4472, .5257, .7236, -.4472, -.5257, .3416, -.4472, 0, .1056, -.4472, .3249, .1056, -.4472, -.3249, -.2764, -.4472, .2008, -.2764, -.4472, -.2008, -.5527, .1058, 0, -.1708, .1058,	.5527, -.1708, .1058, -.5527, .4471, .1058, .3249, .4471, .1058, -.3249, .5527, -.1058, 0, .1708, -.1058, .5527, .1708, -.1058, -.5527, -.4471, -.1058, .3249, -.4471, -.1058, -.3249, 0, 1, 0, 0, -1, 0 ];
+		var is = [ 0, 9, 8, 2, 7, 9, 4, 5, 7, 3, 6, 5, 1, 8, 6, 0, 8, 23, 30, 6, 8, 3, 21, 6, 11, 26, 21, 13, 23, 26, 2, 9, 24, 30, 8, 9, 1, 23, 8, 13, 25, 23, 14, 24, 25, 4, 7, 22, 30, 9, 7, 0, 24, 9, 14, 27, 24, 12, 22, 27, 3, 5, 20, 30, 7, 5, 2, 22, 7, 12, 29, 22, 10, 20, 29, 1, 6, 21, 30, 5, 6, 4, 20, 5, 10, 28, 20, 11, 21, 28, 10, 19, 18, 12, 17, 19, 14, 15, 17, 13, 16, 15, 11, 18, 16, 31, 19, 17, 14, 17, 27, 2, 27, 22, 4, 22, 29, 10, 29, 19, 31, 18, 19, 12, 19, 29, 4, 29, 20, 3, 20, 28, 11, 28, 18, 31, 16, 18, 10, 18, 28, 3, 28, 21, 1, 21, 26, 13, 26, 16, 31, 15, 16, 11, 16, 26, 1, 26, 23, 0, 23, 25, 14, 25, 15, 31, 17, 15, 13, 15, 25, 0, 25, 24, 2, 24, 27, 12, 27, 17 ];
 		
 		var positionData = [];
 		var normalData = [];
@@ -4435,14 +4241,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_macro_atomToLigandDistance = -1;
 	c.default_macro_showWater = false;
 	c.default_macro_colorByChain = false;
-	
-	// default surface properties
-	c.default_surfaces_display = true;
-	c.default_surfaces_style = 'Dot';
-	c.default_surfaces_color = '#E9B862';
-	c.default_surfaces_materialAmbientColor_3D = '#000000';
-	c.default_surfaces_materialSpecularColor_3D = '#000000';
-	c.default_surfaces_materialShininess_3D = 32;
 
 	// default crystallographic properties
 	c.default_crystals_displayUnitCell = true;
@@ -4573,14 +4371,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.nucleics_materialShininess_3D = c.default_nucleics_materialShininess_3D;
 		this.macro_showWater = c.default_macro_showWater;
 		this.macro_colorByChain = c.default_macro_colorByChain;
-
-		// surface properties
-		this.surfaces_display = c.default_surfaces_display;
-		this.surfaces_style = c.default_surfaces_style;
-		this.surfaces_color = c.default_surfaces_color;
-		this.surfaces_materialAmbientColor_3D = c.default_surfaces_materialAmbientColor_3D;
-		this.surfaces_materialSpecularColor_3D = c.default_surfaces_materialSpecularColor_3D;
-		this.surfaces_materialShininess_3D = c.default_surfaces_materialShininess_3D;
 
 		// crystallographic properties
 		this.crystals_displayUnitCell = c.default_crystals_displayUnitCell;
@@ -4728,24 +4518,6 @@ ChemDoodle.RESIDUE = (function() {
 	};
 
 })(ChemDoodle.informatics);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3103 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-20 12:58:08 -0500 (Sun, 20 Feb 2011) $
-//
-(function(c, informatics, structures) {
-
-	informatics.MolecularSurfaceGenerator = function() {
-		this.generateSurface = function(molecule, latitudeBands, longitudeBands, probeRadius, atomRadius) {
-			return new structures.MolecularSurface(molecule, latitudeBands, longitudeBands, probeRadius, atomRadius);
-		};
-		return true;
-	};
-	
-})(ChemDoodle, ChemDoodle.informatics, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
