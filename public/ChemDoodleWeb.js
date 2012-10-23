@@ -167,19 +167,19 @@ ChemDoodle.math = (function(extensions, structures, m) {
 		return x >= left && x <= right;
 	};
 
-	pack.getRGB = function(color, multiplier) {
+	pack.getRGB = function(color) {
 		var err = [ 0, 0, 0 ];
 		if (color.charAt(0) == '#') {
 			if (color.length == 4) {
 				color = '#' + color.charAt(1) + color.charAt(1) + color.charAt(2) + color.charAt(2) + color.charAt(3) + color.charAt(3);
 			}
-			return [ parseInt(color.substring(1, 3), 16) / 255.0 * multiplier, parseInt(color.substring(3, 5), 16) / 255.0 * multiplier, parseInt(color.substring(5, 7), 16) / 255.0 * multiplier ];
+			return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 		} else if (extensions.stringStartsWith(color, 'rgb')) {
 			var cs = color.replace(/rgb\(|\)/g, '').split(',');
 			if (cs.length != 3) {
 				return err;
 			}
-			return [ parseInt(cs[0]) / 255.0 * multiplier, parseInt(cs[1]) / 255.0 * multiplier, parseInt(cs[2]) / 255.0 * multiplier ];
+			return [ parseInt(cs[0]) / 255.0, parseInt(cs[1]) / 255.0, parseInt(cs[2]) / 255.0 ];
 		}
 		return err;
 	};
@@ -2104,8 +2104,8 @@ ChemDoodle.RESIDUE = (function() {
 (function(math, structures, v3) {
 
 	structures.Light = function(diffuseColor, specularColor, direction) {
-		this.diffuseRGB = math.getRGB(diffuseColor, 1);
-		this.specularRGB = math.getRGB(specularColor, 1);
+		this.diffuseRGB = math.getRGB(diffuseColor);
+		this.specularRGB = math.getRGB(specularColor);
 		this.direction = direction;
 		this.lightScene = function(gl) {
 			var prefix = 'u_light.';
@@ -2171,17 +2171,17 @@ ChemDoodle.RESIDUE = (function() {
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
 			if(!this.aCache || this.aCache!=ambientColor){
 				this.aCache = ambientColor;
-				var cs = math.getRGB(ambientColor, 1);
+				var cs = math.getRGB(ambientColor);
 				gl.uniform3f(aUL, cs[0], cs[1], cs[2]);
 			}
 			if(diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)){
 				this.dCache = diffuseColor;
-				var cs = math.getRGB(diffuseColor, 1);
+				var cs = math.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 			if(!this.sCache || this.sCache!=specularColor){
 				this.sCache = specularColor;
-				var cs = math.getRGB(specularColor, 1);
+				var cs = math.getRGB(specularColor);
 				gl.uniform3f(sUL, cs[0], cs[1], cs[2]);
 			}
 			if(!this.snCache || this.snCache!=shininess){
@@ -2194,7 +2194,7 @@ ChemDoodle.RESIDUE = (function() {
 		this.setDiffuseColor = function(diffuseColor) {
 			if(!this.dCache || this.dCache!=diffuseColor){
 				this.dCache = diffuseColor;
-				var cs = math.getRGB(diffuseColor, 1);
+				var cs = math.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 		};
@@ -2566,16 +2566,10 @@ Line
 			}
 		}
 
-		this.read = function(content, multiplier) {
+		this.read = function(content) {
 			var molecule = new structures.Molecule();
 			molecule.chains = [];
-			if (content == null || content.length == 0) {
-				return molecule;
-			}
 			var currentTagTokens = content.split('\n');
-			if (!multiplier) {
-				multiplier = 1;
-			}
 			var helices = [];
 			var sheets = [];
 			var lastC = null;
@@ -2612,7 +2606,7 @@ Line
 								}
 							}
 						}
-						var a = new structures.Atom(label, parseFloat(line.substring(30, 38)) * multiplier, parseFloat(line.substring(38, 46)) * multiplier, parseFloat(line.substring(46, 54)) * multiplier);
+						var a = new structures.Atom(label, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 						a.hetatm = false;
 						resatoms.push(a);
 						// set up residue
@@ -2672,7 +2666,7 @@ Line
 					if (symbol.length > 1) {
 						symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
 					}
-					var het = new structures.Atom(symbol, parseFloat(line.substring(30, 38)) * multiplier, parseFloat(line.substring(38, 46)) * multiplier, parseFloat(line.substring(46, 54)) * multiplier);
+					var het = new structures.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 					het.hetatm = true;
 					var residueName = trim(line.substring(17, 20));
 					if (residueName == 'HOH') {
@@ -2715,15 +2709,11 @@ Line
 			this.endChain(molecule, currentChain, lastC);
 			if(molecule.bonds.length==0){
 				var margin = 1.1;
-				var pointsPerAngstrom = c.default_bondLength_2D / c.default_angstromsPerBondLength;
-				if (multiplier) {
-					pointsPerAngstrom = multiplier;
-				}
 				for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
 					for ( var j = i + 1; j < ii; j++) {
 						var first = molecule.atoms[i];
 						var second = molecule.atoms[j];
-						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * pointsPerAngstrom * margin) {
+						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * margin) {
 							molecule.bonds.push(new structures.Bond(first, second, 1));
 						}
 					}
@@ -2791,8 +2781,8 @@ Line
 
 	// shortcuts
 	var interpreter = new io.PDBInterpreter();
-	c.readPDB = function(content, multiplier) {
-		return interpreter.read(content, multiplier);
+	c.readPDB = function(content) {
+		return interpreter.read(content);
 	};
 
 })(ChemDoodle, ChemDoodle.extensions, ChemDoodle.io, ChemDoodle.structures, ChemDoodle.ELEMENT, jQuery.trim, Math);
@@ -3180,7 +3170,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	};
 	c.Canvas.prototype.setupScene = function() {
 		// clear the canvas
-		var cs = math.getRGB(this.specs.backgroundColor, 1);
+		var cs = math.getRGB(this.specs.backgroundColor);
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
