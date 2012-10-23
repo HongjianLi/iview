@@ -1982,7 +1982,7 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 					var a = this.atoms[i];
-					if (!isMacro || (a.hetatm && (specs.macro_showWater || !a.isWater))) {
+					if (!isMacro || (a.hetatm && !a.isWater)) {
 						a.render(gl, specs);
 					}
 				}
@@ -3198,7 +3198,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_macro_displayAtoms = false;
 	c.default_macro_displayBonds = false;
 	c.default_macro_atomToLigandDistance = -1;
-	c.default_macro_showWater = false;
 
 	structures.VisualSpecifications = function() {
 
@@ -3295,7 +3294,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.nucleics_materialAmbientColor_3D = c.default_nucleics_materialAmbientColor_3D;
 		this.nucleics_materialSpecularColor_3D = c.default_nucleics_materialSpecularColor_3D;
 		this.nucleics_materialShininess_3D = c.default_nucleics_materialShininess_3D;
-		this.macro_showWater = c.default_macro_showWater;
 
 		this.set3DRepresentation = function(representation) {
 			this.atoms_display = true;
