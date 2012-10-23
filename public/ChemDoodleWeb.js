@@ -321,20 +321,6 @@ ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
 		return typeof context.fillText == 'function';
 	};
 
-	features.supports_webgl = function() {
-		var dummyCanvas = document.createElement('canvas');
-		try {
-			if (dummyCanvas.getContext('webgl')) {
-				return true;
-			}
-			if (dummyCanvas.getContext('experimental-webgl')) {
-				return true;
-			}
-		} catch (b) {
-		}
-		return false;
-	};
-
 	features.supports_xhr2 = function() {
 		return q.support.cors;
 	};
@@ -3587,19 +3573,12 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 (function(c, featureDetection, monitor, extensions, math, structures, RESIDUE, q, browser, m, document, m4, m3, v3, window) {
 
 	c.Canvas = function(id) {
-		this.image = null;
 		this.rotationMatrix = m4.identity([]);
 		this.translationMatrix = m4.identity([]);
-		this.lastPoint = null;
-		this.emptyMessage = 'WebGL is Unavailable!';
 		this.id = id;
 		var jqCapsule = q('#' + id);
 		this.width = jqCapsule.attr('width');
 		this.height = jqCapsule.attr('height');
-		if (!c.featureDetection.supportsCanvas_text() && browser.msie && browser.version >= '6') {
-			// Install Google Chrome Frame
-			document.writeln('<div style="border: 1px solid black;" width="' + width + '" height="' + height + '">Please install <a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>, then restart Internet Explorer.</div>');
-		}
 		this.specs = new structures.VisualSpecifications();
 		// setup input events
 		// make sure prehandle events are only in if statements if handled, so
@@ -3707,11 +3686,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 				}
 			});
 		} else {
-			// normal events
-			// some mobile browsers will simulate mouse events, so do not set
-			// these
-			// events if mobile, or it will interfere with the handling of touch
-			// events
 			jqCapsule.click(function(e) {
 				switch (e.which) {
 				case 1:
@@ -3822,23 +3796,15 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			});
 		}
 		// setup gl object
-		try {
-			var canvas = document.getElementById(this.id);
-			this.gl = canvas.getContext('webgl');
-			if (!this.gl) {
-				this.gl = canvas.getContext('experimental-webgl');
-			}
-		} catch (e) {
+		var canvas = document.getElementById('iview');
+		this.gl = canvas.getContext('webgl');
+		if (!this.gl) {
+			this.gl = canvas.getContext('experimental-webgl');
 		}
-		if (this.gl) {
-			this.gl.program = this.gl.createProgram();
-			this.gl.shader = new structures.Shader();
-			this.gl.shader.init(this.gl);
-			this.setupScene();
-		} else {
-			this.molecule = null;
-			this.displayMessage();
-		}
+		this.gl.program = this.gl.createProgram();
+		this.gl.shader = new structures.Shader();
+		this.gl.shader.init(this.gl);
+		this.setupScene();
 		return true;
 	};
 	c.Canvas.prototype.loadMolecule = function(molecule) {
@@ -3868,22 +3834,11 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -distance ]);
 	};
 	c.Canvas.prototype.repaint = function() {
-		if (this.gl) {
-			// ready the bits for rendering
-			this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-			// set up the model view matrix to the specified transformations
-			this.gl.modelViewMatrix = m4.multiply(this.translationMatrix, this.rotationMatrix, []);
-			this.gl.rotationMatrix = this.rotationMatrix;
-
-			if (this.molecule != null) {
-				// render molecule
-				this.molecule.render(this.gl, this.specs);
-			}
-
-			// flush as this is seen in documentation
-			this.gl.flush();
-		}
+		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+		this.gl.modelViewMatrix = m4.multiply(this.translationMatrix, this.rotationMatrix, []);
+		this.gl.rotationMatrix = this.rotationMatrix;
+		this.molecule.render(this.gl, this.specs);
+		this.gl.flush();
 	};
 	c.Canvas.prototype.center = function() {
 		var canvas = document.getElementById(this.id);
@@ -3904,23 +3859,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 						residue.cp5.sub3D(p);
 					}
 				}
-			}
-		}
-	};
-	c.Canvas.prototype.displayMessage = function() {
-		var canvas = document.getElementById(this.id);
-		if (canvas.getContext) {
-			var ctx = canvas.getContext('2d');
-			if (this.specs.backgroundColor != null) {
-				ctx.fillStyle = this.specs.backgroundColor;
-				ctx.fillRect(0, 0, this.width, this.height);
-			}
-			if (this.emptyMessage != null) {
-				ctx.fillStyle = '#737683';
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'middle';
-				ctx.font = '18px Helvetica, Verdana, Arial, Sans-serif';
-				ctx.fillText(this.emptyMessage, this.width / 2, this.height / 2);
 			}
 		}
 	};
