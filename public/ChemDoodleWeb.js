@@ -3141,263 +3141,6 @@ ChemDoodle.RESIDUE = (function() {
 	};
 
 })(ChemDoodle.structures, document);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3078 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
-//
-
-(function(extensions, RESIDUE, structures, m, m4, v3) {
-
-	var loadPartition = function(gl, p) {
-		// positions
-		gl.bindBuffer(gl.ARRAY_BUFFER, p.vertexPositionBuffer);
-		gl.vertexAttribPointer(gl.shader.vertexPositionAttribute, p.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		// normals
-		gl.bindBuffer(gl.ARRAY_BUFFER, p.vertexNormalBuffer);
-		gl.vertexAttribPointer(gl.shader.vertexNormalAttribute, p.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		// indexes
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, p.vertexIndexBuffer);
-	};
-
-	var pointRotator = function(point, axis, angle) {
-		var d = m.sqrt(axis[1] * axis[1] + axis[2] * axis[2]);
-		var Rx = [ 1, 0, 0, 0, 0, axis[2] / d, -axis[1] / d, 0, 0, axis[1] / d, axis[2] / d, 0, 0, 0, 0, 1 ];
-		var RxT = [ 1, 0, 0, 0, 0, axis[2] / d, axis[1] / d, 0, 0, -axis[1] / d, axis[2] / d, 0, 0, 0, 0, 1 ];
-		var Ry = [ d, 0, -axis[0], 0, 0, 1, 0, 0, axis[0], 0, d, 0, 0, 0, 0, 1 ];
-		var RyT = [ d, 0, axis[0], 0, 0, 1, 0, 0, -axis[0], 0, d, 0, 0, 0, 0, 1 ];
-		var Rz = [ m.cos(angle), -m.sin(angle), 0, 0, m.sin(angle), m.cos(angle), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ];
-		var matrix = m4.multiply(Rx, m4.multiply(Ry, m4.multiply(Rz, m4.multiply(RyT, RxT, []))));
-		this.rotate = function() {
-			return m4.multiplyVec3(matrix, point);
-		};
-	};
-
-	structures.Tube = function(chain, thickness, cylinderResolution) {
-		var lineSegmentNum = chain[0].lineSegments[0].length;
-		this.partitions = [];
-		var currentPartition = null;
-		this.ends = [];
-		this.ends.push(chain[0].lineSegments[0][0]);
-		this.ends.push(chain[chain.length - 2].lineSegments[0][0]);
-		// calculate vertex and normal points
-		var last = [ 1, 0, 0 ];
-		for ( var i = 0, ii = chain.length - 1; i < ii; i++) {
-			if (currentPartition == null || currentPartition.positionData.length > 65000) {
-				if (this.partitions.length > 0) {
-					i--;
-				}
-				currentPartition = {
-					count : 0,
-					positionData : [],
-					normalData : [],
-					indexData : []
-				};
-				this.partitions.push(currentPartition);
-			}
-			var residue = chain[i];
-			currentPartition.count++;
-			var min = Infinity;
-			var p = new structures.Atom('', chain[i + 1].cp1.x, chain[i + 1].cp1.y, chain[i + 1].cp1.z);
-			for ( var j = 0; j < lineSegmentNum; j++) {
-				var currentPoint = residue.lineSegments[0][j];
-				var nextPoint = null;
-				if (j == lineSegmentNum - 1) {
-					if (i == chain.length - 2) {
-						nextPoint = residue.lineSegments[0][j - 1];
-					} else {
-						nextPoint = chain[i + 1].lineSegments[0][0];
-					}
-				} else {
-					nextPoint = residue.lineSegments[0][j + 1];
-				}
-				var axis = [ nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y, nextPoint.z - currentPoint.z ];
-				v3.normalize(axis);
-				if (i == chain.length - 2 && j == lineSegmentNum - 1) {
-					v3.scale(axis, -1);
-				}
-				var startVector = vec3.cross(axis, last, []);
-				v3.normalize(startVector);
-				v3.scale(startVector, thickness / 2);
-				var rotator = new pointRotator(startVector, axis, 2 * Math.PI / cylinderResolution);
-				for ( var k = 0, kk = cylinderResolution; k < kk; k++) {
-					var use = rotator.rotate();
-					if (k == m.floor(cylinderResolution / 4)) {
-						last = [ use[0], use[1], use[2] ];
-					}
-					currentPartition.normalData.push(use[0], use[1], use[2]);
-					currentPartition.positionData.push(currentPoint.x + use[0], currentPoint.y + use[1], currentPoint.z + use[2]);
-				}
-				// find closest point to attach stick to
-				if (p != null) {
-					var dist = currentPoint.distance3D(p);
-					if (dist < min) {
-						min = dist;
-						chain[i + 1].pPoint = currentPoint;
-					}
-				}
-			}
-		}
-
-		// build mesh connectivity
-		for ( var n = 0, nn = this.partitions.length; n < nn; n++) {
-			var currentPartition = this.partitions[n];
-			for ( var i = 0, ii = currentPartition.count - 1; i < ii; i++) {
-				var indexStart = i * lineSegmentNum * cylinderResolution;
-				for ( var j = 0, jj = lineSegmentNum; j < jj; j++) {
-					var segmentIndexStart = indexStart + j * cylinderResolution;
-					for ( var k = 0; k < cylinderResolution; k++) {
-						var next = 1;
-						if (k == cylinderResolution - 1) {
-							if (i == chain.length - 2) {
-								nextRes = 0;
-							} else {
-								nextRes = -k;
-							}
-						}
-						var sk = segmentIndexStart + k;
-						currentPartition.indexData.push(sk);
-						currentPartition.indexData.push(sk + cylinderResolution);
-						currentPartition.indexData.push(sk + cylinderResolution + next);
-						currentPartition.indexData.push(sk);
-						currentPartition.indexData.push(sk + next);
-						currentPartition.indexData.push(sk + cylinderResolution + next);
-					}
-				}
-			}
-		}
-
-		this.storeData(this.partitions[0].positionData, this.partitions[0].normalData, this.partitions[0].indexData);
-
-		var ps = [ new structures.Point(2, 0) ];
-		for ( var i = 0; i < 60; i++) {
-			var ang = i / 60 * m.PI;
-			ps.push(new structures.Point(2 * m.cos(ang), -2 * m.sin(ang)));
-		}
-		ps.push(new structures.Point(-2, 0), new structures.Point(-2, 4), new structures.Point(2, 4));
-		var platform = new structures.Shape(ps, 1);
-
-		this.render = function(gl, specs) {
-			// draw tube
-			this.bindBuffers(gl);
-			// colors
-			gl.material.setDiffuseColor(specs.macro_colorByChain ? this.chainColor : specs.nucleics_tubeColor);
-			// render
-			gl.drawElements(gl.TRIANGLES, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-			if (this.partitions) {
-				for ( var i = 1, ii = this.partitions.length; i < ii; i++) {
-					var p = this.partitions[i];
-					loadPartition(gl, p);
-					// render
-					gl.drawElements(gl.TRIANGLES, p.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-				}
-			}
-
-			// draw ends
-			gl.sphereBuffer.bindBuffers(gl);
-			for ( var i = 0; i < 2; i++) {
-				var p = this.ends[i];
-				var transform = m4.translate(gl.modelViewMatrix, [ p.x, p.y, p.z ], []);
-				var radius = thickness / 2;
-				m4.scale(transform, [ radius, radius, radius ]);
-				// render
-				gl.setMatrixUniforms(transform);
-				gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-			}
-
-			// draw nucleotide handles
-			gl.cylinderBuffer.bindBuffers(gl);
-			for ( var i = 1, ii = chain.length - 1; i < ii; i++) {
-				var residue = chain[i];
-				var p1 = residue.pPoint;
-				var p2 = new structures.Atom('', residue.cp2.x, residue.cp2.y, residue.cp2.z);
-				var height = 1.001 * p1.distance3D(p2);
-				var scaleVector = [ thickness / 4, height, thickness / 4 ];
-				var transform = m4.translate(gl.modelViewMatrix, [ p1.x, p1.y, p1.z ], []);
-				var y = [ 0, 1, 0 ];
-				var ang = 0;
-				var axis = null;
-				var a2b = [ p2.x - p1.x, p2.y - p1.y, p2.z - p1.z ];
-				if (p1.x == p2.x && p1.z == p2.z) {
-					axis = [ 0, 0, 1 ];
-					if (p1.y < p1.y) {
-						ang = m.PI;
-					}
-				} else {
-					ang = extensions.vec3AngleFrom(y, a2b);
-					axis = v3.cross(y, a2b, []);
-				}
-				if (ang != 0) {
-					m4.rotate(transform, ang, axis);
-				}
-				m4.scale(transform, scaleVector);
-				gl.setMatrixUniforms(transform);
-				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-			}
-
-			// draw nucleotide platforms
-			platform.bindBuffers(gl);
-			// colors
-			gl.material.setDiffuseColor(specs.nucleics_baseColor);
-			for ( var i = 1, ii = chain.length - 1; i < ii; i++) {
-				var residue = chain[i];
-				var p2 = residue.cp2;
-				var transform = m4.translate(gl.modelViewMatrix, [ p2.x, p2.y, p2.z ], []);
-				// rotate to direction
-				var y = [ 0, 1, 0 ];
-				var ang = 0;
-				var axis = null;
-				var p3 = residue.cp3;
-				var a2b = [ p3.x - p2.x, p3.y - p2.y, p3.z - p2.z ];
-				if (p2.x == p3.x && p2.z == p3.z) {
-					axis = [ 0, 0, 1 ];
-					if (p2.y < p2.y) {
-						ang = m.PI;
-					}
-				} else {
-					ang = extensions.vec3AngleFrom(y, a2b);
-					axis = v3.cross(y, a2b, []);
-				}
-				if (ang != 0) {
-					m4.rotate(transform, ang, axis);
-				}
-				// rotate to orientation
-				var x = [ 1, 0, 0 ];
-				var rM = m4.rotate(m4.identity([]), ang, axis);
-				m4.multiplyVec3(rM, x);
-				var p4 = residue.cp4;
-				var p5 = residue.cp5;
-				if (!(p4.y == p5.y && p4.z == p5.z)) {
-					var pivot = [ p5.x - p4.x, p5.y - p4.y, p5.z - p4.z ];
-					var ang2 = extensions.vec3AngleFrom(x, pivot);
-					if (v3.dot(a2b, v3.cross(x, pivot)) < 0) {
-						ang2 *= -1;
-					}
-					m4.rotateY(transform, ang2);
-				}
-				// color
-				if (specs.nucleics_useShapelyColors && !specs.macro_colorByChain) {
-					if (RESIDUE[residue.name]) {
-						gl.material.setDiffuseColor(RESIDUE[residue.name].shapelyColor);
-					} else {
-						gl.material.setDiffuseColor(RESIDUE['*'].shapelyColor);
-					}
-				}
-				// render
-				gl.setMatrixUniforms(transform);
-				gl.drawElements(gl.TRIANGLES, platform.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-			}
-
-		};
-
-		return true;
-	};
-	structures.Tube.prototype = new structures._Mesh();
-
-})(ChemDoodle.extensions, ChemDoodle.RESIDUE, ChemDoodle.structures, Math, mat4, vec3);
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
@@ -3490,11 +3233,8 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_proteins_materialSpecularColor_3D = '#555555';
 	c.default_proteins_materialShininess_3D = 32;
 	c.default_nucleics_display = true;
-	c.default_nucleics_tubeColor = '#CCCCCC';
 	c.default_nucleics_baseColor = '#C10000';
 	c.default_nucleics_useShapelyColors = true;
-	c.default_nucleics_tubeThickness = 1.5;
-	c.default_nucleics_tubeResolution_3D = 60;
 	c.default_nucleics_verticalResolution = 10;
 	c.default_nucleics_materialAmbientColor_3D = '#222222';
 	c.default_nucleics_materialSpecularColor_3D = '#555555';
@@ -3610,11 +3350,8 @@ ChemDoodle.RESIDUE = (function() {
 		this.macro_displayBonds = c.default_macro_displayBonds;
 		this.macro_atomToLigandDistance = c.default_macro_atomToLigandDistance;
 		this.nucleics_display = c.default_nucleics_display;
-		this.nucleics_tubeColor = c.default_nucleics_tubeColor;
 		this.nucleics_baseColor = c.default_nucleics_baseColor;
 		this.nucleics_useShapelyColors = c.default_nucleics_useShapelyColors;
-		this.nucleics_tubeThickness = c.default_nucleics_tubeThickness;
-		this.nucleics_tubeResolution_3D = c.default_nucleics_tubeResolution_3D;
 		this.nucleics_verticalResolution = c.default_nucleics_verticalResolution;
 		this.nucleics_materialAmbientColor_3D = c.default_nucleics_materialAmbientColor_3D;
 		this.nucleics_materialSpecularColor_3D = c.default_nucleics_materialSpecularColor_3D;
@@ -4539,7 +4276,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 				if (this.molecule.chains) {
 					this.molecule.ribbons = [];
 					this.molecule.cartoons = [];
-					this.molecule.tubes = [];
 					// set up ribbon diagram if available and not already setup
 					for ( var j = 0, jj = this.molecule.chains.length; j < jj; j++) {
 						var rs = this.molecule.chains[j];
@@ -4574,44 +4310,38 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 						var rgb = math.hsl2rgb(jj==1?.5:j / jj, 1, .5);
 						var chainColor = 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
 						rs.chainColor = chainColor;
-						if (isNucleotide) {
-							var t = new structures.Tube(rs, this.specs.nucleics_tubeThickness, this.specs.nucleics_tubeResolution_3D);
-							t.chainColor = chainColor;
-							this.molecule.tubes.push(t);
-						} else {
-							var r = {
-								front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, false),
-								back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, false)
-							};
-							r.front.chainColor = chainColor;
-							r.back.chainColor = chainColor;
-							for ( var i = 0, ii = r.front.segments.length; i < ii; i++) {
-								r.front.segments[i].chainColor = chainColor;
-							}
-							for ( var i = 0, ii = r.back.segments.length; i < ii; i++) {
-								r.back.segments[i].chainColor = chainColor;
-							}
-							this.molecule.ribbons.push(r);
-							var c = {
-								front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, true),
-								back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, true)
-							};
-							c.front.chainColor = chainColor;
-							c.back.chainColor = chainColor;
-							for ( var i = 0, ii = c.front.segments.length; i < ii; i++) {
-								c.front.segments[i].chainColor = chainColor;
-							}
-							for ( var i = 0, ii = c.back.segments.length; i < ii; i++) {
-								c.back.segments[i].chainColor = chainColor;
-							}
-							for ( var i = 0, ii = c.front.cartoonSegments.length; i < ii; i++) {
-								c.front.cartoonSegments[i].chainColor = chainColor;
-							}
-							for ( var i = 0, ii = c.back.cartoonSegments.length; i < ii; i++) {
-								c.back.cartoonSegments[i].chainColor = chainColor;
-							}
-							this.molecule.cartoons.push(c);
+						var r = {
+							front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, false),
+							back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, false)
+						};
+						r.front.chainColor = chainColor;
+						r.back.chainColor = chainColor;
+						for ( var i = 0, ii = r.front.segments.length; i < ii; i++) {
+							r.front.segments[i].chainColor = chainColor;
 						}
+						for ( var i = 0, ii = r.back.segments.length; i < ii; i++) {
+							r.back.segments[i].chainColor = chainColor;
+						}
+						this.molecule.ribbons.push(r);
+						var c = {
+							front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, true),
+							back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, true)
+						};
+						c.front.chainColor = chainColor;
+						c.back.chainColor = chainColor;
+						for ( var i = 0, ii = c.front.segments.length; i < ii; i++) {
+							c.front.segments[i].chainColor = chainColor;
+						}
+						for ( var i = 0, ii = c.back.segments.length; i < ii; i++) {
+							c.back.segments[i].chainColor = chainColor;
+						}
+						for ( var i = 0, ii = c.front.cartoonSegments.length; i < ii; i++) {
+							c.front.cartoonSegments[i].chainColor = chainColor;
+						}
+						for ( var i = 0, ii = c.back.cartoonSegments.length; i < ii; i++) {
+							c.back.cartoonSegments[i].chainColor = chainColor;
+						}
+						this.molecule.cartoons.push(c);
 					}
 				}
 			}
