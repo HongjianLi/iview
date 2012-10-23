@@ -2401,223 +2401,117 @@ ChemDoodle.RESIDUE = (function() {
 
 (function(c, structures, m) {
 
-	// default canvas properties
-	c.default_backgroundColor = '#FFFFFF';
-	c.default_scale = 1;
-	c.default_rotateAngle = 0;
-	c.default_bondLength_2D = 20;
-	c.default_angstromsPerBondLength = 1.25;
-	c.default_lightDirection_3D = [ -.1, -.1, -1 ];
-	c.default_lightDiffuseColor_3D = '#FFFFFF';
-	c.default_lightSpecularColor_3D = '#FFFFFF';
-	c.default_projectionPerspectiveVerticalFieldOfView_3D = 45;
-	c.default_projectionFrontCulling_3D = .1;
-	c.default_projectionBackCulling_3D = 10000;
-
-	// default atom properties
-	c.default_atoms_display = true;
-	c.default_atoms_color = '#000000';
-	c.default_atoms_font_size_2D = 12;
-	c.default_atoms_font_families_2D = [ 'Helvetica', 'Arial', 'Dialog' ];
-	c.default_atoms_font_bold_2D = false;
-	c.default_atoms_font_italic_2D = false;
-	c.default_atoms_circles_2D = false;
-	c.default_atoms_circleDiameter_2D = 10;
-	c.default_atoms_circleBorderWidth_2D = 1;
-	c.default_atoms_lonePairDistance_2D = 8;
-	c.default_atoms_lonePairSpread_2D = 4;
-	c.default_atoms_lonePairDiameter_2D = 1;
-	c.default_atoms_resolution_3D = 60;
-	c.default_atoms_sphereDiameter_3D = .8;
-	c.default_atoms_useVDWDiameters_3D = false;
-	c.default_atoms_vdwMultiplier_3D = 1;
-	c.default_atoms_materialAmbientColor_3D = '#000000';
-	c.default_atoms_materialSpecularColor_3D = '#555555';
-	c.default_atoms_materialShininess_3D = 32;
-	c.default_atoms_implicitHydrogens_2D = true;
-	c.default_atoms_displayTerminalCarbonLabels_2D = false;
-	c.default_atoms_showHiddenCarbons_2D = true;
-	c.default_atoms_displayAllCarbonLabels_2D = false;
-
-	// default bond properties
-	c.default_bonds_display = true;
-	c.default_bonds_color = '#000000';
-	c.default_bonds_width_2D = 1;
-	c.default_bonds_saturationWidth_2D = .2;
-	c.default_bonds_ends_2D = 'round';
-	c.default_bonds_colorGradient = false;
-	c.default_bonds_saturationAngle_2D = m.PI / 3;
-	c.default_bonds_symmetrical_2D = false;
-	c.default_bonds_clearOverlaps_2D = false;
-	c.default_bonds_overlapClearWidth_2D = .5;
-	c.default_bonds_atomLabelBuffer_2D = 1;
-	c.default_bonds_wedgeThickness_2D = .22;
-	c.default_bonds_hashWidth_2D = 1;
-	c.default_bonds_hashSpacing_2D = 2.5;
-	c.default_bonds_showBondOrders_3D = false;
-	c.default_bonds_resolution_3D = 60;
-	c.default_bonds_renderAsLines_3D = false;
-	c.default_bonds_cylinderDiameter_3D = .3;
-	c.default_bonds_materialAmbientColor_3D = '#222222';
-	c.default_bonds_materialSpecularColor_3D = '#555555';
-	c.default_bonds_materialShininess_3D = 32;
-
-	// default macromolecular properties
-	c.default_proteins_displayRibbon = true;
-	c.default_proteins_displayBackbone = false;
-	c.default_proteins_backboneThickness = 1.5;
-	c.default_proteins_backboneColor = '#CCCCCC';
-	c.default_proteins_primaryColor = '#FF0D0D';
-	c.default_proteins_secondaryColor = '#FFFF30';
-	c.default_proteins_ribbonCartoonHelixPrimaryColor = '#00E740';
-	c.default_proteins_ribbonCartoonHelixSecondaryColor = '#9905FF';
-	c.default_proteins_ribbonCartoonSheetColor = '#E8BB99';
-	c.default_proteins_ribbonThickness = .2;
-	c.default_proteins_verticalResolution = 10;
-	c.default_proteins_horizontalResolution = 9;
-	c.default_proteins_materialAmbientColor_3D = '#222222';
-	c.default_proteins_materialSpecularColor_3D = '#555555';
-	c.default_proteins_materialShininess_3D = 32;
-	c.default_nucleics_display = true;
-	c.default_nucleics_baseColor = '#C10000';
-	c.default_nucleics_useShapelyColors = true;
-	c.default_nucleics_verticalResolution = 10;
-	c.default_nucleics_materialAmbientColor_3D = '#222222';
-	c.default_nucleics_materialSpecularColor_3D = '#555555';
-	c.default_nucleics_materialShininess_3D = 32;
-	c.default_macro_displayAtoms = false;
-	c.default_macro_displayBonds = false;
-	c.default_macro_atomToLigandDistance = -1;
-
 	structures.VisualSpecifications = function() {
 
 		// canvas properties
-		this.backgroundColor = c.default_backgroundColor;
-		this.scale = c.default_scale;
-		this.rotateAngle = c.default_rotateAngle;
-		this.bondLength = c.default_bondLength_2D;
-		this.angstromsPerBondLength = c.default_angstromsPerBondLength;
-		this.lightDirection_3D = c.default_lightDirection_3D;
-		this.lightDiffuseColor_3D = c.default_lightDiffuseColor_3D;
-		this.lightSpecularColor_3D = c.default_lightSpecularColor_3D;
-		this.projectionPerspectiveVerticalFieldOfView_3D = c.default_projectionPerspectiveVerticalFieldOfView_3D;
-		this.projectionFrontCulling_3D = c.default_projectionFrontCulling_3D;
-		this.projectionBackCulling_3D = c.default_projectionBackCulling_3D;
+		this.backgroundColor = '#FFFFFF';
+		this.scale = 1;
+		this.rotateAngle = 0;
+		this.bondLength = 20;
+		this.angstromsPerBondLength = 1.25;
+		this.lightDirection_3D = [ -.1, -.1, -1 ];
+		this.lightDiffuseColor_3D = '#FFFFFF';
+		this.lightSpecularColor_3D = '#FFFFFF';
+		this.projectionPerspectiveVerticalFieldOfView_3D = 45;
+		this.projectionFrontCulling_3D = .1;
+		this.projectionBackCulling_3D = 10000;
 
 		// atom properties
-		this.atoms_display = c.default_atoms_display;
-		this.atoms_color = c.default_atoms_color;
-		this.atoms_font_size_2D = c.default_atoms_font_size_2D;
-		this.atoms_font_families_2D = [];
-		for ( var i = 0, ii = c.default_atoms_font_families_2D.length; i < ii; i++) {
-			this.atoms_font_families_2D[i] = c.default_atoms_font_families_2D[i];
-		}
-		this.atoms_font_bold_2D = c.default_atoms_font_bold_2D;
-		this.atoms_font_italic_2D = c.default_atoms_font_italic_2D;
-		this.atoms_circles_2D = c.default_atoms_circles_2D;
-		this.atoms_circleDiameter_2D = c.default_atoms_circleDiameter_2D;
-		this.atoms_circleBorderWidth_2D = c.default_atoms_circleBorderWidth_2D;
-		this.atoms_lonePairDistance_2D = c.default_atoms_lonePairDistance_2D;
-		this.atoms_lonePairSpread_2D = c.default_atoms_lonePairSpread_2D;
-		this.atoms_lonePairDiameter_2D = c.default_atoms_lonePairDiameter_2D;
-		this.atoms_resolution_3D = c.default_atoms_resolution_3D;
-		this.atoms_sphereDiameter_3D = c.default_atoms_sphereDiameter_3D;
-		this.atoms_useVDWDiameters_3D = c.default_atoms_useVDWDiameters_3D;
-		this.atoms_vdwMultiplier_3D = c.default_atoms_vdwMultiplier_3D;
-		this.atoms_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
-		this.atoms_materialSpecularColor_3D = c.default_atoms_materialSpecularColor_3D;
-		this.atoms_materialShininess_3D = c.default_atoms_materialShininess_3D;
-		this.atoms_implicitHydrogens_2D = c.default_atoms_implicitHydrogens_2D;
-		this.atoms_displayTerminalCarbonLabels_2D = c.default_atoms_displayTerminalCarbonLabels_2D;
-		this.atoms_showHiddenCarbons_2D = c.default_atoms_showHiddenCarbons_2D;
-		this.atoms_displayAllCarbonLabels_2D = c.default_atoms_displayAllCarbonLabels_2D;
+		this.atoms_display = true;
+		this.atoms_color = '#000000';
+		this.atoms_font_size_2D = 12;
+		this.atoms_font_families_2D = [ 'Helvetica', 'Arial', 'Dialog' ];
+		this.atoms_font_bold_2D = false;
+		this.atoms_font_italic_2D = false;
+		this.atoms_circles_2D = false;
+		this.atoms_circleDiameter_2D = 10;
+		this.atoms_circleBorderWidth_2D = 1;
+		this.atoms_lonePairDistance_2D = 8;
+		this.atoms_lonePairSpread_2D = 4;
+		this.atoms_lonePairDiameter_2D = 1;
+		this.atoms_resolution_3D = 60;
+		this.atoms_sphereDiameter_3D = .8;
+		this.atoms_useVDWDiameters_3D = false;
+		this.atoms_vdwMultiplier_3D = 1;
+		this.atoms_materialAmbientColor_3D = '#000000';
+		this.atoms_materialSpecularColor_3D = '#555555';
+		this.atoms_materialShininess_3D = 32;
+		this.atoms_implicitHydrogens_2D = true;
+		this.atoms_displayTerminalCarbonLabels_2D = false;
+		this.atoms_showHiddenCarbons_2D = true;
+		this.atoms_displayAllCarbonLabels_2D = false;
 
 		// bond properties
-		this.bonds_display = c.default_bonds_display;
-		this.bonds_color = c.default_bonds_color;
-		this.bonds_width_2D = c.default_bonds_width_2D;
-		this.bonds_saturationWidth_2D = c.default_bonds_saturationWidth_2D;
-		this.bonds_ends_2D = c.default_bonds_ends_2D;
-		this.bonds_colorGradient = c.default_bonds_colorGradient;
-		this.bonds_saturationAngle_2D = c.default_bonds_saturationAngle_2D;
-		this.bonds_symmetrical_2D = c.default_bonds_symmetrical_2D;
-		this.bonds_clearOverlaps_2D = c.default_bonds_clearOverlaps_2D;
-		this.bonds_overlapClearWidth_2D = c.default_bonds_overlapClearWidth_2D;
-		this.bonds_atomLabelBuffer_2D = c.default_bonds_atomLabelBuffer_2D;
-		this.bonds_wedgeThickness_2D = c.default_bonds_wedgeThickness_2D;
-		this.bonds_hashWidth_2D = c.default_bonds_hashWidth_2D;
-		this.bonds_hashSpacing_2D = c.default_bonds_hashSpacing_2D;
-		this.bonds_showBondOrders_3D = c.default_bonds_showBondOrders_3D;
-		this.bonds_resolution_3D = c.default_bonds_resolution_3D;
-		this.bonds_renderAsLines_3D = c.default_bonds_renderAsLines_3D;
-		this.bonds_cylinderDiameter_3D = c.default_bonds_cylinderDiameter_3D;
-		this.bonds_materialAmbientColor_3D = c.default_bonds_materialAmbientColor_3D;
-		this.bonds_materialSpecularColor_3D = c.default_bonds_materialSpecularColor_3D;
-		this.bonds_materialShininess_3D = c.default_bonds_materialShininess_3D;
+		this.bonds_display = true;
+		this.bonds_color = '#777777';
+		this.bonds_width_2D = 1;
+		this.bonds_saturationWidth_2D = .2;
+		this.bonds_ends_2D = 'round';
+		this.bonds_colorGradient = false;
+		this.bonds_saturationAngle_2D = m.PI / 3;
+		this.bonds_symmetrical_2D = false;
+		this.bonds_clearOverlaps_2D = false;
+		this.bonds_overlapClearWidth_2D = .5;
+		this.bonds_atomLabelBuffer_2D = 1;
+		this.bonds_wedgeThickness_2D = .22;
+		this.bonds_hashWidth_2D = 1;
+		this.bonds_hashSpacing_2D = 2.5;
+		this.bonds_showBondOrders_3D = false;
+		this.bonds_resolution_3D = 60;
+		this.bonds_renderAsLines_3D = false;
+		this.bonds_cylinderDiameter_3D = .8;
+		this.bonds_materialAmbientColor_3D = '#000000';
+		this.bonds_materialSpecularColor_3D = '#555555';
+		this.bonds_materialShininess_3D = 32;
 
 		// macromolecular properties
-		this.proteins_displayRibbon = c.default_proteins_displayRibbon;
-		this.proteins_displayBackbone = c.default_proteins_displayBackbone;
-		this.proteins_backboneThickness = c.default_proteins_backboneThickness;
-		this.proteins_backboneColor = c.default_proteins_backboneColor;
-		this.proteins_primaryColor = c.default_proteins_primaryColor;
-		this.proteins_secondaryColor = c.default_proteins_secondaryColor;
-		this.proteins_ribbonCartoonHelixPrimaryColor = c.default_proteins_ribbonCartoonHelixPrimaryColor;
-		this.proteins_ribbonCartoonHelixSecondaryColor = c.default_proteins_ribbonCartoonHelixSecondaryColor;
-		this.proteins_ribbonCartoonSheetColor = c.default_proteins_ribbonCartoonSheetColor;
-		this.proteins_ribbonThickness = c.default_proteins_ribbonThickness;
-		this.proteins_verticalResolution = c.default_proteins_verticalResolution;
-		this.proteins_horizontalResolution = c.default_proteins_horizontalResolution;
-		this.proteins_materialAmbientColor_3D = c.default_proteins_materialAmbientColor_3D;
-		this.proteins_materialSpecularColor_3D = c.default_proteins_materialSpecularColor_3D;
-		this.proteins_materialShininess_3D = c.default_proteins_materialShininess_3D;
-		this.macro_displayAtoms = c.default_macro_displayAtoms;
-		this.macro_displayBonds = c.default_macro_displayBonds;
-		this.macro_atomToLigandDistance = c.default_macro_atomToLigandDistance;
-		this.nucleics_display = c.default_nucleics_display;
-		this.nucleics_baseColor = c.default_nucleics_baseColor;
-		this.nucleics_useShapelyColors = c.default_nucleics_useShapelyColors;
-		this.nucleics_verticalResolution = c.default_nucleics_verticalResolution;
-		this.nucleics_materialAmbientColor_3D = c.default_nucleics_materialAmbientColor_3D;
-		this.nucleics_materialSpecularColor_3D = c.default_nucleics_materialSpecularColor_3D;
-		this.nucleics_materialShininess_3D = c.default_nucleics_materialShininess_3D;
+		this.proteins_displayRibbon = true;
+		this.proteins_displayBackbone = false;
+		this.proteins_backboneThickness = 1.5;
+		this.proteins_backboneColor = '#CCCCCC';
+		this.proteins_primaryColor = '#FF0D0D';
+		this.proteins_secondaryColor = '#FFFF30';
+		this.proteins_ribbonCartoonHelixPrimaryColor = '#00E740';
+		this.proteins_ribbonCartoonHelixSecondaryColor = '#9905FF';
+		this.proteins_ribbonCartoonSheetColor = '#E8BB99';
+		this.proteins_ribbonThickness = .2;
+		this.proteins_verticalResolution = 10;
+		this.proteins_horizontalResolution = 9;
+		this.proteins_materialAmbientColor_3D = '#222222';
+		this.proteins_materialSpecularColor_3D = '#555555';
+		this.proteins_materialShininess_3D = 32;
+		this.nucleics_display = true;
+		this.nucleics_baseColor = '#C10000';
+		this.nucleics_useShapelyColors = true;
+		this.nucleics_verticalResolution = 10;
+		this.nucleics_materialAmbientColor_3D = '#222222';
+		this.nucleics_materialSpecularColor_3D = '#555555';
+		this.nucleics_materialShininess_3D = 32;
+		this.macro_displayAtoms = false;
+		this.macro_displayBonds = false;
+		this.macro_atomToLigandDistance = -1;
 
-		this.set3DRepresentation = function(representation) {
-			this.atoms_display = true;
-			this.bonds_display = true;
-			this.bonds_color = '#777777';
-			this.atoms_useVDWDiameters_3D = true;
-			this.atoms_useJMOLColors = true;
-			this.bonds_useJMOLColors = true;
-			this.bonds_showBondOrders_3D = true;
-			this.bonds_renderAsLines_3D = false;
-			if (representation == 'Ball and Stick') {
-				this.atoms_vdwMultiplier_3D = .3;
-				this.bonds_useJMOLColors = false;
-				this.bonds_cylinderDiameter_3D = .3;
-				this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
-			} else if (representation == 'van der Waals Spheres') {
-				this.bonds_display = false;
-				this.atoms_vdwMultiplier_3D = 1;
-			} else if (representation == 'Stick') {
-				this.atoms_useVDWDiameters_3D = false;
-				this.bonds_showBondOrders_3D = false;
-				this.bonds_cylinderDiameter_3D = this.atoms_sphereDiameter_3D = .8;
-				this.bonds_materialAmbientColor_3D = this.atoms_materialAmbientColor_3D;
-			} else if (representation == 'Wireframe') {
-				this.atoms_useVDWDiameters_3D = false;
-				this.bonds_cylinderDiameter_3D = .05;
-				this.atoms_sphereDiameter_3D = .15;
-				this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
-			} else if (representation == 'Line') {
-				this.atoms_display = false;
-				this.bonds_renderAsLines_3D = true;
-				this.bonds_width_2D = 1;
-				this.bonds_cylinderDiameter_3D = .05;
-			} else {
-				alert('"' + representation + '" is not recognized. Use one of the following strings:\n\n' + '1. Ball and Stick\n' + '2. van der Waals Spheres\n' + '3. Stick\n' + '4. Wireframe\n' + '5. Line\n');
-			}
-		};
+/*
+Ball and Stick
+		this.atoms_vdwMultiplier_3D = .3;
+		this.bonds_useJMOLColors = false;
+		this.bonds_cylinderDiameter_3D = .3;
+		this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
+van der Waals Spheres
+		this.bonds_display = false;
+		this.atoms_vdwMultiplier_3D = 1;
+Wireframe
+		this.atoms_useVDWDiameters_3D = false;
+		this.bonds_cylinderDiameter_3D = .05;
+		this.atoms_sphereDiameter_3D = .15;
+		this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
+Line
+		this.atoms_display = false;
+		this.bonds_renderAsLines_3D = true;
+		this.bonds_width_2D = 1;
+		this.bonds_cylinderDiameter_3D = .05;
+*/
+		
 		this.getFontString = function(size, families, bold, italic) {
 			var sb = [];
 			if (bold) {
