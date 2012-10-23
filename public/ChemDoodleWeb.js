@@ -308,26 +308,26 @@ ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
 	
 	var features = {};
 
-	features.supports_canvas = function() {
+	features.supportsCanvas = function() {
 		return !!document.createElement('canvas').getContext;
 	};
 
-	features.supports_canvas_text = function() {
-		if (!features.supports_canvas()) {
+	features.supportsCanvas_text = function() {
+		if (!features.supportsCanvas()) {
 			return false;
 		}
-		var dummy_canvas = document.createElement('canvas');
-		var context = dummy_canvas.getContext('2d');
+		var dummyCanvas = document.createElement('canvas');
+		var context = dummyCanvas.getContext('2d');
 		return typeof context.fillText == 'function';
 	};
 
 	features.supports_webgl = function() {
-		var dummy_canvas = document.createElement('canvas');
+		var dummyCanvas = document.createElement('canvas');
 		try {
-			if (dummy_canvas.getContext('webgl')) {
+			if (dummyCanvas.getContext('webgl')) {
 				return true;
 			}
-			if (dummy_canvas.getContext('experimental-webgl')) {
+			if (dummyCanvas.getContext('experimental-webgl')) {
 				return true;
 			}
 		} catch (b) {
@@ -3756,86 +3756,16 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 
 (function(c, featureDetection, monitor, structures, q, browser, m, document, window) {
 
-	c._Canvas = function() {
+	c.Canvas = function() {
 		this.molecule = null;
 		this.emptyMessage = null;
 		this.image = null;
 		return true;
 	};
-	c._Canvas.prototype.repaint = function() {
-		var canvas = document.getElementById(this.id);
-		if (canvas.getContext) {
-			var ctx = canvas.getContext('2d');
-			var pixelRatio = window.devicePixelRatio ? window.devicePixelRatio : 1;
-			if (pixelRatio != 1) {
-				canvas.width = this.width * pixelRatio;
-				canvas.height = this.height * pixelRatio;
-				ctx.scale(pixelRatio, pixelRatio);
-			}
-			if (this.image == null) {
-				if (this.specs.backgroundColor != null) {
-					ctx.fillStyle = this.specs.backgroundColor;
-					ctx.fillRect(0, 0, this.width, this.height);
-				}
-			} else {
-				ctx.drawImage(this.image, 0, 0);
-			}
-			if (this.innerRepaint) {
-				this.innerRepaint(ctx);
-			} else {
-				if (this.molecule != null && this.molecule.atoms.length > 0) {
-					ctx.save();
-					ctx.translate(this.width / 2, this.height / 2);
-					ctx.rotate(this.specs.rotateAngle);
-					ctx.scale(this.specs.scale, this.specs.scale);
-					ctx.translate(-this.width / 2, -this.height / 2);
-					this.molecule.check(true);
-					this.molecule.draw(ctx, this.specs);
-					ctx.restore();
-				} else if (this.emptyMessage != null) {
-					ctx.fillStyle = '#737683';
-					ctx.textAlign = 'center';
-					ctx.textBaseline = 'middle';
-					ctx.font = '18px Helvetica, Verdana, Arial, Sans-serif';
-					ctx.fillText(this.emptyMessage, this.width / 2, this.height / 2);
-				}
-			}
-			if (this.drawChildExtras) {
-				this.drawChildExtras(ctx);
-			}
-		}
-	};
-	c._Canvas.prototype.resize = function(w, h) {
-		var cap = q('#' + this.id);
-		cap.attr({
-			width : w,
-			height : h
-		});
-		cap.css('width', w);
-		cap.css('height', h);
-		this.width = w;
-		this.height = h;
-		if(this instanceof ChemDoodle._Canvas3D){
-			this.gl.viewport(0, 0, w, h);
-			this.setupScene();
-		} else if(this.molecule){
-			this.center();
-			this.molecule.check();
-		}
-		this.repaint();
-	};
-	c._Canvas.prototype.setBackgroundImage = function(path) {
-		this.image = new Image(); // Create new Image object
-		var me = this;
-		this.image.onload = function() {
-			me.repaint();
-		};
-		this.image.src = path; // Set source path
-	};
-	c._Canvas.prototype.loadMolecule = function(molecule) {
+	c.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
 		this.center();
-		if (!(this instanceof ChemDoodle._Canvas3D)) {
+		if (!(this instanceof ChemDoodle.Canvas3D)) {
 			this.molecule.check();
 		}
 		if (this.afterLoadMolecule) {
@@ -3843,7 +3773,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		}
 		this.repaint();
 	};
-	c._Canvas.prototype.center = function() {
+	c.Canvas.prototype.center = function() {
 		var p = this.molecule.getCenter3D();
 		var center = new structures.Atom('C', this.width / 2, this.height / 2, 0);
 		center.sub3D(p);
@@ -3856,12 +3786,12 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.specs.scale = m.min(this.width / dim.x, this.height / dim.y) * .85;
 		}
 	};
-	c._Canvas.prototype.create = function(id) {
+	c.Canvas.prototype.create = function(id) {
 		this.id = id;
 		var jqCapsule = q('#' + id);
 		this.width = jqCapsule.attr('width');
 		this.height = jqCapsule.attr('height');
-		if (!c.featureDetection.supports_canvas_text() && browser.msie && browser.version >= '6') {
+		if (!c.featureDetection.supportsCanvas_text() && browser.msie && browser.version >= '6') {
 			// Install Google Chrome Frame
 			document.writeln('<div style="border: 1px solid black;" width="' + width + '" height="' + height + '">Please install <a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>, then restart Internet Explorer.</div>');
 		}
@@ -4090,10 +4020,10 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.subCreate();
 		}
 	};
-	c._Canvas.prototype.getMolecule = function() {
+	c.Canvas.prototype.getMolecule = function() {
 		return this.molecule;
 	};
-	c._Canvas.prototype.prehandleEvent = function(e) {
+	c.Canvas.prototype.prehandleEvent = function(e) {
 		if (e.originalEvent.changedTouches) {
 			e.pageX = e.originalEvent.changedTouches[0].pageX;
 			e.pageY = e.originalEvent.changedTouches[0].pageY;
@@ -4114,7 +4044,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 
 (function(c, extensions, math, structures, RESIDUE, m, document, m4, m3, v3, window) {
 
-	c._Canvas3D = function(id, width, height) {
+	c.Canvas3D = function(id, width, height) {
 		if (id) {
 			this.create(id, width, height);
 		}
@@ -4124,17 +4054,17 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		this.emptyMessage = 'WebGL is Unavailable!';
 		return true;
 	};
-	c._Canvas3D.prototype = new c._Canvas();
-	c._Canvas3D.prototype.afterLoadMolecule = function() {
+	c.Canvas3D.prototype = new c.Canvas();
+	c.Canvas3D.prototype.afterLoadMolecule = function() {
 		var d = this.molecule.getDimension();
 		this.maxDimension = m.max(d.x, d.y);
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		this.setupScene();
 	};
-	c._Canvas3D.prototype.setViewDistance = function(distance) {
+	c.Canvas3D.prototype.setViewDistance = function(distance) {
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -distance ]);
 	};
-	c._Canvas3D.prototype.repaint = function() {
+	c.Canvas3D.prototype.repaint = function() {
 		if (this.gl) {
 			// ready the bits for rendering
 			this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -4152,7 +4082,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.gl.flush();
 		}
 	};
-	c._Canvas3D.prototype.center = function() {
+	c.Canvas3D.prototype.center = function() {
 		var canvas = document.getElementById(this.id);
 		var p = this.molecule.getCenter3D();
 		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
@@ -4174,7 +4104,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			}
 		}
 	};
-	c._Canvas3D.prototype.subCreate = function() {
+	c.Canvas3D.prototype.subCreate = function() {
 		// setup gl object
 		try {
 			var canvas = document.getElementById(this.id);
@@ -4203,7 +4133,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.displayMessage();
 		}
 	};
-	c._Canvas.prototype.displayMessage = function() {
+	c.Canvas.prototype.displayMessage = function() {
 		var canvas = document.getElementById(this.id);
 		if (canvas.getContext) {
 			var ctx = canvas.getContext('2d');
@@ -4220,7 +4150,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			}
 		}
 	};
-	c._Canvas3D.prototype.setupScene = function() {
+	c.Canvas3D.prototype.setupScene = function() {
 		if (this.gl) {
 			// clear the canvas
 			var cs = math.getRGB(this.specs.backgroundColor, 1);
@@ -4338,13 +4268,13 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			};
 		}
 	};
-	c._Canvas3D.prototype.mousedown = function(e) {
+	c.Canvas3D.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c._Canvas3D.prototype.rightmousedown = function(e) {
+	c.Canvas3D.prototype.rightmousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c._Canvas3D.prototype.drag = function(e) {
+	c.Canvas3D.prototype.drag = function(e) {
 		if (c.monitor.ALT) {
 			var t = new structures.Point(e.p.x, e.p.y);
 			t.sub(this.lastPoint);
@@ -4361,7 +4291,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.repaint();
 		}
 	};
-	c._Canvas3D.prototype.mousewheel = function(e, delta) {
+	c.Canvas3D.prototype.mousewheel = function(e, delta) {
 		var dz = delta * this.maxDimension/8;
 		if(this.specs.projectionPerspective_3D){
 			m4.translate(this.translationMatrix, [ 0, 0, dz ]);
@@ -4373,23 +4303,4 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	};
 
 })(ChemDoodle, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, Math, document, mat4, mat3, vec3, window);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3078 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
-//
-(function(c) {
-
-	c.TransformCanvas3D = function(id, width, height) {
-		if (id) {
-			this.create(id, width, height);
-		}
-		return true;
-	};
-	c.TransformCanvas3D.prototype = new c._Canvas3D();
-
-})(ChemDoodle);
 
