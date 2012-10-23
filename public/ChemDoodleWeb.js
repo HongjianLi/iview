@@ -42,7 +42,6 @@ var ChemDoodle = (function() {
 	var c = {};
 
 	c.structures = {};
-	c.informatics = {};
 	c.io = {};
 
 	return c;
@@ -2467,25 +2466,6 @@ ChemDoodle.RESIDUE = (function() {
 						}
 					}
 				}
-				if (specs.nucleics_display) {
-					// nucleic acids
-					// colors
-					gl.material.setTempColors(specs.nucleics_materialAmbientColor_3D, null, specs.nucleics_materialSpecularColor_3D, specs.nucleics_materialShininess_3D);
-					for ( var j = 0, jj = this.tubes.length; j < jj; j++) {
-						gl.setMatrixUniforms(gl.modelViewMatrix);
-						var use = this.tubes[j];
-						use.render(gl, specs);
-					}
-				}
-			}
-			if (specs.crystals_displayUnitCell && this.unitCell) {
-				gl.setMatrixUniforms(gl.modelViewMatrix);
-				this.unitCell.bindBuffers(gl);
-				// colors
-				gl.material.setDiffuseColor(specs.crystals_unitCellColor);
-				gl.lineWidth(specs.crystals_unitCellLineWidth);
-				// render
-				gl.drawElements(gl.LINES, this.unitCell.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 			}
 		};
 		this.getCenter3D = function() {
@@ -3985,54 +3965,6 @@ ChemDoodle.RESIDUE = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3100 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-17 07:35:56 -0500 (Thu, 17 Feb 2011) $
-//
-
-(function(structures, v3) {
-
-	structures.UnitCell = function(unitCellVectors) {
-		var positionData = [];
-		var normalData = [];
-		// calculate vertex and normal points
-
-		var pushSide = function(p1, p2, p3, p4) {
-			positionData.push(p1[0], p1[1], p1[2]);
-			positionData.push(p2[0], p2[1], p2[2]);
-			positionData.push(p3[0], p3[1], p3[2]);
-			positionData.push(p4[0], p4[1], p4[2]);
-			// push 0s for normals so shader gives them full color
-			for ( var i = 0; i < 4; i++) {
-				normalData.push(0,0,0);
-			}
-		};
-		pushSide(unitCellVectors.o, unitCellVectors.x, unitCellVectors.xy, unitCellVectors.y);
-		pushSide(unitCellVectors.o, unitCellVectors.y, unitCellVectors.yz, unitCellVectors.z);
-		pushSide(unitCellVectors.o, unitCellVectors.z, unitCellVectors.xz, unitCellVectors.x);
-		pushSide(unitCellVectors.yz, unitCellVectors.y, unitCellVectors.xy, unitCellVectors.xyz);
-		pushSide(unitCellVectors.xyz, unitCellVectors.xz, unitCellVectors.z, unitCellVectors.yz);
-		pushSide(unitCellVectors.xy, unitCellVectors.x, unitCellVectors.xz, unitCellVectors.xyz);
-
-		// build mesh connectivity
-		var indexData = [];
-		for ( var i = 0; i < 6; i++) {
-			var start = i*4;
-			// sides
-			indexData.push(start, start + 1, start + 1, start + 2, start + 2, start + 3, start+3, start);
-		}
-
-		this.storeData(positionData, normalData, indexData);
-		
-		return true;
-	};
-	structures.UnitCell.prototype = new structures._Mesh();
-
-})(ChemDoodle.structures, vec3);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3078 $
 //  $Author: kevin $
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
@@ -4242,11 +4174,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_macro_showWater = false;
 	c.default_macro_colorByChain = false;
 
-	// default crystallographic properties
-	c.default_crystals_displayUnitCell = true;
-	c.default_crystals_unitCellColor = 'green';
-	c.default_crystals_unitCellLineWidth = 1;
-
 	// default spectrum properties
 	c.default_plots_color = '#000000';
 	c.default_plots_width = 1;
@@ -4372,11 +4299,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.macro_showWater = c.default_macro_showWater;
 		this.macro_colorByChain = c.default_macro_colorByChain;
 
-		// crystallographic properties
-		this.crystals_displayUnitCell = c.default_crystals_displayUnitCell;
-		this.crystals_unitCellColor = c.default_crystals_unitCellColor;
-		this.crystals_unitCellLineWidth = c.default_crystals_unitCellLineWidth;
-
 		// spectrum properties
 		this.plots_color = c.default_plots_color;
 		this.plots_width = c.default_plots_width;
@@ -4452,41 +4374,6 @@ ChemDoodle.RESIDUE = (function() {
 	};
 
 })(ChemDoodle, ChemDoodle.structures, Math);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3103 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-20 12:58:08 -0500 (Sun, 20 Feb 2011) $
-//
-(function(c, ELEMENT, informatics, structures) {
-	
-	informatics.getPointsPerAngstrom = function() {
-		return c.default_bondLength_2D / c.default_angstromsPerBondLength;
-	};
-
-	informatics.BondDeducer = function() {
-		this.margin = 1.1;
-		this.deduceCovalentBonds = function(molecule, customPointsPerAngstrom) {
-			var pointsPerAngstrom = informatics.getPointsPerAngstrom();
-			if (customPointsPerAngstrom) {
-				pointsPerAngstrom = customPointsPerAngstrom;
-			}
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				for ( var j = i + 1; j < ii; j++) {
-					var first = molecule.atoms[i];
-					var second = molecule.atoms[j];
-					if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * pointsPerAngstrom * this.margin) {
-						molecule.bonds.push(new structures.Bond(first, second, 1));
-					}
-				}
-			}
-		};
-		return true;
-	};
-	
-})(ChemDoodle, ChemDoodle.ELEMENT, ChemDoodle.informatics, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -4668,7 +4555,20 @@ ChemDoodle.RESIDUE = (function() {
 			}
 			this.endChain(molecule, currentChain, lastC);
 			if(molecule.bonds.length==0){
-				new c.informatics.BondDeducer().deduceCovalentBonds(molecule, multiplier);
+				var margin = 1.1;
+				var pointsPerAngstrom = c.default_bondLength_2D / c.default_angstromsPerBondLength;
+				if (multiplier) {
+					pointsPerAngstrom = multiplier;
+				}
+				for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
+					for ( var j = i + 1; j < ii; j++) {
+						var first = molecule.atoms[i];
+						var second = molecule.atoms[j];
+						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * pointsPerAngstrom * margin) {
+							molecule.bonds.push(new structures.Bond(first, second, 1));
+						}
+					}
+				}
 			}
 			if(this.deduceResidueBonds){
 				for ( var i = 0, ii = resatoms.length; i < ii; i++) {
@@ -5314,9 +5214,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			this.gl.lineBuffer = new structures.Line();
 			if (this.molecule && this.molecule!=this.previousMolecule) {
 				this.previousMolecule = this.molecule;
-				if (this.molecule.unitCellVectors) {
-					this.molecule.unitCell = new structures.UnitCell(this.molecule.unitCellVectors);
-				}
 				if (this.molecule.chains) {
 					this.molecule.ribbons = [];
 					this.molecule.cartoons = [];
