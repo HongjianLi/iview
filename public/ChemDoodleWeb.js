@@ -2556,9 +2556,7 @@ ChemDoodle.RESIDUE = (function() {
 		this.pi = pi;
 
 		this.getColor = function(specs) {
-			if (specs.macro_colorByChain) {
-				return this.chainColor;
-			} else if (this.name) {
+			if (this.name) {
 				return this.getResidueColor(RESIDUE[this.name] ? this.name : '*', specs);
 			} else if (this.helix) {
 				return entire.front ? specs.proteins_ribbonCartoonHelixPrimaryColor : specs.proteins_ribbonCartoonHelixSecondaryColor;
@@ -2782,10 +2780,7 @@ ChemDoodle.RESIDUE = (function() {
 		this.render = function(gl, specs) {
 			this.bindBuffers(gl);
 			// colors
-			var color = specs.macro_colorByChain ? this.chainColor : null;
-			if (!color) {
-				color = this.front ? specs.proteins_primaryColor : specs.proteins_secondaryColor;
-			}
+			var color = this.front ? specs.proteins_primaryColor : specs.proteins_secondaryColor;
 			gl.material.setDiffuseColor(color);
 			// render
 			gl.drawElements(gl.TRIANGLES, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -3204,22 +3199,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_macro_displayBonds = false;
 	c.default_macro_atomToLigandDistance = -1;
 	c.default_macro_showWater = false;
-	c.default_macro_colorByChain = false;
-
-	// default spectrum properties
-	c.default_plots_color = '#000000';
-	c.default_plots_width = 1;
-	c.default_plots_showIntegration = false;
-	c.default_plots_integrationColor = '#c10000';
-	c.default_plots_integrationLineWidth = 1;
-	c.default_plots_showGrid = false;
-	c.default_plots_gridColor = 'gray';
-	c.default_plots_gridLineWidth = .5;
-	c.default_plots_showYAxis = true;
-	c.default_plots_flipXAxis = false;
-	c.default_text_font_size = 12;
-	c.default_text_font_families = [ 'Helvetica', 'Arial', 'Dialog' ];
-	c.default_text_color = '#000000';
 
 	structures.VisualSpecifications = function() {
 
@@ -3317,25 +3296,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.nucleics_materialSpecularColor_3D = c.default_nucleics_materialSpecularColor_3D;
 		this.nucleics_materialShininess_3D = c.default_nucleics_materialShininess_3D;
 		this.macro_showWater = c.default_macro_showWater;
-		this.macro_colorByChain = c.default_macro_colorByChain;
-
-		// spectrum properties
-		this.plots_color = c.default_plots_color;
-		this.plots_width = c.default_plots_width;
-		this.plots_showIntegration = c.default_plots_showIntegration;
-		this.plots_integrationColor = c.default_plots_integrationColor;
-		this.plots_integrationLineWidth = c.default_plots_integrationLineWidth;
-		this.plots_showGrid = c.default_plots_showGrid;
-		this.plots_gridColor = c.default_plots_gridColor;
-		this.plots_gridLineWidth = c.default_plots_gridLineWidth;
-		this.plots_showYAxis = c.default_plots_showYAxis;
-		this.plots_flipXAxis = c.default_plots_flipXAxis;
-		this.text_font_size = c.default_text_font_size;
-		this.text_font_families = [];
-		for ( var i = 0, ii = c.default_text_font_families.length; i < ii; i++) {
-			this.text_font_families[i] = c.default_text_font_families[i];
-		}
-		this.text_color = c.default_text_color;
 
 		this.set3DRepresentation = function(representation) {
 			this.atoms_display = true;
