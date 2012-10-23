@@ -108,38 +108,6 @@ ChemDoodle.extensions = (function(structures, v3, m) {
 		}
 	};
 
-	ext.contextRoundRect = function(ctx, x, y, width, height, radius) {
-		ctx.beginPath();
-		ctx.moveTo(x + radius, y);
-		ctx.lineTo(x + width - radius, y);
-		ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-		ctx.lineTo(x + width, y + height - radius);
-		ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-		ctx.lineTo(x + radius, y + height);
-		ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-		ctx.lineTo(x, y + radius);
-		ctx.quadraticCurveTo(x, y, x + radius, y);
-		ctx.closePath();
-	};
-
-	ext.contextEllipse = function(ctx, x, y, w, h) {
-		var kappa = .5522848;
-		var ox = (w / 2) * kappa;
-		var oy = (h / 2) * kappa;
-		var xe = x + w;
-		var ye = y + h;
-		var xm = x + w / 2;
-		var ym = y + h / 2;
-
-		ctx.beginPath();
-		ctx.moveTo(x, ym);
-		ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-		ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-		ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-		ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-		ctx.closePath();
-	};
-
 	return ext;
 
 })(ChemDoodle.structures, vec3, Math);
@@ -155,149 +123,6 @@ ChemDoodle.extensions = (function(structures, v3, m) {
 ChemDoodle.math = (function(extensions, structures, m) {
 
 	var pack = {};
-
-	var namedColors = {
-		'aliceblue' : '#f0f8ff',
-		'antiquewhite' : '#faebd7',
-		'aqua' : '#00ffff',
-		'aquamarine' : '#7fffd4',
-		'azure' : '#f0ffff',
-		'beige' : '#f5f5dc',
-		'bisque' : '#ffe4c4',
-		'black' : '#000000',
-		'blanchedalmond' : '#ffebcd',
-		'blue' : '#0000ff',
-		'blueviolet' : '#8a2be2',
-		'brown' : '#a52a2a',
-		'burlywood' : '#deb887',
-		'cadetblue' : '#5f9ea0',
-		'chartreuse' : '#7fff00',
-		'chocolate' : '#d2691e',
-		'coral' : '#ff7f50',
-		'cornflowerblue' : '#6495ed',
-		'cornsilk' : '#fff8dc',
-		'crimson' : '#dc143c',
-		'cyan' : '#00ffff',
-		'darkblue' : '#00008b',
-		'darkcyan' : '#008b8b',
-		'darkgoldenrod' : '#b8860b',
-		'darkgray' : '#a9a9a9',
-		'darkgreen' : '#006400',
-		'darkkhaki' : '#bdb76b',
-		'darkmagenta' : '#8b008b',
-		'darkolivegreen' : '#556b2f',
-		'darkorange' : '#ff8c00',
-		'darkorchid' : '#9932cc',
-		'darkred' : '#8b0000',
-		'darksalmon' : '#e9967a',
-		'darkseagreen' : '#8fbc8f',
-		'darkslateblue' : '#483d8b',
-		'darkslategray' : '#2f4f4f',
-		'darkturquoise' : '#00ced1',
-		'darkviolet' : '#9400d3',
-		'deeppink' : '#ff1493',
-		'deepskyblue' : '#00bfff',
-		'dimgray' : '#696969',
-		'dodgerblue' : '#1e90ff',
-		'firebrick' : '#b22222',
-		'floralwhite' : '#fffaf0',
-		'forestgreen' : '#228b22',
-		'fuchsia' : '#ff00ff',
-		'gainsboro' : '#dcdcdc',
-		'ghostwhite' : '#f8f8ff',
-		'gold' : '#ffd700',
-		'goldenrod' : '#daa520',
-		'gray' : '#808080',
-		'green' : '#008000',
-		'greenyellow' : '#adff2f',
-		'honeydew' : '#f0fff0',
-		'hotpink' : '#ff69b4',
-		'indianred ' : '#cd5c5c',
-		'indigo ' : '#4b0082',
-		'ivory' : '#fffff0',
-		'khaki' : '#f0e68c',
-		'lavender' : '#e6e6fa',
-		'lavenderblush' : '#fff0f5',
-		'lawngreen' : '#7cfc00',
-		'lemonchiffon' : '#fffacd',
-		'lightblue' : '#add8e6',
-		'lightcoral' : '#f08080',
-		'lightcyan' : '#e0ffff',
-		'lightgoldenrodyellow' : '#fafad2',
-		'lightgrey' : '#d3d3d3',
-		'lightgreen' : '#90ee90',
-		'lightpink' : '#ffb6c1',
-		'lightsalmon' : '#ffa07a',
-		'lightseagreen' : '#20b2aa',
-		'lightskyblue' : '#87cefa',
-		'lightslategray' : '#778899',
-		'lightsteelblue' : '#b0c4de',
-		'lightyellow' : '#ffffe0',
-		'lime' : '#00ff00',
-		'limegreen' : '#32cd32',
-		'linen' : '#faf0e6',
-		'magenta' : '#ff00ff',
-		'maroon' : '#800000',
-		'mediumaquamarine' : '#66cdaa',
-		'mediumblue' : '#0000cd',
-		'mediumorchid' : '#ba55d3',
-		'mediumpurple' : '#9370d8',
-		'mediumseagreen' : '#3cb371',
-		'mediumslateblue' : '#7b68ee',
-		'mediumspringgreen' : '#00fa9a',
-		'mediumturquoise' : '#48d1cc',
-		'mediumvioletred' : '#c71585',
-		'midnightblue' : '#191970',
-		'mintcream' : '#f5fffa',
-		'mistyrose' : '#ffe4e1',
-		'moccasin' : '#ffe4b5',
-		'navajowhite' : '#ffdead',
-		'navy' : '#000080',
-		'oldlace' : '#fdf5e6',
-		'olive' : '#808000',
-		'olivedrab' : '#6b8e23',
-		'orange' : '#ffa500',
-		'orangered' : '#ff4500',
-		'orchid' : '#da70d6',
-		'palegoldenrod' : '#eee8aa',
-		'palegreen' : '#98fb98',
-		'paleturquoise' : '#afeeee',
-		'palevioletred' : '#d87093',
-		'papayawhip' : '#ffefd5',
-		'peachpuff' : '#ffdab9',
-		'peru' : '#cd853f',
-		'pink' : '#ffc0cb',
-		'plum' : '#dda0dd',
-		'powderblue' : '#b0e0e6',
-		'purple' : '#800080',
-		'red' : '#ff0000',
-		'rosybrown' : '#bc8f8f',
-		'royalblue' : '#4169e1',
-		'saddlebrown' : '#8b4513',
-		'salmon' : '#fa8072',
-		'sandybrown' : '#f4a460',
-		'seagreen' : '#2e8b57',
-		'seashell' : '#fff5ee',
-		'sienna' : '#a0522d',
-		'silver' : '#c0c0c0',
-		'skyblue' : '#87ceeb',
-		'slateblue' : '#6a5acd',
-		'slategray' : '#708090',
-		'snow' : '#fffafa',
-		'springgreen' : '#00ff7f',
-		'steelblue' : '#4682b4',
-		'tan' : '#d2b48c',
-		'teal' : '#008080',
-		'thistle' : '#d8bfd8',
-		'tomato' : '#ff6347',
-		'turquoise' : '#40e0d0',
-		'violet' : '#ee82ee',
-		'wheat' : '#f5deb3',
-		'white' : '#ffffff',
-		'whitesmoke' : '#f5f5f5',
-		'yellow' : '#ffff00',
-		'yellowgreen' : '#9acd32'
-	};
 
 	pack.angleBetweenLargest = function(angles) {
 		if (angles.length == 0) {
@@ -344,9 +169,6 @@ ChemDoodle.math = (function(extensions, structures, m) {
 
 	pack.getRGB = function(color, multiplier) {
 		var err = [ 0, 0, 0 ];
-		if (namedColors[color.toLowerCase()] != null) {
-			color = namedColors[color.toLowerCase()];
-		}
 		if (color.charAt(0) == '#') {
 			if (color.length == 4) {
 				color = '#' + color.charAt(1) + color.charAt(1) + color.charAt(2) + color.charAt(2) + color.charAt(3) + color.charAt(3);
@@ -360,21 +182,6 @@ ChemDoodle.math = (function(extensions, structures, m) {
 			return [ parseInt(cs[0]) / 255.0 * multiplier, parseInt(cs[1]) / 255.0 * multiplier, parseInt(cs[2]) / 255.0 * multiplier ];
 		}
 		return err;
-	};
-
-	pack.distanceFromPointToLineInclusive = function(p, l1, l2) {
-		var length = l1.distance(l2);
-		var angle = l1.angle(l2);
-		var angleDif = m.PI / 2 - angle;
-		var pcop = new structures.Point(p.x - l1.x, p.y - l1.x);
-		var origin = new structures.Point();
-		var newAngleP = l1.angle(p) + angleDif;
-		var pDist = l1.distance(p);
-		pcopRot = new structures.Point(pDist * m.cos(newAngleP), -pDist * m.sin(newAngleP));
-		if (pack.isBetween(-pcopRot.y, 0, length)) {
-			return m.abs(pcopRot.x);
-		}
-		return -1;
 	};
 
 	pack.calculateDistanceInterior = function(to, from, r) {
@@ -553,8 +360,7 @@ ChemDoodle.featureDetection = (function(iChemLabs, q, document, window) {
 //
 
 // all symbols
-ChemDoodle.SYMBOLS = [ 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl',
-		'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn' ];
+ChemDoodle.SYMBOLS = [ 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn' ];
 
 ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	var E = [];
@@ -793,17 +599,14 @@ ChemDoodle.ELEMENT = (function(SYMBOLS) {
 	E['Rg'].jmolColor = '#000000';
 	E['Cn'].jmolColor = '#000000';
 
-	for ( var i = 0, ii = SYMBOLS.length; i < ii; i++) {
-		E[SYMBOLS[i]].pymolColor = E[SYMBOLS[i]].jmolColor;
-	}
-
-	E['H'].pymolColor = '#E6E6E6';
-	E['C'].pymolColor = '#33FF33';
-	E['N'].pymolColor = '#3333FF';
-	E['O'].pymolColor = '#FF4D4D';
-	E['F'].pymolColor = '#B3FFFF';
-	E['S'].pymolColor = '#E6C640';
-
+/* Uncomment these lines to substitute PyMOL colors
+	E['H'].jmolColor = '#E6E6E6';
+	E['C'].jmolColor = '#33FF33';
+	E['N'].jmolColor = '#3333FF';
+	E['O'].jmolColor = '#FF4D4D';
+	E['F'].jmolColor = '#B3FFFF';
+	E['S'].jmolColor = '#E6C640';
+*/
 	// set up covalent radii
 	E['H'].covalentRadius = 0.31;
 	E['He'].covalentRadius = 0.28;
@@ -1302,98 +1105,6 @@ ChemDoodle.RESIDUE = (function() {
 	R['Asx'] = new Residue('Asx', 'Asparagine/Aspartic Acid');
 	R['Glx'] = new Residue('Glx', 'Glutamine/Glutamic Acid');
 	R['*'] = new Residue('*', 'Other');
-	R['A'] = new Residue('A', 'Adenine');
-	R['G'] = new Residue('G', 'Guanine');
-	R['I'] = new Residue('I', '');
-	R['C'] = new Residue('C', 'Cytosine');
-	R['T'] = new Residue('T', 'Thymine');
-	R['U'] = new Residue('U', 'Uracil');
-
-	// set up polar/non-polar
-	R['Ala'].polar = false;
-	R['Arg'].polar = true;
-	R['Asn'].polar = true;
-	R['Asp'].polar = true;
-	R['Cys'].polar = true;
-	R['Gln'].polar = true;
-	R['Glu'].polar = true;
-	R['Gly'].polar = false;
-	R['His'].polar = true;
-	R['Ile'].polar = false;
-	R['Leu'].polar = false;
-	R['Lys'].polar = true;
-	R['Met'].polar = false;
-	R['Phe'].polar = false;
-	R['Pro'].polar = false;
-	R['Ser'].polar = true;
-	R['Thr'].polar = true;
-	R['Trp'].polar = true;
-	R['Tyr'].polar = true;
-	R['Val'].polar = false;
-	R['Asx'].polar = true;
-	R['Glx'].polar = true;
-
-	// set up amino colors
-	R['Ala'].aminoColor = '#C8C8C8';
-	R['Arg'].aminoColor = '#145AFF';
-	R['Asn'].aminoColor = '#00DCDC';
-	R['Asp'].aminoColor = '#E60A0A';
-	R['Cys'].aminoColor = '#E6E600';
-	R['Gln'].aminoColor = '#00DCDC';
-	R['Glu'].aminoColor = '#E60A0A';
-	R['Gly'].aminoColor = '#EBEBEB';
-	R['His'].aminoColor = '#8282D2';
-	R['Ile'].aminoColor = '#0F820F';
-	R['Leu'].aminoColor = '#0F820F';
-	R['Lys'].aminoColor = '#145AFF';
-	R['Met'].aminoColor = '#E6E600';
-	R['Phe'].aminoColor = '#3232AA';
-	R['Pro'].aminoColor = '#DC9682';
-	R['Ser'].aminoColor = '#FA9600';
-	R['Thr'].aminoColor = '#FA9600';
-	R['Trp'].aminoColor = '#B45AB4';
-	R['Tyr'].aminoColor = '#3232AA';
-	R['Val'].aminoColor = '#0F820F';
-	R['Asx'].aminoColor = '#FF69B4';
-	R['Glx'].aminoColor = '#FF69B4';
-	R['*'].aminoColor = '#BEA06E';
-	R['A'].aminoColor = '#BEA06E';
-	R['G'].aminoColor = '#BEA06E';
-	R['I'].aminoColor = '#BEA06E';
-	R['C'].aminoColor = '#BEA06E';
-	R['T'].aminoColor = '#BEA06E';
-	R['U'].aminoColor = '#BEA06E';
-
-	// set up shapely colors
-	R['Ala'].shapelyColor = '#8CFF8C';
-	R['Arg'].shapelyColor = '#00007C';
-	R['Asn'].shapelyColor = '#FF7C70';
-	R['Asp'].shapelyColor = '#A00042';
-	R['Cys'].shapelyColor = '#FFFF70';
-	R['Gln'].shapelyColor = '#FF4C4C';
-	R['Glu'].shapelyColor = '#660000';
-	R['Gly'].shapelyColor = '#FFFFFF';
-	R['His'].shapelyColor = '#7070FF';
-	R['Ile'].shapelyColor = '#004C00';
-	R['Leu'].shapelyColor = '#455E45';
-	R['Lys'].shapelyColor = '#4747B8';
-	R['Met'].shapelyColor = '#B8A042';
-	R['Phe'].shapelyColor = '#534C52';
-	R['Pro'].shapelyColor = '#525252';
-	R['Ser'].shapelyColor = '#FF7042';
-	R['Thr'].shapelyColor = '#B84C00';
-	R['Trp'].shapelyColor = '#4F4600';
-	R['Tyr'].shapelyColor = '#8C704C';
-	R['Val'].shapelyColor = '#FF8CFF';
-	R['Asx'].shapelyColor = '#FF00FF';
-	R['Glx'].shapelyColor = '#FF00FF';
-	R['*'].shapelyColor = '#FF00FF';
-	R['A'].shapelyColor = '#A0A0FF';
-	R['G'].shapelyColor = '#FF7070';
-	R['I'].shapelyColor = '#80FFFF';
-	R['C'].shapelyColor = '#FF8C4B';
-	R['T'].shapelyColor = '#A0FFA0';
-	R['U'].shapelyColor = '#FF8080';
 
 	return R;
 	
@@ -1551,12 +1262,7 @@ ChemDoodle.RESIDUE = (function() {
 			}
 			var font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
 			ctx.font = font;
-			ctx.fillStyle = specs.atoms_color;
-			if (specs.atoms_useJMOLColors) {
-				ctx.fillStyle = ELEMENT[this.label].jmolColor;
-			} else if (specs.atoms_usePYMOLColors) {
-				ctx.fillStyle = ELEMENT[this.label].pymolColor;
-			}
+			ctx.fillStyle = ELEMENT[this.label].jmolColor;
 			if (this.isLone && !specs.atoms_displayAllCarbonLabels_2D || specs.atoms_circles_2D) {
 				ctx.beginPath();
 				ctx.arc(this.x, this.y, specs.atoms_circleDiameter_2D / 2, 0, m.PI * 2, false);
@@ -1739,12 +1445,7 @@ ChemDoodle.RESIDUE = (function() {
 			}
 			m4.scale(transform, [ radius, radius, radius ]);
 			// colors
-			var color = specs.atoms_color;
-			if (specs.atoms_useJMOLColors) {
-				color = ELEMENT[this.label].jmolColor;
-			} else if (specs.atoms_usePYMOLColors) {
-				color = ELEMENT[this.label].pymolColor;
-			}
+			var color = ELEMENT[this.label].jmolColor;
 			gl.material.setDiffuseColor(color);
 			// render
 			gl.setMatrixUniforms(transform);
@@ -1868,23 +1569,17 @@ ChemDoodle.RESIDUE = (function() {
 			ctx.fillStyle = specs.bonds_color;
 			ctx.lineWidth = specs.bonds_width_2D;
 			ctx.lineCap = specs.bonds_ends_2D;
-			if (specs.bonds_useJMOLColors || specs.bonds_usePYMOLColors) {
-				var linearGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-				var color1 = ELEMENT[this.a1.label].jmolColor;
-				var color2 = ELEMENT[this.a2.label].jmolColor;
-				if(specs.atoms_usePYMOLColors){
-					var color1 = ELEMENT[this.a1.label].pymolColor;
-					var color2 = ELEMENT[this.a2.label].pymolColor;
-				}
-				linearGradient.addColorStop(0, color1);
-				if(!specs.bonds_colorGradient){
-					linearGradient.addColorStop(0.5, color1);
-					linearGradient.addColorStop(0.51, color2);
-				}
-				linearGradient.addColorStop(1, color2);
-				ctx.strokeStyle = linearGradient;
-				ctx.fillStyle = linearGradient;
+			var linearGradient = ctx.createLinearGradient(x1, y1, x2, y2);
+			var color1 = ELEMENT[this.a1.label].jmolColor;
+			var color2 = ELEMENT[this.a2.label].jmolColor;
+			linearGradient.addColorStop(0, color1);
+			if(!specs.bonds_colorGradient){
+				linearGradient.addColorStop(0.5, color1);
+				linearGradient.addColorStop(0.51, color2);
 			}
+			linearGradient.addColorStop(1, color2);
+			ctx.strokeStyle = linearGradient;
+			ctx.fillStyle = linearGradient;
 			switch (this.bondOrder) {
 			case 0.5:
 				ctx.beginPath();
@@ -2085,23 +1780,20 @@ ChemDoodle.RESIDUE = (function() {
 				specs = this.specs;
 			}
 			// this is the elongation vector for the cylinder
-			var height = (specs.bonds_renderAsLines_3D?1.1:1.001) * this.a1.distance3D(this.a2) / (specs.bonds_useJMOLColors||specs.bonds_usePYMOLColors ? 2 : 1);
+			var height = (specs.bonds_renderAsLines_3D?1.1:1.001) * this.a1.distance3D(this.a2) / 2;
 			if (height == 0) {
 				// if there is no height, then no point in rendering this bond,
 				// just return
 				return false;
 			}
 			var scaleVector = [ specs.bonds_cylinderDiameter_3D / 2, height, specs.bonds_cylinderDiameter_3D / 2 ];
-			// transform to the atom as well as the opposite atom (for Jmol and PyMOL
-			// color splits)
+			// transform to the atom as well as the opposite atom
 			var transform = m4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
 			var transformOpposite = null;
 			// align bond
 			var a2b = [ this.a2.x - this.a1.x, this.a2.y - this.a1.y, this.a2.z - this.a1.z ];
-			if (specs.bonds_useJMOLColors || specs.bonds_usePYMOLColors) {
-				v3.scale(a2b, .5);
-				transformOpposite = m4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
-			}
+			v3.scale(a2b, .5);
+			transformOpposite = m4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
 			// calculate the translations for unsaturated bonds
 			var others = [ 0 ];
 			var saturatedCross = null;
@@ -2146,12 +1838,7 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				m4.scale(transformUse, scaleVector);
 				// colors
-				var color = specs.bonds_color;
-				if(specs.bonds_useJMOLColors){
-					color = ELEMENT[this.a1.label].jmolColor;
-				}else if(specs.bonds_usePYMOLColors){
-					color = ELEMENT[this.a1.label].pymolColor;
-				}
+				var color = ELEMENT[this.a1.label].jmolColor;
 				gl.material.setDiffuseColor(color);
 				// render
 				gl.setMatrixUniforms(transformUse);
@@ -2160,24 +1847,22 @@ ChemDoodle.RESIDUE = (function() {
 				}else {
 					gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 				}
-				if (specs.bonds_useJMOLColors || specs.bonds_usePYMOLColors) {
-					m4.set(transformOpposite, transformUse);
-					if (others[i] != 0) {
-						m4.translate(transformUse, v3.scale(saturatedCross, others[i], []));
-					}
-					// don't check for 0 here as that means it should be rotated
-					// by PI, but PI will be negated
-					m4.rotate(transformUse, ang + m.PI, axis);
-					m4.scale(transformUse, scaleVector);
-					// colors
-					gl.material.setDiffuseColor(specs.bonds_usePYMOLColors?ELEMENT[this.a2.label].pymolColor:ELEMENT[this.a2.label].jmolColor);
-					// render
-					gl.setMatrixUniforms(transformUse);				
-					if (specs.bonds_renderAsLines_3D) {
-						gl.drawArrays(gl.LINES, 0, gl.lineBuffer.vertexPositionBuffer.numItems);
-					}else {
-						gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-					}
+				m4.set(transformOpposite, transformUse);
+				if (others[i] != 0) {
+					m4.translate(transformUse, v3.scale(saturatedCross, others[i], []));
+				}
+				// don't check for 0 here as that means it should be rotated
+				// by PI, but PI will be negated
+				m4.rotate(transformUse, ang + m.PI, axis);
+				m4.scale(transformUse, scaleVector);
+				// colors
+				gl.material.setDiffuseColor(ELEMENT[this.a2.label].jmolColor);
+				// render
+				gl.setMatrixUniforms(transformUse);				
+				if (specs.bonds_renderAsLines_3D) {
+					gl.drawArrays(gl.LINES, 0, gl.lineBuffer.vertexPositionBuffer.numItems);
+				}else {
+					gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 				}
 			}
 		};
@@ -2363,106 +2048,14 @@ ChemDoodle.RESIDUE = (function() {
 					// colors
 					gl.material.setTempColors(specs.proteins_materialAmbientColor_3D, null, specs.proteins_materialSpecularColor_3D, specs.proteins_materialShininess_3D);
 					for ( var j = 0, jj = this.ribbons.length; j < jj; j++) {
-						if (specs.proteins_useShapelyColors || specs.proteins_useAminoColors || specs.proteins_usePolarityColors) {
-							var use = specs.proteins_ribbonCartoonize ? this.cartoons[j] : this.ribbons[j];
-							use.front.bindBuffers(gl);
-							for ( var i = 0, ii = use.front.segments.length; i < ii; i++) {
-								use.front.segments[i].render(gl, specs);
-							}
-							use.back.bindBuffers(gl);
-							for ( var i = 0, ii = use.back.segments.length; i < ii; i++) {
-								use.back.segments[i].render(gl, specs);
-							}
-						} else {
-							if (specs.proteins_ribbonCartoonize) {
-								var use = this.cartoons[j];
-								use.front.bindBuffers(gl);
-								for ( var i = 0, ii = use.front.cartoonSegments.length; i < ii; i++) {
-									use.front.cartoonSegments[i].render(gl, specs);
-								}
-								use.back.bindBuffers(gl);
-								for ( var i = 0, ii = use.back.cartoonSegments.length; i < ii; i++) {
-									use.back.cartoonSegments[i].render(gl, specs);
-								}
-							} else {
-								var use = this.ribbons[j];
-								use.front.render(gl, specs);
-								use.back.render(gl, specs);
-							}
+						var use = this.cartoons[j];
+						use.front.bindBuffers(gl);
+						for ( var i = 0, ii = use.front.cartoonSegments.length; i < ii; i++) {
+							use.front.cartoonSegments[i].render(gl, specs);
 						}
-					}
-				}
-				if (specs.proteins_displayBackbone) {
-					if (!this.alphaCarbonTrace) {
-						// cache the alpha carbon trace
-						this.alphaCarbonTrace = {
-							nodes : [],
-							edges : []
-						};
-						for ( var j = 0, jj = this.chains.length; j < jj; j++) {
-							var rs = this.chains[j];
-							var isNucleotide = rs.length > 2 && RESIDUE[rs[2].name] && RESIDUE[rs[2].name].aminoColor == '#BEA06E';
-							if (!isNucleotide && rs.length > 0) {
-								for ( var i = 1, ii = rs.length - 2; i < ii; i++) {
-									var n = rs[i].cp1;
-									n.chainColor = rs.chainColor;
-									this.alphaCarbonTrace.nodes.push(n);
-									var b = new structures.Bond(rs[i].cp1, rs[i + 1].cp1);
-									b.residueName = rs[i].name;
-									b.chainColor = rs.chainColor;
-									this.alphaCarbonTrace.edges.push(b);
-									if (i == rs.length - 3) {
-										n = rs[i + 1].cp1;
-										n.chainColor = rs.chainColor;
-										this.alphaCarbonTrace.nodes.push(n);
-									}
-								}
-							}
-						}
-					}
-					if (this.alphaCarbonTrace.nodes.length > 0) {
-						var traceSpecs = new structures.VisualSpecifications();
-						traceSpecs.atoms_display = true;
-						traceSpecs.bonds_display = true;
-						traceSpecs.atoms_sphereDiameter_3D = specs.proteins_backboneThickness;
-						traceSpecs.bonds_cylinderDiameter_3D = specs.proteins_backboneThickness;
-						traceSpecs.bonds_useJMOLColors = false;
-						traceSpecs.atoms_color = specs.proteins_backboneColor;
-						traceSpecs.bonds_color = specs.proteins_backboneColor;
-						traceSpecs.atoms_useVDWDiameters_3D = false;
-						// colors
-						gl.material.setTempColors(specs.proteins_materialAmbientColor_3D, null, specs.proteins_materialSpecularColor_3D, specs.proteins_materialShininess_3D);
-						gl.material.setDiffuseColor(specs.proteins_backboneColor);
-						for ( var i = 0, ii = this.alphaCarbonTrace.nodes.length; i < ii; i++) {
-							var n = this.alphaCarbonTrace.nodes[i];
-							if (specs.macro_colorByChain) {
-								traceSpecs.atoms_color = n.chainColor;
-							}
-							gl.sphereBuffer.bindBuffers(gl);
-							n.render(gl, traceSpecs);
-						}
-						for ( var i = 0, ii = this.alphaCarbonTrace.edges.length; i < ii; i++) {
-							var e = this.alphaCarbonTrace.edges[i];
-							var color = null;
-							var r = RESIDUE[e.residueName] ? RESIDUE[e.residueName] : RESIDUE['*'];
-							if (specs.macro_colorByChain) {
-								color = e.chainColor;
-							} else if (specs.proteins_useShapelyColors) {
-								color = r.shapelyColor;
-							} else if (specs.proteins_useAminoColors) {
-								color = r.aminoColor;
-							} else if (specs.proteins_usePolarityColors) {
-								if (r.polar) {
-									color = '#C10000';
-								} else {
-									color = '#FFFFFF';
-								}
-							}
-							if (color != null) {
-								traceSpecs.bonds_color = color;
-							}
-							gl.cylinderBuffer.bindBuffers(gl);
-							e.render(gl, traceSpecs);
+						use.back.bindBuffers(gl);
+						for ( var i = 0, ii = use.back.cartoonSegments.length; i < ii; i++) {
+							use.back.cartoonSegments[i].render(gl, specs);
 						}
 					}
 				}
@@ -3027,18 +2620,6 @@ ChemDoodle.RESIDUE = (function() {
 			}
 		};
 		this.getResidueColor = function(name, specs) {
-			var r = RESIDUE[name];
-			if (specs.proteins_useShapelyColors) {
-				return r.shapelyColor;
-			} else if (specs.proteins_useAminoColors) {
-				return r.aminoColor;
-			} else if (specs.proteins_usePolarityColors) {
-				if (r.polar) {
-					return '#C10000';
-				} else {
-					return '#FFFFFF';
-				}
-			}
 			return '#FFFFFF';
 		};
 		this.render = function(gl, specs) {
@@ -3902,9 +3483,7 @@ ChemDoodle.RESIDUE = (function() {
 			// draw nucleotide platforms
 			platform.bindBuffers(gl);
 			// colors
-			if (!specs.nucleics_useShapelyColors && !specs.macro_colorByChain) {
-				gl.material.setDiffuseColor(specs.nucleics_baseColor);
-			}
+			gl.material.setDiffuseColor(specs.nucleics_baseColor);
 			for ( var i = 1, ii = chain.length - 1; i < ii; i++) {
 				var residue = chain[i];
 				var p2 = residue.cp2;
@@ -3961,104 +3540,6 @@ ChemDoodle.RESIDUE = (function() {
 	structures.Tube.prototype = new structures._Mesh();
 
 })(ChemDoodle.extensions, ChemDoodle.RESIDUE, ChemDoodle.structures, Math, mat4, vec3);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3078 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
-//
-
-(function(structures, extensions, m) {
-
-	structures.Plate = function(lanes) {
-		this.lanes = new Array(lanes);
-		for (i = 0, ii = lanes; i < ii; i++) {
-			this.lanes[i] = [];
-		}
-		this.sort = function() {
-			for (i = 0, ii = this.lanes.length; i < ii; i++) {
-				this.lanes[i].sort(function(a,b){return a - b;});
-			}
-		};
-		this.draw = function(ctx, specs) {
-			// Front and origin
-			var width = ctx.canvas.width;
-			var height = ctx.canvas.height;
-			this.origin = 9 * height / 10;
-			this.front = height / 10;
-			this.laneLength = this.origin - this.front;
-			ctx.strokeStyle = '#000000';
-			ctx.beginPath();
-			ctx.moveTo(0, this.front);
-			extensions.contextHashTo(ctx, 0, this.front, width, this.front, 3, 3);
-			ctx.closePath();
-			ctx.stroke();
-			ctx.beginPath();
-			ctx.moveTo(0, this.origin);
-			ctx.lineTo(width, this.origin);
-			ctx.closePath();
-			ctx.stroke();
-			// Lanes
-			for (i = 0, ii = this.lanes.length; i < ii; i++) {
-				var laneX = (i + 1) * width / (ii + 1);
-				ctx.beginPath();
-				ctx.moveTo(laneX, this.origin);
-				ctx.lineTo(laneX, this.origin + 3);
-				ctx.closePath();
-				ctx.stroke();
-				// Spots
-				for (s = 0, ss = this.lanes[i].length; s < ss; s++) {
-					var spotY = this.origin - (this.laneLength * this.lanes[i][s].rf);
-					switch (this.lanes[i][s].type) {
-					case 'compact':
-						ctx.beginPath();
-						ctx.arc(laneX, spotY, 3, 0, 2 * m.PI, false);
-						ctx.closePath();
-						break;
-					case 'expanded':
-						ctx.beginPath();
-						ctx.arc(laneX, spotY, 7, 0, 2 * m.PI, false);
-						ctx.closePath();
-						break;
-					case 'trailing':
-						// trailing
-						break;
-					case 'widened':
-						extensions.contextOval(ctx, laneX - 18, spotY - 10, 36, 10);
-						break;
-					case 'cresent':
-						ctx.beginPath();
-						ctx.arc(laneX, spotY, 9, 0, m.PI, true);
-						ctx.closePath();
-						break;
-					}
-					switch (this.lanes[i][s].style) {
-					case 'solid':
-						ctx.fillStyle = '#000000';
-						ctx.fill();
-						break;
-					case 'transparent':
-						ctx.stroke();
-						break;
-					case 'gradient':
-						// gradient
-						break;
-					}
-				}
-			}
-		};
-		return true;
-	};
-	
-	structures.Plate.Spot = function(type, rf, style) {
-		this.type = type;
-		this.rf = rf;
-		this.style = style ? style : 'solid';
-	};
-
-})(ChemDoodle.structures, ChemDoodle.extensions, Math);
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
@@ -4098,8 +3579,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_atoms_lonePairDistance_2D = 8;
 	c.default_atoms_lonePairSpread_2D = 4;
 	c.default_atoms_lonePairDiameter_2D = 1;
-	c.default_atoms_useJMOLColors = false;
-	c.default_atoms_usePYMOLColors = false;
 	c.default_atoms_resolution_3D = 60;
 	c.default_atoms_sphereDiameter_3D = .8;
 	c.default_atoms_useVDWDiameters_3D = false;
@@ -4119,8 +3598,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_bonds_width_2D = 1;
 	c.default_bonds_saturationWidth_2D = .2;
 	c.default_bonds_ends_2D = 'round';
-	c.default_bonds_useJMOLColors = false;
-	c.default_bonds_usePYMOLColors = false;
 	c.default_bonds_colorGradient = false;
 	c.default_bonds_saturationAngle_2D = m.PI / 3;
 	c.default_bonds_symmetrical_2D = false;
@@ -4144,9 +3621,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_proteins_backboneThickness = 1.5;
 	c.default_proteins_backboneColor = '#CCCCCC';
 	c.default_proteins_ribbonCartoonize = false;
-	c.default_proteins_useShapelyColors = false;
-	c.default_proteins_useAminoColors = false;
-	c.default_proteins_usePolarityColors = false;
 	c.default_proteins_primaryColor = '#FF0D0D';
 	c.default_proteins_secondaryColor = '#FFFF30';
 	c.default_proteins_ribbonCartoonHelixPrimaryColor = '#00E740';
@@ -4223,8 +3697,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.atoms_lonePairDistance_2D = c.default_atoms_lonePairDistance_2D;
 		this.atoms_lonePairSpread_2D = c.default_atoms_lonePairSpread_2D;
 		this.atoms_lonePairDiameter_2D = c.default_atoms_lonePairDiameter_2D;
-		this.atoms_useJMOLColors = c.default_atoms_useJMOLColors;
-		this.atoms_usePYMOLColors = c.default_atoms_usePYMOLColors;
 		this.atoms_resolution_3D = c.default_atoms_resolution_3D;
 		this.atoms_sphereDiameter_3D = c.default_atoms_sphereDiameter_3D;
 		this.atoms_useVDWDiameters_3D = c.default_atoms_useVDWDiameters_3D;
@@ -4244,8 +3716,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.bonds_width_2D = c.default_bonds_width_2D;
 		this.bonds_saturationWidth_2D = c.default_bonds_saturationWidth_2D;
 		this.bonds_ends_2D = c.default_bonds_ends_2D;
-		this.bonds_useJMOLColors = c.default_bonds_useJMOLColors;
-		this.bonds_usePYMOLColors = c.default_bonds_usePYMOLColors;
 		this.bonds_colorGradient = c.default_bonds_colorGradient;
 		this.bonds_saturationAngle_2D = c.default_bonds_saturationAngle_2D;
 		this.bonds_symmetrical_2D = c.default_bonds_symmetrical_2D;
@@ -4269,9 +3739,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.proteins_backboneThickness = c.default_proteins_backboneThickness;
 		this.proteins_backboneColor = c.default_proteins_backboneColor;
 		this.proteins_ribbonCartoonize = c.default_proteins_ribbonCartoonize;
-		this.proteins_useShapelyColors = c.default_proteins_useShapelyColors;
-		this.proteins_useAminoColors = c.default_proteins_useAminoColors;
-		this.proteins_usePolarityColors = c.default_proteins_usePolarityColors;
 		this.proteins_primaryColor = c.default_proteins_primaryColor;
 		this.proteins_secondaryColor = c.default_proteins_secondaryColor;
 		this.proteins_ribbonCartoonHelixPrimaryColor = c.default_proteins_ribbonCartoonHelixPrimaryColor;
