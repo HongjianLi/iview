@@ -1449,7 +1449,7 @@ ChemDoodle.RESIDUE = (function() {
 			gl.material.setDiffuseColor(color);
 			// render
 			gl.setMatrixUniforms(transform);
-			var buffer = this.renderAsStar ? gl.starBuffer : gl.sphereBuffer;
+			var buffer = gl.sphereBuffer;
 			gl.drawElements(gl.TRIANGLES, buffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 		this.isLabelVisible = function(specs) {
@@ -2007,7 +2007,6 @@ ChemDoodle.RESIDUE = (function() {
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 					var a = this.atoms[i];
 					a.bondNumber = 0;
-					a.renderAsStar = false;
 				}
 				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
 					var b = this.bonds[i];
@@ -2019,22 +2018,10 @@ ChemDoodle.RESIDUE = (function() {
 					// colors
 					gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
 				}
-				var asStars = [];
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 					var a = this.atoms[i];
 					if (!isMacro || (a.hetatm && (specs.macro_showWater || !a.isWater))) {
-						if (specs.atoms_nonBondedAsStars_3D && a.bondNumber == 0) {
-							a.renderAsStar = true;
-							asStars.push(a);
-						} else {
-							a.render(gl, specs);
-						}
-					}
-				}
-				if (asStars.length > 0) {
-					gl.starBuffer.bindBuffers(gl);
-					for ( var i = 0, ii = asStars.length; i < ii; i++) {
-						asStars[i].render(gl, specs);
+						a.render(gl, specs);
 					}
 				}
 			}
@@ -3158,135 +3145,6 @@ ChemDoodle.RESIDUE = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3100 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-17 07:35:56 -0500 (Thu, 17 Feb 2011) $
-//
-
-(function(structures, v3) {
-
-	structures.Shape = function(points, thickness) {
-		// points must be in the xy-plane, all z-coords must be 0, thickness
-		// will be in the z-plane
-		var numPoints = points.length;
-		var positionData = [];
-		var normalData = [];
-
-		// calculate vertex and normal points
-		var center = new structures.Point();
-		for ( var i = 0, ii = numPoints; i < ii; i++) {
-			var next = i + 1;
-			if (i == ii - 1) {
-				next = 0;
-			}
-			var z = [ 0, 0, 1 ];
-			var currentPoint = points[i];
-			var nextPoint = points[next];
-			var v = [ nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y, 0 ];
-			var normal = v3.cross(z, v);
-			// first four are for the side normal
-			// second four will do both the bottom and top triangle normals
-			for ( var j = 0; j < 2; j++) {
-				positionData.push(currentPoint.x, currentPoint.y, thickness / 2);
-				positionData.push(currentPoint.x, currentPoint.y, -thickness / 2);
-				positionData.push(nextPoint.x, nextPoint.y, thickness / 2);
-				positionData.push(nextPoint.x, nextPoint.y, -thickness / 2);
-			}
-			// side normals
-			for ( var j = 0; j < 4; j++) {
-				normalData.push(normal[0], normal[1], normal[2]);
-			}
-			// top and bottom normals
-			normalData.push(0, 0, 1);
-			normalData.push(0, 0, -1);
-			normalData.push(0, 0, 1);
-			normalData.push(0, 0, -1);
-			center.add(currentPoint);
-		}
-		// centers
-		center.x /= numPoints;
-		center.y /= numPoints;
-		normalData.push(0, 0, 1);
-		positionData.push(center.x, center.y, thickness / 2);
-		normalData.push(0, 0, -1);
-		positionData.push(center.x, center.y, -thickness / 2);
-
-		// build mesh connectivity
-		var indexData = [];
-		var centerIndex = numPoints * 8;
-		for ( var i = 0, ii = numPoints; i < ii; i++) {
-			var start = i * 8;
-			// sides
-			indexData.push(start);
-			indexData.push(start + 1);
-			indexData.push(start + 3);
-			indexData.push(start);
-			indexData.push(start + 2);
-			indexData.push(start + 3);
-			// top and bottom
-			indexData.push(start + 4);
-			indexData.push(start + 6);
-			indexData.push(centerIndex);
-			indexData.push(start + 5);
-			indexData.push(start + 7);
-			indexData.push(centerIndex + 1);
-		}
-
-		this.storeData(positionData, normalData, indexData);
-		
-		return true;
-	};
-	structures.Shape.prototype = new structures._Mesh();
-
-})(ChemDoodle.structures, vec3);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3458 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-12-23 10:57:22 -0500 (Fri, 23 Dec 2011) $
-//
-
-(function(structures, m, v3) {
-
-	structures.Star = function() {
-		var ps = [ .8944, .4472, 0, .2764, .4472, .8506, .2764, .4472, -.8506, -.7236, .4472, .5257, -.7236, .4472, -.5257, -.3416, .4472, 0, -.1056, .4472, .3249, -.1056, .4472, -.3249, .2764, .4472, .2008, .2764, .4472, -.2008, -.8944, -.4472, 0, -.2764, -.4472, .8506, -.2764, -.4472, -.8506, .7236, -.4472, .5257, .7236, -.4472, -.5257, .3416, -.4472, 0, .1056, -.4472, .3249, .1056, -.4472, -.3249, -.2764, -.4472, .2008, -.2764, -.4472, -.2008, -.5527, .1058, 0, -.1708, .1058,	.5527, -.1708, .1058, -.5527, .4471, .1058, .3249, .4471, .1058, -.3249, .5527, -.1058, 0, .1708, -.1058, .5527, .1708, -.1058, -.5527, -.4471, -.1058, .3249, -.4471, -.1058, -.3249, 0, 1, 0, 0, -1, 0 ];
-		var is = [ 0, 9, 8, 2, 7, 9, 4, 5, 7, 3, 6, 5, 1, 8, 6, 0, 8, 23, 30, 6, 8, 3, 21, 6, 11, 26, 21, 13, 23, 26, 2, 9, 24, 30, 8, 9, 1, 23, 8, 13, 25, 23, 14, 24, 25, 4, 7, 22, 30, 9, 7, 0, 24, 9, 14, 27, 24, 12, 22, 27, 3, 5, 20, 30, 7, 5, 2, 22, 7, 12, 29, 22, 10, 20, 29, 1, 6, 21, 30, 5, 6, 4, 20, 5, 10, 28, 20, 11, 21, 28, 10, 19, 18, 12, 17, 19, 14, 15, 17, 13, 16, 15, 11, 18, 16, 31, 19, 17, 14, 17, 27, 2, 27, 22, 4, 22, 29, 10, 29, 19, 31, 18, 19, 12, 19, 29, 4, 29, 20, 3, 20, 28, 11, 28, 18, 31, 16, 18, 10, 18, 28, 3, 28, 21, 1, 21, 26, 13, 26, 16, 31, 15, 16, 11, 16, 26, 1, 26, 23, 0, 23, 25, 14, 25, 15, 31, 17, 15, 13, 15, 25, 0, 25, 24, 2, 24, 27, 12, 27, 17 ];
-		
-		var positionData = [];
-		var normalData = [];
-		var indexData = [];
-		for ( var i = 0, ii = is.length; i < ii; i+=3) {
-			var j1 = is[i]*3;
-			var j2 = is[i + 1]*3;
-			var j3 = is[i + 2]*3;
-			
-			var p1 = [ps[j1], ps[j1+1], ps[j1+2]];
-			var p2 = [ps[j2], ps[j2+1], ps[j2+2]];
-			var p3 = [ps[j3], ps[j3+1], ps[j3+2]];
-			
-			var toAbove = [p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2] ];
-			var toSide = [p3[0] - p2[0], p3[1] - p2[1], p3[2] - p2[2] ];
-			var normal = v3.cross(toSide, toAbove, []);
-			v3.normalize(normal);
-			
-			positionData.push(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], p3[0], p3[1], p3[2]);
-			normalData.push(normal[0], normal[1], normal[2], normal[0], normal[1], normal[2], normal[0], normal[1], normal[2]);
-			indexData.push(i, i+1, i+2);
-		}
-		
-		this.storeData(positionData, normalData, indexData);
-
-		return true;
-	};
-	structures.Star.prototype = new structures._Mesh();
-
-})(ChemDoodle.structures, Math, vec3);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3078 $
 //  $Author: kevin $
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
@@ -3590,7 +3448,6 @@ ChemDoodle.RESIDUE = (function() {
 	c.default_atoms_displayTerminalCarbonLabels_2D = false;
 	c.default_atoms_showHiddenCarbons_2D = true;
 	c.default_atoms_displayAllCarbonLabels_2D = false;
-	c.default_atoms_nonBondedAsStars_3D = false;
 
 	// default bond properties
 	c.default_bonds_display = true;
@@ -3708,7 +3565,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.atoms_displayTerminalCarbonLabels_2D = c.default_atoms_displayTerminalCarbonLabels_2D;
 		this.atoms_showHiddenCarbons_2D = c.default_atoms_showHiddenCarbons_2D;
 		this.atoms_displayAllCarbonLabels_2D = c.default_atoms_displayAllCarbonLabels_2D;
-		this.atoms_nonBondedAsStars_3D = c.default_atoms_nonBondedAsStars_3D;
 
 		// bond properties
 		this.bonds_display = c.default_bonds_display;
@@ -4676,7 +4532,6 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			// here is the sphere buffer to be drawn, make it once, then scale
 			// and translate to draw atoms
 			this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
-			this.gl.starBuffer = new structures.Star();
 			this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
 			this.gl.lineBuffer = new structures.Line();
 			if (this.molecule && this.molecule!=this.previousMolecule) {
