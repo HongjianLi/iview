@@ -1107,7 +1107,7 @@ ChemDoodle.RESIDUE = (function() {
 					var angle = this.a1.angle(this.a2);
 					var perpendicular = angle + m.PI / 2;
 					var useDist = dist * specs.bonds_saturationWidth_2D;
-					var clipAngle = specs.bonds_saturationAngle_2D;
+					var clipAngle = m.PI / 3;
 					if (clipAngle < m.PI / 2) {
 						clip = -(useDist / m.tan(clipAngle));
 					}
@@ -2217,180 +2217,125 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
 //
 
-(function(structures, document) {
+(function(structures) {
 
-	structures.Shader = function() {
-		this.init = function(gl) {
-			var vertexShader = this.getShader(gl, 'vertex-shader');
-			if (vertexShader == null) {
-				vertexShader = this.loadDefaultVertexShader(gl);
-			}
-			var fragmentShader = this.getShader(gl, 'fragment-shader');
-			if (fragmentShader == null) {
-				fragmentShader = this.loadDefaultFragmentShader(gl);
-			}
-
-			gl.attachShader(gl.program, vertexShader);
-			gl.attachShader(gl.program, fragmentShader);
-			gl.linkProgram(gl.program);
-
-			if (!gl.getProgramParameter(gl.program, gl.LINK_STATUS)) {
-				alert('Could not initialize shaders: '+gl.getProgramInfoLog(program));
-			}
-
-			gl.useProgram(gl.program);
-
-			this.vertexPositionAttribute = gl.getAttribLocation(gl.program, 'a_vertex_position');
-			gl.enableVertexAttribArray(this.vertexPositionAttribute);
-
-			this.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
-			gl.enableVertexAttribArray(this.vertexNormalAttribute);
-		};
-		this.getShader = function(gl, id) {
-			var shaderScript = document.getElementById(id);
-			if (!shaderScript) {
-				return null;
-			}
-			var sb = [];
-			var k = shaderScript.firstChild;
-			while (k) {
-				if (k.nodeType == 3)
-					sb.push(k.textContent);
-				k = k.nextSibling;
-			}
-			var shader;
-			if (shaderScript.type == 'x-shader/x-fragment') {
-				shader = gl.createShader(gl.FRAGMENT_SHADER);
-			} else if (shaderScript.type == 'x-shader/x-vertex') {
-				shader = gl.createShader(gl.VERTEX_SHADER);
-			} else {
-				return null;
-			}
-			gl.shaderSource(shader, sb.join(''));
-			gl.compileShader(shader);
-			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				alert(shaderScript.type+' '+gl.getShaderInfoLog(shader));
-				return null;
-			}
-			return shader;
-		};
-		this.loadDefaultVertexShader = function(gl) {
-			var sb = [];
-			// phong shader
-			sb.push('struct Light');
-			sb.push('{');
-			sb.push('vec3 diffuse_color;');
-			sb.push('vec3 specular_color;');
-			sb.push('vec3 direction;');
-			sb.push('vec3 half_vector;');
-			sb.push('};');
-			sb.push('struct Material');
-			sb.push('{');
-			sb.push('vec3 ambient_color;');
-			sb.push('vec3 diffuse_color;');
-			sb.push('vec3 specular_color;');
-			sb.push('float shininess;');
-			sb.push('float alpha;');
-			sb.push('};');
+	structures.Shader = function(gl) {
+		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertexShader, [	// phong shader
+			'struct Light',
+			'{',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'vec3 direction;',
+				'vec3 half_vector;',
+			'};',
+			'struct Material',
+			'{',
+				'vec3 ambient_color;',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'float shininess;',
+				'float alpha;',
+			'};',
 			// attributes set when rendering objects
-			sb.push('attribute vec3 a_vertex_position;');
-			sb.push('attribute vec3 a_vertex_normal;');
+			'attribute vec3 a_vertex_position;',
+			'attribute vec3 a_vertex_normal;',
 			// scene structs
-			sb.push('uniform Light u_light;');
-			sb.push('uniform Material u_material;');
+			'uniform Light u_light;',
+			'uniform Material u_material;',
 			// matrices set by gl.setMatrixUniforms
-			sb.push('uniform mat4 u_model_view_matrix;');
-			sb.push('uniform mat4 u_projection_matrix;');
-			sb.push('uniform mat3 u_normal_matrix;');
+			'uniform mat4 u_model_view_matrix;',
+			'uniform mat4 u_projection_matrix;',
+			'uniform mat3 u_normal_matrix;',
 			// sent to the fragment shader
-			sb.push('varying vec4 v_diffuse;');
-			sb.push('varying vec4 v_ambient;');
-			sb.push('varying vec3 v_normal;');
-			sb.push('varying vec3 v_light_direction;');
-			sb.push('void main(void)');
-			sb.push('{');
-			sb.push('if(length(a_vertex_normal)==0.0){');
-			sb.push('v_normal = a_vertex_normal;');
-			sb.push('}else{');
-			sb.push('v_normal = normalize(u_normal_matrix * a_vertex_normal);');
-			sb.push('}');
+			'varying vec4 v_diffuse;',
+			'varying vec4 v_ambient;',
+			'varying vec3 v_normal;',
+			'varying vec3 v_light_direction;',
+			'void main(void)',
+			'{',
+				'if (length(a_vertex_normal) == 0.0)',
+				'{',
+					'v_normal = a_vertex_normal;',
+				'}',
+				'else',
+				'{',
+					'v_normal = normalize(u_normal_matrix * a_vertex_normal);',
+				'}',
+				'vec4 diffuse = vec4(u_light.diffuse_color, 1.0);',
+				'v_light_direction = u_light.direction;',
+				'v_ambient = vec4(u_material.ambient_color, 1.0);',
+				'v_diffuse = vec4(u_material.diffuse_color, 1.0) * diffuse;',
+				'gl_Position = u_projection_matrix * u_model_view_matrix * vec4(a_vertex_position, 1.0);',
+			'}'
+		].join(''));
+		gl.compileShader(vertexShader);
 
-			sb.push('vec4 diffuse = vec4(u_light.diffuse_color, 1.0);');
-			sb.push('v_light_direction = u_light.direction;');
-
-			sb.push('v_ambient = vec4(u_material.ambient_color, 1.0);');
-			sb.push('v_diffuse = vec4(u_material.diffuse_color, 1.0) * diffuse;');
-
-			sb.push('gl_Position = u_projection_matrix * u_model_view_matrix * vec4(a_vertex_position, 1.0);');
-			sb.push('}');
-			var shader = gl.createShader(gl.VERTEX_SHADER);
-			gl.shaderSource(shader, sb.join(''));
-			gl.compileShader(shader);
-			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				alert('Vertex shader failed to compile: '+gl.getShaderInfoLog(shader));
-				return null;
-			}
-			return shader;
-		};
-		this.loadDefaultFragmentShader = function(gl) {
-			var sb = [];
-			// set float precision
-			sb.push('precision mediump float;\n');
-			sb.push('struct Light');
-			sb.push('{');
-			sb.push('vec3 diffuse_color;');
-			sb.push('vec3 specular_color;');
-			sb.push('vec3 direction;');
-			sb.push('vec3 half_vector;');
-			sb.push('};');
-			sb.push('struct Material');
-			sb.push('{');
-			sb.push('vec3 ambient_color;');
-			sb.push('vec3 diffuse_color;');
-			sb.push('vec3 specular_color;');
-			sb.push('float shininess;');
-			sb.push('float alpha;');
-			sb.push('};');
+		var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragmentShader, [
+			'precision mediump float;',
+			'struct Light',
+			'{',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'vec3 direction;',
+				'vec3 half_vector;',
+			'};',
+			'struct Material',
+			'{',
+				'vec3 ambient_color;',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'float shininess;',
+				'float alpha;',
+			'};',
 			// scene structs
-			sb.push('uniform Light u_light;');
-			sb.push('uniform Material u_material;');
+			'uniform Light u_light;',
+			'uniform Material u_material;',
 			// from the vertex shader
-			sb.push('varying vec4 v_diffuse;');
-			sb.push('varying vec4 v_ambient;');
-			sb.push('varying vec3 v_normal;');
-			sb.push('varying vec3 v_light_direction;');
-			sb.push('void main(void)');
-			sb.push('{');
-			sb.push('if(length(v_normal)==0.0){');
-			sb.push('gl_FragColor = vec4(v_diffuse.rgba);');
-			sb.push('}else{');
-			sb.push('float nDotL = max(dot(v_normal, v_light_direction), 0.0);');
-			sb.push('vec4 color = vec4(v_diffuse.rgb*nDotL, v_diffuse.a);');
-			sb.push('float nDotHV = max(dot(v_normal, u_light.half_vector), 0.0);');
-			sb.push('vec4 specular = vec4(u_material.specular_color * u_light.specular_color, 1.0);');
-			sb.push('color+=vec4(specular.rgb * pow(nDotHV, u_material.shininess), specular.a);');
-			// fogging
-			//sb.push('float z = gl_FragCoord.z/gl_FragCoord.w;');
-			//sb.push('float fog = z*z/20000.0;');
-			//sb.push('color-=vec4(fog, fog, fog, 0);');
-			// set the color
-			sb.push('gl_FragColor = color+v_ambient;');
-			sb.push('gl_FragColor.a*=u_material.alpha;');
-			sb.push('}');
-			sb.push('}');
-			var shader = gl.createShader(gl.FRAGMENT_SHADER);
-			gl.shaderSource(shader, sb.join(''));
-			gl.compileShader(shader);
-			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				alert('Fragment shader failed to compile: '+gl.getShaderInfoLog(shader));
-				return null;
-			}
-			return shader;
-		};
+			'varying vec4 v_diffuse;',
+			'varying vec4 v_ambient;',
+			'varying vec3 v_normal;',
+			'varying vec3 v_light_direction;',
+			'void main(void)',
+			'{',
+				'if (length(v_normal)==0.0)',
+				'{',
+					'gl_FragColor = vec4(v_diffuse.rgba);',
+				'}',
+				'else',
+				'{',
+					'float nDotL = max(dot(v_normal, v_light_direction), 0.0);',
+					'vec4 color = vec4(v_diffuse.rgb*nDotL, v_diffuse.a);',
+					'float nDotHV = max(dot(v_normal, u_light.half_vector), 0.0);',
+					'vec4 specular = vec4(u_material.specular_color * u_light.specular_color, 1.0);',
+					'color += vec4(specular.rgb * pow(nDotHV, u_material.shininess), specular.a);',
+					// fogging
+					//'float z = gl_FragCoord.z / gl_FragCoord.w;',
+					//'float fog = z*z/20000.0;',
+					//'color -= vec4(fog, fog, fog, 0);',
+					// set the color
+					'gl_FragColor = color + v_ambient;',
+					'gl_FragColor.a *= u_material.alpha;',
+				'}',
+			'}'
+		].join(''));
+		gl.compileShader(fragmentShader);
+
+		gl.attachShader(gl.program, vertexShader);
+		gl.attachShader(gl.program, fragmentShader);
+		gl.linkProgram(gl.program);
+		gl.useProgram(gl.program);
+
+		this.vertexPositionAttribute = gl.getAttribLocation(gl.program, 'a_vertex_position');
+		gl.enableVertexAttribArray(this.vertexPositionAttribute);
+		this.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
+		gl.enableVertexAttribArray(this.vertexNormalAttribute);
+
 		return true;
 	};
 
-})(ChemDoodle.structures, document);
+})(ChemDoodle.structures);
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
@@ -2399,7 +2344,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-04 22:27:39 -0400 (Fri, 04 May 2012) $
 //
 
-(function(c, structures, m) {
+(function(c, structures) {
 
 	structures.VisualSpecifications = function() {
 
@@ -2448,7 +2393,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.bonds_saturationWidth_2D = .2;
 		this.bonds_ends_2D = 'round';
 		this.bonds_colorGradient = false;
-		this.bonds_saturationAngle_2D = m.PI / 3;
 		this.bonds_symmetrical_2D = false;
 		this.bonds_clearOverlaps_2D = false;
 		this.bonds_overlapClearWidth_2D = .5;
@@ -2532,7 +2476,7 @@ Line
 		};
 	};
 
-})(ChemDoodle, ChemDoodle.structures, Math);
+})(ChemDoodle, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2542,7 +2486,7 @@ Line
 //  $LastChangedDate: 2012-05-05 15:12:11 -0400 (Sat, 05 May 2012) $
 //
 
-(function(c, extensions, io, structures, ELEMENT, trim, m) {
+(function(c, extensions, io, structures, ELEMENT, m) {
 
 	io.PDBInterpreter = function() {
 
@@ -2593,9 +2537,9 @@ Line
 				} else if (extensions.stringStartsWith(line, 'ATOM')) {
 					var altLoc = line.substring(16, 17);
 					if (altLoc == ' ' || altLoc == 'A') {
-						var label = trim(line.substring(76, 78));
+						var label = $.trim(line.substring(76, 78));
 						if (label.length == 0) {
-							var s = trim(line.substring(12, 14));
+							var s = $.trim(line.substring(12, 14));
 							if (s == 'HD') {
 								label = 'H';
 							} else if (s.length > 0) {
@@ -2621,7 +2565,7 @@ Line
 						}
 						if (resSeq != Number.NaN && currentChain[currentChain.length - 1].resSeq != resSeq) {
 							var r = new structures.Residue(resSeq);
-							r.name = trim(line.substring(17, 20));
+							r.name = $.trim(line.substring(17, 20));
 							if (r.name.length == 3) {
 								r.name = r.name.substring(0, 1) + r.name.substring(1).toLowerCase();
 							} else {
@@ -2635,7 +2579,7 @@ Line
 							checkContained(r, sheets, chainID, resSeq, false);
 						}
 						// end residue setup
-						var atomName = trim(line.substring(12, 16));
+						var atomName = $.trim(line.substring(12, 16));
 						var currentResidue = currentChain[currentChain.length - 1];
 						if (atomName == 'CA' || atomName == 'P' || atomName == 'O5\'') {
 							if (!currentResidue.cp1) {
@@ -2662,24 +2606,24 @@ Line
 						}
 					}
 				} else if (extensions.stringStartsWith(line, 'HETATM')) {
-					var symbol = trim(line.substring(76, 78));
+					var symbol = $.trim(line.substring(76, 78));
 					if (symbol.length > 1) {
 						symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
 					}
 					var het = new structures.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 					het.hetatm = true;
-					var residueName = trim(line.substring(17, 20));
+					var residueName = $.trim(line.substring(17, 20));
 					if (residueName == 'HOH') {
 						het.isWater = true;
 					}
 					molecule.atoms.push(het);
-					atomSerials[parseInt(trim(line.substring(6, 11)))] = het;
+					atomSerials[parseInt($.trim(line.substring(6, 11)))] = het;
 				} else if(extensions.stringStartsWith(line, 'CONECT')){
-					var oid = parseInt(trim(line.substring(6, 11)));
+					var oid = parseInt($.trim(line.substring(6, 11)));
 					if(atomSerials[oid]){
 						var origin = atomSerials[oid];
 						for(var k = 0; k<4; k++){
-							var next = trim(line.substring(11+k*5, 16+k*5));
+							var next = $.trim(line.substring(11+k*5, 16+k*5));
 							if(next.length!=0){
 								var nid = parseInt(next);
 								if(atomSerials[nid]){
@@ -2785,7 +2729,7 @@ Line
 		return interpreter.read(content);
 	};
 
-})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.io, ChemDoodle.structures, ChemDoodle.ELEMENT, jQuery.trim, Math);
+})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.io, ChemDoodle.structures, ChemDoodle.ELEMENT, Math);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2795,7 +2739,7 @@ Line
 //  $LastChangedDate: 2010-12-29 11:07:06 -0500 (Wed, 29 Dec 2010) $
 //
 
-ChemDoodle.monitor = (function(featureDetection, q, document) {
+ChemDoodle.monitor = (function(document) {
 	var m = {};
 
 	m.CANVAS_DRAGGING = null;
@@ -2805,9 +2749,9 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 	m.META = false;
 
 	if (!('ontouchstart' in window)) {
-		q(document).ready(function() {
+		$(document).ready(function() {
 			// handles dragging beyond the canvas bounds
-			q(document).mousemove(function(e) {
+			$(document).mousemove(function(e) {
 				if (m.CANVAS_DRAGGING != null) {
 					if (m.CANVAS_DRAGGING.drag) {
 						m.CANVAS_DRAGGING.prehandleEvent(e);
@@ -2815,7 +2759,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 					}
 				}
 			});
-			q(document).mouseup(function(e) {
+			$(document).mouseup(function(e) {
 				if (m.CANVAS_DRAGGING != null && m.CANVAS_DRAGGING != m.CANVAS_OVER) {
 					if (m.CANVAS_DRAGGING.mouseup) {
 						m.CANVAS_DRAGGING.prehandleEvent(e);
@@ -2825,7 +2769,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 				m.CANVAS_DRAGGING = null;
 			});
 			// handles modifier keys from a single keyboard
-			q(document).keydown(function(e) {
+			$(document).keydown(function(e) {
 				m.SHIFT = e.shiftKey;
 				m.ALT = e.altKey;
 				m.META = e.metaKey;
@@ -2840,7 +2784,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 					}
 				}
 			});
-			q(document).keypress(function(e) {
+			$(document).keypress(function(e) {
 				var affecting = m.CANVAS_OVER;
 				if (m.CANVAS_DRAGGING != null) {
 					affecting = m.CANVAS_DRAGGING;
@@ -2852,7 +2796,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 					}
 				}
 			});
-			q(document).keyup(function(e) {
+			$(document).keyup(function(e) {
 				m.SHIFT = e.shiftKey;
 				m.ALT = e.altKey;
 				m.META = e.metaKey;
@@ -2872,7 +2816,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 
 	return m;
 
-})(ChemDoodle.featureDetection, jQuery, document);
+})(document);
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
@@ -2881,13 +2825,13 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, featureDetection, monitor, extensions, math, structures, RESIDUE, q, browser, m, document, m4, m3, v3, window) {
+(function(c, monitor, extensions, math, structures, RESIDUE, m, document, m4, m3, v3, window) {
 
 	c.Canvas = function(id) {
 		this.rotationMatrix = m4.identity([]);
 		this.translationMatrix = m4.identity([]);
 		this.id = id;
-		var jqCapsule = q('#' + id);
+		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
 		this.height = jqCapsule.attr('height');
 		this.specs = new structures.VisualSpecifications();
@@ -3107,14 +3051,13 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			});
 		}
 		// setup gl object
-		var canvas = document.getElementById('iview');
+		var canvas = document.getElementById(this.id);
 		this.gl = canvas.getContext('webgl');
 		if (!this.gl) {
 			this.gl = canvas.getContext('experimental-webgl');
 		}
 		this.gl.program = this.gl.createProgram();
-		this.gl.shader = new structures.Shader();
-		this.gl.shader.init(this.gl);
+		this.gl.shader = new structures.Shader(this.gl);
 		this.setupScene();
 		return true;
 	};
@@ -3133,7 +3076,7 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 			e.pageY = e.originalEvent.changedTouches[0].pageY;
 		}
 		e.preventDefault();
-		e.offset = q('#' + this.id).offset();
+		e.offset = $('#' + this.id).offset();
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
 	};
 	c.Canvas.prototype.setViewDistance = function(distance) {
@@ -3309,4 +3252,4 @@ ChemDoodle.monitor = (function(featureDetection, q, document) {
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.featureDetection, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, jQuery, jQuery.browser, Math, document, mat4, mat3, vec3, window);
+})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, Math, document, mat4, mat3, vec3, window);
