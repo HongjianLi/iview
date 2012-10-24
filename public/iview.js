@@ -1,43 +1,22 @@
-//
-// ChemDoodle Web Components 4.7.0
-//
-// http://web.chemdoodle.com
-//
-// Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// As a special exception to the GPL, any HTML file in a public website
-// or any free web service which merely makes function calls to this
-// code, and for that purpose includes it by reference, shall be deemed
-// a separate work for copyright law purposes. If you modify this code,
-// you may extend this exception to your version of the code, but you
-// are not obligated to do so. If you do not wish to do so, delete this
-// exception statement from your version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Please contact iChemLabs <http://www.ichemlabs.com/contact> for
-// alternate licensing options.
-//
+/*
+	Copyright (c) 2012, The Chinese University of Hong Kong
 
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 2934 $
-//  $Author: kevin $
-//  $LastChangedDate: 2010-12-08 20:53:47 -0500 (Wed, 08 Dec 2010) $
-//
-var ChemDoodle = (function() {
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
+var iview = (function() {
 	
 	var c = {};
 
@@ -47,15 +26,7 @@ var ChemDoodle = (function() {
 	
 })();
 
-//
-//  Copyright 2006-2010 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3385 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
-//
-
-ChemDoodle.extensions = (function(structures) {
+iview.extensions = (function(structures) {
 
 	var ext = {};
 
@@ -109,17 +80,9 @@ ChemDoodle.extensions = (function(structures) {
 
 	return ext;
 
-})(ChemDoodle.structures);
+})(iview.structures);
 
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3519 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
-//
-
-ChemDoodle.math = (function(extensions, structures) {
+iview.math = (function(extensions, structures) {
 
 	var pack = {};
 
@@ -224,17 +187,9 @@ ChemDoodle.math = (function(extensions, structures) {
 
 	return pack;
 
-})(ChemDoodle.extensions, ChemDoodle.structures);
+})(iview.extensions, iview.structures);
 
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3470 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-22 13:15:22 -0500 (Sun, 22 Jan 2012) $
-//
-
-ChemDoodle.ELEMENT = (function() {
+iview.ELEMENT = (function() {
 
 	function Element(symbol, name, atomicNumber) {
 		this.symbol = symbol;
@@ -415,14 +370,6 @@ ChemDoodle.ELEMENT = (function() {
 
 })();
 
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3469 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-21 10:01:03 -0500 (Sat, 21 Jan 2012) $
-//
-
 (function(structures) {
 
 	structures.Point = function(x, y) {
@@ -513,15 +460,7 @@ ChemDoodle.ELEMENT = (function() {
 		return true;
 	};
 
-})(ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3519 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
-//
+})(iview.structures);
 
 (function(ELEMENT, extensions, structures) {
 
@@ -779,15 +718,7 @@ ChemDoodle.ELEMENT = (function() {
 	};
 	structures.Atom.prototype = new structures.Point(0, 0);
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3519 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
-//
+})(iview.ELEMENT, iview.extensions, iview.structures);
 
 (function(ELEMENT, extensions, structures, math) {
 
@@ -1171,15 +1102,7 @@ ChemDoodle.ELEMENT = (function() {
 	structures.Bond.STEREO_RECESSED = 'recessed';
 	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.math);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3519 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
-//
+})(iview.ELEMENT, iview.extensions, iview.structures, iview.math);
 
 (function(c, math, structures) {
 
@@ -1315,15 +1238,7 @@ ChemDoodle.ELEMENT = (function() {
 		return true;
 	};
 
-})(ChemDoodle, ChemDoodle.math, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3385 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
-//
+})(iview, iview.math, iview.structures);
 
 (function(structures) {
 
@@ -1406,15 +1321,7 @@ ChemDoodle.ELEMENT = (function() {
 		}
 	};
 
-})(ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3462 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
-//
+})(iview.structures);
 
 (function(structures) {
 
@@ -1441,15 +1348,7 @@ ChemDoodle.ELEMENT = (function() {
 	};
 	structures.Cylinder.prototype = new structures._Mesh();
 
-})(ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3462 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
-//
+})(iview.structures);
 
 (function(structures) {
 
@@ -1498,15 +1397,7 @@ ChemDoodle.ELEMENT = (function() {
 	};
 	structures.Sphere.prototype = new structures._Mesh();
 
-})(ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3385 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
-//
+})(iview.structures);
 
 (function(math, structures) {
 
@@ -1536,15 +1427,7 @@ ChemDoodle.ELEMENT = (function() {
 		return true;
 	};
 
-})(ChemDoodle.math, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3462 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
-//
+})(iview.math, iview.structures);
 
 (function(math, structures) {
 
@@ -1588,15 +1471,7 @@ ChemDoodle.ELEMENT = (function() {
 		return true;
 	};
 
-})(ChemDoodle.math, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3462 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
-//
+})(iview.math, iview.structures);
 
 (function(structures) {
 
@@ -1716,14 +1591,7 @@ ChemDoodle.ELEMENT = (function() {
 		return true;
 	};
 
-})(ChemDoodle.structures);
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3524 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-04 22:27:39 -0400 (Fri, 04 May 2012) $
-//
+})(iview.structures);
 
 (function(c, structures) {
 
@@ -1825,15 +1693,7 @@ Line
 		};
 	};
 
-})(ChemDoodle, ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3526 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-05 15:12:11 -0400 (Sat, 05 May 2012) $
-//
+})(iview, iview.structures);
 
 (function(c, extensions, structures, ELEMENT) {
 
@@ -1881,17 +1741,9 @@ Line
 		return molecule;
 	};
 
-})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.ELEMENT);
+})(iview, iview.extensions, iview.structures, iview.ELEMENT);
 
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 2974 $
-//  $Author: kevin $
-//  $LastChangedDate: 2010-12-29 11:07:06 -0500 (Wed, 29 Dec 2010) $
-//
-
-ChemDoodle.monitor = (function(document) {
+iview.monitor = (function(document) {
 
 	var m = {};
 	m.CANVAS_DRAGGING = null;
@@ -1968,13 +1820,6 @@ ChemDoodle.monitor = (function(document) {
 	return m;
 
 })(document);
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
-//  $Revision: 3519 $
-//  $Author: kevin $
-//  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
-//
 
 (function(c, monitor, extensions, math, structures, document, window) {
 
@@ -2185,4 +2030,4 @@ ChemDoodle.monitor = (function(document) {
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, document, window);
+})(iview, iview.monitor, iview.extensions, iview.math, iview.structures, document, window);

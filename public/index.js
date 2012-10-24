@@ -5,7 +5,7 @@ $(function() {
 //	window.open(canvas.toDataURL('image/png'));
 
 	$.get('2ZD1.pdb', function(complex) {
-		var c = new ChemDoodle.Canvas('iview');
-		c.loadMolecule(ChemDoodle.readPDB(complex));
+		var c = new iview.Canvas('iview');
+		c.loadMolecule(iview.readPDB(complex));
 	});
 });
