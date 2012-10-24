@@ -2535,75 +2535,60 @@ Line
 						end : parseInt(line.substring(33, 37))
 					});
 				} else if (extensions.stringStartsWith(line, 'ATOM')) {
-					var altLoc = line.substring(16, 17);
-					if (altLoc == ' ' || altLoc == 'A') {
-						var label = $.trim(line.substring(76, 78));
-						if (label.length == 0) {
-							var s = $.trim(line.substring(12, 14));
-							if (s == 'HD') {
-								label = 'H';
-							} else if (s.length > 0) {
-								if (s.length > 1) {
-									label = s.charAt(0) + s.substring(1).toLowerCase();
-								} else {
-									label = s;
-								}
+					var label = $.trim(line.substring(76, 78));
+					var a = new structures.Atom(label, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+					a.hetatm = false;
+					resatoms.push(a);
+					// set up residue
+					var resSeq = parseInt(line.substring(22, 26));
+					if (currentChain.length == 0) {
+						for ( var j = 0; j < 2; j++) {
+							var dummyFront = new structures.Residue(-1);
+							dummyFront.cp1 = a;
+							dummyFront.cp2 = a;
+							currentChain.push(dummyFront);
+						}
+					}
+					if (resSeq != Number.NaN && currentChain[currentChain.length - 1].resSeq != resSeq) {
+						var r = new structures.Residue(resSeq);
+						r.name = $.trim(line.substring(17, 20));
+						if (r.name.length == 3) {
+							r.name = r.name.substring(0, 1) + r.name.substring(1).toLowerCase();
+						} else {
+							if (r.name.length == 2 && r.name.charAt(0) == 'D') {
+								r.name = r.name.substring(1);
 							}
 						}
-						var a = new structures.Atom(label, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-						a.hetatm = false;
-						resatoms.push(a);
-						// set up residue
-						var resSeq = parseInt(line.substring(22, 26));
-						if (currentChain.length == 0) {
-							for ( var j = 0; j < 2; j++) {
-								var dummyFront = new structures.Residue(-1);
-								dummyFront.cp1 = a;
-								dummyFront.cp2 = a;
-								currentChain.push(dummyFront);
-							}
+						currentChain.push(r);
+						var chainID = line.substring(21, 22);
+						checkContained(r, helices, chainID, resSeq, true);
+						checkContained(r, sheets, chainID, resSeq, false);
+					}
+					// end residue setup
+					var atomName = $.trim(line.substring(12, 16));
+					var currentResidue = currentChain[currentChain.length - 1];
+					if (atomName == 'CA' || atomName == 'P' || atomName == 'O5\'') {
+						if (!currentResidue.cp1) {
+							currentResidue.cp1 = a;
 						}
-						if (resSeq != Number.NaN && currentChain[currentChain.length - 1].resSeq != resSeq) {
-							var r = new structures.Residue(resSeq);
-							r.name = $.trim(line.substring(17, 20));
-							if (r.name.length == 3) {
-								r.name = r.name.substring(0, 1) + r.name.substring(1).toLowerCase();
-							} else {
-								if (r.name.length == 2 && r.name.charAt(0) == 'D') {
-									r.name = r.name.substring(1);
-								}
+					} else if (atomName == 'N3' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'N1' && (currentResidue.name=='A'||currentResidue.name=='G')) {
+						//control points for base platform direction
+						currentResidue.cp3 = a;
+					} else if (atomName == 'C2') {
+						//control points for base platform orientation
+						currentResidue.cp4 = a;
+					} else if (atomName == 'C4' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'C6' && (currentResidue.name=='A'||currentResidue.name=='G')) {
+						//control points for base platform orientation
+						currentResidue.cp5 = a;
+					} else if (atomName == 'O' || atomName == 'C6' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'N9') {
+						if (!currentChain[currentChain.length - 1].cp2) {
+							if (atomName == 'C6' || atomName == 'N9') {
+								lastC = a;
 							}
-							currentChain.push(r);
-							var chainID = line.substring(21, 22);
-							checkContained(r, helices, chainID, resSeq, true);
-							checkContained(r, sheets, chainID, resSeq, false);
+							currentResidue.cp2 = a;
 						}
-						// end residue setup
-						var atomName = $.trim(line.substring(12, 16));
-						var currentResidue = currentChain[currentChain.length - 1];
-						if (atomName == 'CA' || atomName == 'P' || atomName == 'O5\'') {
-							if (!currentResidue.cp1) {
-								currentResidue.cp1 = a;
-							}
-						} else if (atomName == 'N3' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'N1' && (currentResidue.name=='A'||currentResidue.name=='G')) {
-							//control points for base platform direction
-							currentResidue.cp3 = a;
-						} else if (atomName == 'C2') {
-							//control points for base platform orientation
-							currentResidue.cp4 = a;
-						} else if (atomName == 'C4' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'C6' && (currentResidue.name=='A'||currentResidue.name=='G')) {
-							//control points for base platform orientation
-							currentResidue.cp5 = a;
-						} else if (atomName == 'O' || atomName == 'C6' && (currentResidue.name=='C'||currentResidue.name=='U'||currentResidue.name=='T') || atomName == 'N9') {
-							if (!currentChain[currentChain.length - 1].cp2) {
-								if (atomName == 'C6' || atomName == 'N9') {
-									lastC = a;
-								}
-								currentResidue.cp2 = a;
-							}
-						} else if (atomName == 'C') {
-							lastC = a;
-						}
+					} else if (atomName == 'C') {
+						lastC = a;
 					}
 				} else if (extensions.stringStartsWith(line, 'HETATM')) {
 					var symbol = $.trim(line.substring(76, 78));
@@ -2652,33 +2637,17 @@ Line
 			}
 			this.endChain(molecule, currentChain, lastC);
 			if(molecule.bonds.length==0){
-				var margin = 1.1;
 				for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
 					for ( var j = i + 1; j < ii; j++) {
 						var first = molecule.atoms[i];
 						var second = molecule.atoms[j];
-						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * margin) {
-							molecule.bonds.push(new structures.Bond(first, second, 1));
-						}
-					}
-				}
-			}
-			if(this.deduceResidueBonds){
-				for ( var i = 0, ii = resatoms.length; i < ii; i++) {
-					var max = Math.min(ii, i+20);
-					for ( var j = i + 1; j <max; j++) {
-						var first = resatoms[i];
-						var second = resatoms[j];
-						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius)*1.1) {
+						if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * 1.1) {
 							molecule.bonds.push(new structures.Bond(first, second, 1));
 						}
 					}
 				}
 			}
 			molecule.atoms = molecule.atoms.concat(resatoms);
-			if (this.calculateRibbonDistances) {
-				this.calculateDistances(molecule, resatoms);
-			}
 			return molecule;
 		};
 		this.endChain = function(molecule, chain, lastC) {
@@ -2697,28 +2666,6 @@ Line
 					chain.push(dummyEnd);
 				}
 				molecule.chains.push(chain);
-			}
-		};
-		this.calculateDistances = function(molecule, resatoms) {
-			var hetatm = [];
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				var a = molecule.atoms[i];
-				if (a.hetatm) {
-					if (!a.isWater) {
-						hetatm.push(a);
-					}
-				}
-			}
-			for ( var i = 0, ii = resatoms.length; i < ii; i++) {
-				var a = resatoms[i];
-				a.closestDistance = Number.POSITIVE_INFINITY;
-				if (hetatm.length == 0) {
-					a.closestDistance = 0;
-				} else {
-					for ( var j = 0, jj = hetatm.length; j < jj; j++) {
-						a.closestDistance = Math.min(a.closestDistance, a.distance3D(hetatm[j]));
-					}
-				}
 			}
 		};
 	};
