@@ -170,9 +170,6 @@ ChemDoodle.math = (function(extensions, structures) {
 	pack.getRGB = function(color) {
 		var err = [ 0, 0, 0 ];
 		if (color.charAt(0) == '#') {
-			if (color.length == 4) {
-				color = '#' + color.charAt(1) + color.charAt(1) + color.charAt(2) + color.charAt(2) + color.charAt(3) + color.charAt(3);
-			}
 			return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 		} else if (extensions.stringStartsWith(color, 'rgb')) {
 			var cs = color.replace(/rgb\(|\)/g, '').split(',');
@@ -2871,26 +2868,23 @@ ChemDoodle.monitor = (function(document) {
 				// set up ribbon diagram if available and not already setup
 				for ( var j = 0, jj = this.molecule.chains.length; j < jj; j++) {
 					var rs = this.molecule.chains[j];
-					var isNucleotide = rs.length > 2 && RESIDUE[rs[2].name] && RESIDUE[rs[2].name].aminoColor == '#BEA06E';
 					if (rs.length > 0 && !rs[0].lineSegments) {
 						for ( var i = 0, ii = rs.length - 1; i < ii; i++) {
-							rs[i].setup(rs[i + 1].cp1, isNucleotide?1:this.specs.proteins_horizontalResolution);
+							rs[i].setup(rs[i + 1].cp1, this.specs.proteins_horizontalResolution);
 						}
-						if (!isNucleotide) {
-							for ( var i = 1, ii = rs.length - 1; i < ii; i++) {
-								// reverse guide points if carbonyl
-								// orientation
-								// flips
-								if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > Math.PI / 2) {
-									rs[i].guidePointsSmall.reverse();
-									rs[i].guidePointsLarge.reverse();
-									vec3.scale(rs[i].D, -1);
-								}
+						for ( var i = 1, ii = rs.length - 1; i < ii; i++) {
+							// reverse guide points if carbonyl
+							// orientation
+							// flips
+							if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > Math.PI / 2) {
+								rs[i].guidePointsSmall.reverse();
+								rs[i].guidePointsLarge.reverse();
+								vec3.scale(rs[i].D, -1);
 							}
 						}
 						for ( var i = 1, ii = rs.length - 3; i < ii; i++) {
 							// compute line segments
-							rs[i].computeLineSegments(rs[i - 1], rs[i + 1], rs[i + 2], !isNucleotide, isNucleotide?this.specs.nucleics_verticalResolution:this.specs.proteins_verticalResolution);
+							rs[i].computeLineSegments(rs[i - 1], rs[i + 1], rs[i + 2], true, this.specs.proteins_verticalResolution);
 						}
 						// remove unneeded dummies
 						rs.pop();
