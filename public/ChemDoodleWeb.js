@@ -484,50 +484,6 @@ ChemDoodle.ELEMENT = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3008 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-01-07 21:28:00 -0500 (Fri, 07 Jan 2011) $
-//
-ChemDoodle.RESIDUE = (function() {
-
-	function Residue(symbol, name) {
-		this.symbol = symbol;
-		this.name = name;
-		return true;
-	}
-
-	var R = [];
-	R['Ala'] = new Residue('Ala', 'Alanine');
-	R['Arg'] = new Residue('Arg', 'Arginine');
-	R['Asn'] = new Residue('Asn', 'Asparagine');
-	R['Asp'] = new Residue('Asp', 'Aspartic Acid');
-	R['Cys'] = new Residue('Cys', 'Cysteine');
-	R['Gln'] = new Residue('Gln', 'Glutamine');
-	R['Glu'] = new Residue('Glu', 'Glutamic Acid');
-	R['Gly'] = new Residue('Gly', 'Glycine');
-	R['His'] = new Residue('His', 'Histidine');
-	R['Ile'] = new Residue('Ile', 'Isoleucine');
-	R['Leu'] = new Residue('Leu', 'Leucine');
-	R['Lys'] = new Residue('Lys', 'Lysine');
-	R['Met'] = new Residue('Met', 'Methionine');
-	R['Phe'] = new Residue('Phe', 'Phenylalanine');
-	R['Pro'] = new Residue('Pro', 'Proline');
-	R['Ser'] = new Residue('Ser', 'Serine');
-	R['Thr'] = new Residue('Thr', 'Threonine');
-	R['Trp'] = new Residue('Trp', 'Tryptophan');
-	R['Tyr'] = new Residue('Tyr', 'Tyrosine');
-	R['Val'] = new Residue('Val', 'Valine');
-	R['Asx'] = new Residue('Asx', 'Asparagine');
-	R['Glx'] = new Residue('Glx', 'Glutamine');
-	R['*'] = new Residue('*', 'Other');
-
-	return R;
-	
-})();
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3469 $
 //  $Author: kevin $
 //  $LastChangedDate: 2012-01-21 10:01:03 -0500 (Sat, 21 Jan 2012) $
@@ -1291,7 +1247,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, math, structures, RESIDUE) {
+(function(c, math, structures) {
 
 	structures.Molecule = function() {
 		this.atoms = [];
@@ -1425,7 +1381,7 @@ ChemDoodle.RESIDUE = (function() {
 		return true;
 	};
 
-})(ChemDoodle, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE);
+})(ChemDoodle, ChemDoodle.math, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2086,7 +2042,7 @@ ChemDoodle.monitor = (function(document) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, monitor, extensions, math, structures, RESIDUE, document, window) {
+(function(c, monitor, extensions, math, structures, document, window) {
 
 	c.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
@@ -2295,4 +2251,4 @@ ChemDoodle.monitor = (function(document) {
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, document, window);
+})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, document, window);
