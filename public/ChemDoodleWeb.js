@@ -2041,24 +2041,6 @@ ChemDoodle.RESIDUE = (function() {
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
 //
-//  $Revision: 3100 $
-//  $Author: kevin $
-//  $LastChangedDate: 2011-02-17 07:35:56 -0500 (Thu, 17 Feb 2011) $
-//
-
-(function(structures) {
-
-	structures.Line = function() {
-		this.storeData([0,0,0, 0,1,0], [0,0,0, 0,0,0]);
-		return true;
-	};
-	structures.Line.prototype = new structures._Mesh();
-
-})(ChemDoodle.structures);
-
-//
-//  Copyright 2009 iChemLabs, LLC.  All rights reserved.
-//
 //  $Revision: 3462 $
 //  $Author: kevin $
 //  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
@@ -2796,7 +2778,6 @@ ChemDoodle.monitor = (function(document) {
 		// and translate to draw atoms
 		this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
 		this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
-		this.gl.lineBuffer = new structures.Line();
 		this.gl.lighting = new structures.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
 		this.gl.material = new structures.Material(this.gl);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
