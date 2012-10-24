@@ -56,7 +56,7 @@ var ChemDoodle = (function() {
 //  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
 //
 
-ChemDoodle.extensions = (function(structures, v3, m) {
+ChemDoodle.extensions = (function(structures) {
 
 	var ext = {};
 
@@ -65,11 +65,11 @@ ChemDoodle.extensions = (function(structures, v3, m) {
 	};
 
 	ext.vec3AngleFrom = function(v1, v2) {
-		var length1 = v3.length(v1);
-		var length2 = v3.length(v2);
-		var dot = v3.dot(v1, v2);
+		var length1 = vec3.length(v1);
+		var length2 = vec3.length(v2);
+		var dot = vec3.dot(v1, v2);
 		var cosine = dot / length1 / length2;
-		return m.acos(cosine);
+		return Math.acos(cosine);
 	};
 
 	ext.contextHashTo = function(ctx, xs, ys, xt, yt, width, spacing) {
@@ -110,7 +110,7 @@ ChemDoodle.extensions = (function(structures, v3, m) {
 
 	return ext;
 
-})(ChemDoodle.structures, vec3, Math);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -120,7 +120,7 @@ ChemDoodle.extensions = (function(structures, v3, m) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-ChemDoodle.math = (function(extensions, structures, m) {
+ChemDoodle.math = (function(extensions, structures) {
 
 	var pack = {};
 
@@ -128,13 +128,13 @@ ChemDoodle.math = (function(extensions, structures, m) {
 		if (angles.length == 0) {
 			return {
 				angle : 0,
-				largest : m.PI * 2
+				largest : Math.PI * 2
 			};
 		}
 		if (angles.length == 1) {
 			return {
-				angle : angles[0] + m.PI,
-				largest : m.PI * 2
+				angle : angles[0] + Math.PI,
+				largest : Math.PI * 2
 			};
 		}
 		var largest = 0;
@@ -148,12 +148,12 @@ ChemDoodle.math = (function(extensions, structures, m) {
 				index = i;
 			}
 		}
-		var last = angles[0] + m.PI * 2 - angles[angles.length - 1];
+		var last = angles[0] + Math.PI * 2 - angles[angles.length - 1];
 		if (last > largest) {
 			angle = angles[0] - last / 2;
 			largest = last;
 			if (angle < 0) {
-				angle += m.PI * 2;
+				angle += Math.PI * 2;
 			}
 			index = angles.length - 1;
 		}
@@ -236,7 +236,7 @@ ChemDoodle.math = (function(extensions, structures, m) {
 			var p = intersections[i];
 			var dx = to.x - p.x;
 			var dy = to.y - p.y;
-			max = m.max(max, m.sqrt(dx * dx + dy * dy));
+			max = Math.max(max, Math.sqrt(dx * dx + dy * dy));
 		}
 		return max;
 	};
@@ -294,7 +294,7 @@ ChemDoodle.math = (function(extensions, structures, m) {
 
 	return pack;
 
-})(ChemDoodle.extensions, ChemDoodle.structures, Math);
+})(ChemDoodle.extensions, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -537,7 +537,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-01-21 10:01:03 -0500 (Sat, 21 Jan 2012) $
 //
 
-(function(structures, m) {
+(function(structures) {
 
 	structures.Point = function(x, y) {
 		this.x = x ? x : 0;
@@ -553,7 +553,7 @@ ChemDoodle.RESIDUE = (function() {
 		this.distance = function(p) {
 			var dx = p.x - this.x;
 			var dy = p.y - this.y;
-			return m.sqrt(dx*dx+dy*dy);
+			return Math.sqrt(dx*dx+dy*dy);
 		};
 		this.angleForStupidCanvasArcs = function(p) {
 			var dx = p.x - this.x;
@@ -564,29 +564,29 @@ ChemDoodle.RESIDUE = (function() {
 				if (dy == 0) {
 					angle = 0;
 				} else if (dy > 0) {
-					angle = m.PI / 2;
+					angle = Math.PI / 2;
 				} else {
-					angle = 3 * m.PI / 2;
+					angle = 3 * Math.PI / 2;
 				}
 			} else if (dy == 0) {
 				if (dx > 0) {
 					angle = 0;
 				} else {
-					angle = m.PI;
+					angle = Math.PI;
 				}
 			} else {
 				if (dx < 0) {
-					angle = m.atan(dy / dx) + m.PI;
+					angle = Math.atan(dy / dx) + Math.PI;
 				} else if (dy < 0) {
-					angle = m.atan(dy / dx) + 2 * m.PI;
+					angle = Math.atan(dy / dx) + 2 * Math.PI;
 				} else {
-					angle = m.atan(dy / dx);
+					angle = Math.atan(dy / dx);
 				}
 			}
 			while (angle < 0) {
-				angle += m.PI * 2;
+				angle += Math.PI * 2;
 			}
-			angle = angle % (m.PI * 2);
+			angle = angle % (Math.PI * 2);
 			return angle;
 		};
 		this.angle = function(p) {
@@ -599,35 +599,35 @@ ChemDoodle.RESIDUE = (function() {
 				if (dy == 0) {
 					angle = 0;
 				} else if (dy > 0) {
-					angle = m.PI / 2;
+					angle = Math.PI / 2;
 				} else {
-					angle = 3 * m.PI / 2;
+					angle = 3 * Math.PI / 2;
 				}
 			} else if (dy == 0) {
 				if (dx > 0) {
 					angle = 0;
 				} else {
-					angle = m.PI;
+					angle = Math.PI;
 				}
 			} else {
 				if (dx < 0) {
-					angle = m.atan(dy / dx) + m.PI;
+					angle = Math.atan(dy / dx) + Math.PI;
 				} else if (dy < 0) {
-					angle = m.atan(dy / dx) + 2 * m.PI;
+					angle = Math.atan(dy / dx) + 2 * Math.PI;
 				} else {
-					angle = m.atan(dy / dx);
+					angle = Math.atan(dy / dx);
 				}
 			}
 			while (angle < 0) {
-				angle += m.PI * 2;
+				angle += Math.PI * 2;
 			}
-			angle = angle % (m.PI * 2);
+			angle = angle % (Math.PI * 2);
 			return angle;
 		};
 		return true;
 	};
 
-})(ChemDoodle.structures, Math);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -637,7 +637,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(ELEMENT, extensions, structures, m, m4) {
+(function(ELEMENT, extensions, structures, m4) {
 
 	structures.Atom = function(label, x, y, z) {
 		this.x = x ? x : 0;
@@ -672,7 +672,7 @@ ChemDoodle.RESIDUE = (function() {
 			var dx = p.x - this.x;
 			var dy = p.y - this.y;
 			var dz = p.z - this.z;
-			return m.sqrt(dx * dx + dy * dy + dz * dz);
+			return Math.sqrt(dx * dx + dy * dy + dz * dz);
 		};
 		this.draw = function(ctx, specs) {
 			this.textBounds = [];
@@ -684,12 +684,12 @@ ChemDoodle.RESIDUE = (function() {
 			ctx.fillStyle = ELEMENT[this.label].jmolColor;
 			if (this.isLone && !specs.atoms_displayAllCarbonLabels_2D || specs.atoms_circles_2D) {
 				ctx.beginPath();
-				ctx.arc(this.x, this.y, specs.atoms_circleDiameter_2D / 2, 0, m.PI * 2, false);
+				ctx.arc(this.x, this.y, specs.atoms_circleDiameter_2D / 2, 0, Math.PI * 2, false);
 				ctx.fill();
 				if (specs.atoms_circleBorderWidth_2D > 0) {
 					ctx.lineWidth = specs.atoms_circleBorderWidth_2D;
 					ctx.strokeStyle = 'black';
-					ctx.stroke(this.x, this.y, 0, m.PI * 2, specs.atoms_circleDiameter_2D / 2);
+					ctx.stroke(this.x, this.y, 0, Math.PI * 2, specs.atoms_circleDiameter_2D / 2);
 				}
 			} else if (this.isLabelVisible(specs)) {
 				ctx.textAlign = 'center';
@@ -732,18 +732,18 @@ ChemDoodle.RESIDUE = (function() {
 							ctx.font = subFont;
 							var numWidth = ctx.measureText(numHs).width;
 							if (this.bondNumber == 1) {
-								if (this.angleOfLeastInterference > m.PI / 2 && this.angleOfLeastInterference < 3 * m.PI / 2) {
+								if (this.angleOfLeastInterference > Math.PI / 2 && this.angleOfLeastInterference < 3 * Math.PI / 2) {
 									xoffset = -symbolWidth / 2 - numWidth - hWidth / 2;
 								}
 							} else {
-								if (this.angleOfLeastInterference <= m.PI / 4) {
+								if (this.angleOfLeastInterference <= Math.PI / 4) {
 									// default
-								} else if (this.angleOfLeastInterference < 3 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference < 3 * Math.PI / 4) {
 									xoffset = 0;
 									yoffset = -specs.atoms_font_size_2D * .9;
-								} else if (this.angleOfLeastInterference <= 5 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference <= 5 * Math.PI / 4) {
 									xoffset = -symbolWidth / 2 - numWidth - hWidth / 2;
-								} else if (this.angleOfLeastInterference < 7 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference < 7 * Math.PI / 4) {
 									xoffset = 0;
 									yoffset = specs.atoms_font_size_2D * .9;
 								}
@@ -768,18 +768,18 @@ ChemDoodle.RESIDUE = (function() {
 							var xoffset = symbolWidth / 2 + hWidth / 2;
 							var yoffset = 0;
 							if (this.bondNumber == 1) {
-								if (this.angleOfLeastInterference > m.PI / 2 && this.angleOfLeastInterference < 3 * m.PI / 2) {
+								if (this.angleOfLeastInterference > Math.PI / 2 && this.angleOfLeastInterference < 3 * Math.PI / 2) {
 									xoffset = -symbolWidth / 2 - hWidth / 2;
 								}
 							} else {
-								if (this.angleOfLeastInterference <= m.PI / 4) {
+								if (this.angleOfLeastInterference <= Math.PI / 4) {
 									// default
-								} else if (this.angleOfLeastInterference < 3 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference < 3 * Math.PI / 4) {
 									xoffset = 0;
 									yoffset = -specs.atoms_font_size_2D * .9;
-								} else if (this.angleOfLeastInterference <= 5 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference <= 5 * Math.PI / 4) {
 									xoffset = -symbolWidth / 2 - hWidth / 2;
-								} else if (this.angleOfLeastInterference < 7 * m.PI / 4) {
+								} else if (this.angleOfLeastInterference < 7 * Math.PI / 4) {
 									xoffset = 0;
 									yoffset = specs.atoms_font_size_2D * .9;
 								}
@@ -808,17 +808,17 @@ ChemDoodle.RESIDUE = (function() {
 					var angleUse = this.angleOfLeastInterference;
 					var distanceUse = specs.atoms_font_size_2D;
 					if (this.isLabelVisible(specs) && numHs > 0) {
-						angleUse += m.PI / 4;
+						angleUse += Math.PI / 4;
 					}
 					ctx.textAlign = 'center';
 					ctx.textBaseline = 'middle';
-					ctx.fillText(s, this.x + distanceUse * m.cos(angleUse), this.y - distanceUse * m.sin(angleUse));
+					ctx.fillText(s, this.x + distanceUse * Math.cos(angleUse), this.y - distanceUse * Math.sin(angleUse));
 				}
 				if (this.numLonePair > 0) {
 					ctx.fillStyle = 'black';
-					if (this.bondNumber == 2 && m.abs(this.largestAngle - m.PI) < m.PI / 60) {
-						this.drawLonePairs(ctx, specs, m.floor(this.numLonePair / 2), this.angleOfLeastInterference, this.largestAngle);
-						this.drawLonePairs(ctx, specs, m.floor(this.numLonePair / 2) + this.numLonePair % 2, this.angleOfLeastInterference + m.PI, this.largestAngle);
+					if (this.bondNumber == 2 && Math.abs(this.largestAngle - Math.PI) < Math.PI / 60) {
+						this.drawLonePairs(ctx, specs, Math.floor(this.numLonePair / 2), this.angleOfLeastInterference, this.largestAngle);
+						this.drawLonePairs(ctx, specs, Math.floor(this.numLonePair / 2) + this.numLonePair % 2, this.angleOfLeastInterference + Math.PI, this.largestAngle);
 					} else {
 						this.drawLonePairs(ctx, specs, this.numLonePair, this.angleOfLeastInterference, this.largestAngle);
 					}
@@ -836,10 +836,10 @@ ChemDoodle.RESIDUE = (function() {
 				var difx = Math.cos(perp) * specs.atoms_lonePairSpread_2D / 2;
 				var dify = -Math.sin(perp) * specs.atoms_lonePairSpread_2D / 2;
 				ctx.beginPath();
-				ctx.arc(p1x + difx, p1y + dify, specs.atoms_lonePairDiameter_2D, 0, m.PI * 2, false);
+				ctx.arc(p1x + difx, p1y + dify, specs.atoms_lonePairDiameter_2D, 0, Math.PI * 2, false);
 				ctx.fill();
 				ctx.beginPath();
-				ctx.arc(p1x - difx, p1y - dify, specs.atoms_lonePairDiameter_2D, 0, m.PI * 2, false);
+				ctx.arc(p1x - difx, p1y - dify, specs.atoms_lonePairDiameter_2D, 0, Math.PI * 2, false);
 				ctx.fill();
 			}
 		};
@@ -849,7 +849,7 @@ ChemDoodle.RESIDUE = (function() {
 				ctx.lineWidth = 1.2;
 				ctx.beginPath();
 				var radius = this.isHover ? 7 : 15;
-				ctx.arc(this.x, this.y, radius, 0, m.PI * 2, false);
+				ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
 				ctx.stroke();
 			}
 		};
@@ -896,7 +896,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Atom.prototype = new structures.Point(0, 0);
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, Math, mat4);
+})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, mat4);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -906,7 +906,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(ELEMENT, extensions, structures, math, m, m4, v3) {
+(function(ELEMENT, extensions, structures, math, m4, v3) {
 
 	structures.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
@@ -1009,9 +1009,9 @@ ChemDoodle.RESIDUE = (function() {
 				if (this.stereo == structures.Bond.STEREO_PROTRUDING || this.stereo == structures.Bond.STEREO_RECESSED) {
 					var thinSpread = specs.bonds_width_2D / 2;
 					var useDist = this.a1.distance(this.a2) * specs.bonds_wedgeThickness_2D / 2;
-					var perpendicular = this.a1.angle(this.a2) + m.PI / 2;
-					var mcosp = m.cos(perpendicular);
-					var msinp = m.sin(perpendicular);
+					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
+					var mcosp = Math.cos(perpendicular);
+					var msinp = Math.sin(perpendicular);
 					var cx1 = x1 - mcosp * thinSpread;
 					var cy1 = y1 + msinp * thinSpread;
 					var cx2 = x1 + mcosp * thinSpread;
@@ -1042,12 +1042,12 @@ ChemDoodle.RESIDUE = (function() {
 				} else if (this.stereo == structures.Bond.STEREO_AMBIGUOUS) {
 					ctx.beginPath();
 					ctx.moveTo(x1, y1);
-					var curves = m.floor(m.sqrt(difX * difX + difY * difY) / specs.bonds_wavyLength_2D);
+					var curves = Math.floor(Math.sqrt(difX * difX + difY * difY) / specs.bonds_wavyLength_2D);
 					var x = x1;
 					var y = y1;
-					var perpendicular = this.a1.angle(this.a2) + m.PI / 2;
-					var mcosp = m.cos(perpendicular);
-					var msinp = m.sin(perpendicular);
+					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
+					var mcosp = Math.cos(perpendicular);
+					var msinp = Math.sin(perpendicular);
 
 					var curveX = difX / curves;
 					var curveY = difY / curves;
@@ -1083,15 +1083,15 @@ ChemDoodle.RESIDUE = (function() {
 			case 2:
 				if (this.stereo == structures.Bond.STEREO_AMBIGUOUS) {
 					var useDist = this.a1.distance(this.a2) * specs.bonds_saturationWidth_2D / 2;
-					var perpendicular = this.a1.angle(this.a2) + m.PI / 2;
-					var cx1 = x1 - m.cos(perpendicular) * useDist;
-					var cy1 = y1 + m.sin(perpendicular) * useDist;
-					var cx2 = x1 + m.cos(perpendicular) * useDist;
-					var cy2 = y1 - m.sin(perpendicular) * useDist;
-					var cx3 = x2 + m.cos(perpendicular) * useDist;
-					var cy3 = y2 - m.sin(perpendicular) * useDist;
-					var cx4 = x2 - m.cos(perpendicular) * useDist;
-					var cy4 = y2 + m.sin(perpendicular) * useDist;
+					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
+					var cx1 = x1 - Math.cos(perpendicular) * useDist;
+					var cy1 = y1 + Math.sin(perpendicular) * useDist;
+					var cx2 = x1 + Math.cos(perpendicular) * useDist;
+					var cy2 = y1 - Math.sin(perpendicular) * useDist;
+					var cx3 = x2 + Math.cos(perpendicular) * useDist;
+					var cy3 = y2 - Math.sin(perpendicular) * useDist;
+					var cx4 = x2 - Math.cos(perpendicular) * useDist;
+					var cy4 = y2 + Math.sin(perpendicular) * useDist;
 					ctx.beginPath();
 					ctx.moveTo(cx1, cy1);
 					ctx.lineTo(cx3, cy3);
@@ -1105,26 +1105,26 @@ ChemDoodle.RESIDUE = (function() {
 					var clip = 0;
 					var dist = this.a1.distance(this.a2);
 					var angle = this.a1.angle(this.a2);
-					var perpendicular = angle + m.PI / 2;
+					var perpendicular = angle + Math.PI / 2;
 					var useDist = dist * specs.bonds_saturationWidth_2D;
-					var clipAngle = m.PI / 3;
-					if (clipAngle < m.PI / 2) {
-						clip = -(useDist / m.tan(clipAngle));
+					var clipAngle = Math.PI / 3;
+					if (clipAngle < Math.PI / 2) {
+						clip = -(useDist / Math.tan(clipAngle));
 					}
-					if (m.abs(clip) < dist / 2) {
-						var xuse1 = x1 - m.cos(angle) * clip;
-						var xuse2 = x2 + m.cos(angle) * clip;
-						var yuse1 = y1 + m.sin(angle) * clip;
-						var yuse2 = y2 - m.sin(angle) * clip;
-						var cx1 = xuse1 - m.cos(perpendicular) * useDist;
-						var cy1 = yuse1 + m.sin(perpendicular) * useDist;
-						var cx2 = xuse1 + m.cos(perpendicular) * useDist;
-						var cy2 = yuse1 - m.sin(perpendicular) * useDist;
-						var cx3 = xuse2 - m.cos(perpendicular) * useDist;
-						var cy3 = yuse2 + m.sin(perpendicular) * useDist;
-						var cx4 = xuse2 + m.cos(perpendicular) * useDist;
-						var cy4 = yuse2 - m.sin(perpendicular) * useDist;
-						var flip = this.ring == null || (this.ring.center.angle(this.a1) > this.ring.center.angle(this.a2) && !(this.ring.center.angle(this.a1) - this.ring.center.angle(this.a2) > m.PI) || (this.ring.center.angle(this.a1) - this.ring.center.angle(this.a2) < -m.PI));
+					if (Math.abs(clip) < dist / 2) {
+						var xuse1 = x1 - Math.cos(angle) * clip;
+						var xuse2 = x2 + Math.cos(angle) * clip;
+						var yuse1 = y1 + Math.sin(angle) * clip;
+						var yuse2 = y2 - Math.sin(angle) * clip;
+						var cx1 = xuse1 - Math.cos(perpendicular) * useDist;
+						var cy1 = yuse1 + Math.sin(perpendicular) * useDist;
+						var cx2 = xuse1 + Math.cos(perpendicular) * useDist;
+						var cy2 = yuse1 - Math.sin(perpendicular) * useDist;
+						var cx3 = xuse2 - Math.cos(perpendicular) * useDist;
+						var cy3 = yuse2 + Math.sin(perpendicular) * useDist;
+						var cx4 = xuse2 + Math.cos(perpendicular) * useDist;
+						var cy4 = yuse2 - Math.sin(perpendicular) * useDist;
+						var flip = this.ring == null || (this.ring.center.angle(this.a1) > this.ring.center.angle(this.a2) && !(this.ring.center.angle(this.a1) - this.ring.center.angle(this.a2) > Math.PI) || (this.ring.center.angle(this.a1) - this.ring.center.angle(this.a2) < -Math.PI));
 						if (flip) {
 							ctx.moveTo(cx1, cy1);
 							ctx.lineTo(cx3, cy3);
@@ -1136,15 +1136,15 @@ ChemDoodle.RESIDUE = (function() {
 					}
 				} else {
 					var useDist = this.a1.distance(this.a2) * specs.bonds_saturationWidth_2D / 2;
-					var perpendicular = this.a1.angle(this.a2) + m.PI / 2;
-					var cx1 = x1 - m.cos(perpendicular) * useDist;
-					var cy1 = y1 + m.sin(perpendicular) * useDist;
-					var cx2 = x1 + m.cos(perpendicular) * useDist;
-					var cy2 = y1 - m.sin(perpendicular) * useDist;
-					var cx3 = x2 + m.cos(perpendicular) * useDist;
-					var cy3 = y2 - m.sin(perpendicular) * useDist;
-					var cx4 = x2 - m.cos(perpendicular) * useDist;
-					var cy4 = y2 + m.sin(perpendicular) * useDist;
+					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
+					var cx1 = x1 - Math.cos(perpendicular) * useDist;
+					var cy1 = y1 + Math.sin(perpendicular) * useDist;
+					var cx2 = x1 + Math.cos(perpendicular) * useDist;
+					var cy2 = y1 - Math.sin(perpendicular) * useDist;
+					var cx3 = x2 + Math.cos(perpendicular) * useDist;
+					var cy3 = y2 - Math.sin(perpendicular) * useDist;
+					var cx4 = x2 - Math.cos(perpendicular) * useDist;
+					var cy4 = y2 + Math.sin(perpendicular) * useDist;
 					ctx.beginPath();
 					ctx.moveTo(cx1, cy1);
 					ctx.lineTo(cx4, cy4);
@@ -1155,15 +1155,15 @@ ChemDoodle.RESIDUE = (function() {
 				break;
 			case 3:
 				var useDist = this.a1.distance(this.a2) * specs.bonds_saturationWidth_2D;
-				var perpendicular = this.a1.angle(this.a2) + m.PI / 2;
-				var cx1 = x1 - m.cos(perpendicular) * useDist;
-				var cy1 = y1 + m.sin(perpendicular) * useDist;
-				var cx2 = x1 + m.cos(perpendicular) * useDist;
-				var cy2 = y1 - m.sin(perpendicular) * useDist;
-				var cx3 = x2 + m.cos(perpendicular) * useDist;
-				var cy3 = y2 - m.sin(perpendicular) * useDist;
-				var cx4 = x2 - m.cos(perpendicular) * useDist;
-				var cy4 = y2 + m.sin(perpendicular) * useDist;
+				var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
+				var cx1 = x1 - Math.cos(perpendicular) * useDist;
+				var cy1 = y1 + Math.sin(perpendicular) * useDist;
+				var cx2 = x1 + Math.cos(perpendicular) * useDist;
+				var cy2 = y1 - Math.sin(perpendicular) * useDist;
+				var cx3 = x2 + Math.cos(perpendicular) * useDist;
+				var cy3 = y2 - Math.sin(perpendicular) * useDist;
+				var cx4 = x2 - Math.cos(perpendicular) * useDist;
+				var cy4 = y2 + Math.sin(perpendicular) * useDist;
 				ctx.beginPath();
 				ctx.moveTo(cx1, cy1);
 				ctx.lineTo(cx4, cy4);
@@ -1177,18 +1177,18 @@ ChemDoodle.RESIDUE = (function() {
 		};
 		this.drawDecorations = function(ctx) {
 			if (this.isHover || this.isSelected) {
-				var pi2 = 2 * m.PI;
-				var angle = (this.a1.angleForStupidCanvasArcs(this.a2) + m.PI / 2) % pi2;
+				var pi2 = 2 * Math.PI;
+				var angle = (this.a1.angleForStupidCanvasArcs(this.a2) + Math.PI / 2) % pi2;
 				ctx.strokeStyle = this.isHover ? '#885110' : '#0060B2';
 				ctx.lineWidth = 1.2;
 				ctx.beginPath();
-				var angleTo = (angle + m.PI) % pi2;
-				angleTo = angleTo % (m.PI * 2);
+				var angleTo = (angle + Math.PI) % pi2;
+				angleTo = angleTo % (Math.PI * 2);
 				ctx.arc(this.a1.x, this.a1.y, 7, angle, angleTo, false);
 				ctx.stroke();
 				ctx.beginPath();
-				angle += m.PI;
-				angleTo = (angle + m.PI) % pi2;
+				angle += Math.PI;
+				angleTo = (angle + Math.PI) % pi2;
 				ctx.arc(this.a2.x, this.a2.y, 7, angle, angleTo, false);
 				ctx.stroke();
 			}
@@ -1239,7 +1239,7 @@ ChemDoodle.RESIDUE = (function() {
 			if (this.a1.x == this.a2.x && this.a1.z == this.a2.z) {
 				axis = [ 0, 0, 1 ];
 				if (this.a2.y < this.a1.y) {
-					ang = m.PI;
+					ang = Math.PI;
 				}
 			} else {
 				ang = extensions.vec3AngleFrom(y, a2b);
@@ -1271,7 +1271,7 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				// don't check for 0 here as that means it should be rotated
 				// by PI, but PI will be negated
-				m4.rotate(transformUse, ang + m.PI, axis);
+				m4.rotate(transformUse, ang + Math.PI, axis);
 				m4.scale(transformUse, scaleVector);
 				// colors
 				gl.material.setDiffuseColor(ELEMENT[this.a2.label].jmolColor);
@@ -1291,7 +1291,7 @@ ChemDoodle.RESIDUE = (function() {
 	structures.Bond.STEREO_RECESSED = 'recessed';
 	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.math, Math, mat4, vec3);
+})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.math, mat4, vec3);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1301,7 +1301,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, math, structures, RESIDUE, m) {
+(function(c, math, structures, RESIDUE) {
 
 	structures.Molecule = function() {
 		this.atoms = [];
@@ -1441,28 +1441,28 @@ ChemDoodle.RESIDUE = (function() {
 					var chain = this.chains[i];
 					for ( var j = 0, jj = chain.length; j < jj; j++) {
 						var residue = chain[j];
-						minX = m.min(residue.cp1.x, minX);
-						minY = m.min(residue.cp1.y, minY);
-						minZ = m.min(residue.cp1.z, minZ);
-						maxX = m.max(residue.cp1.x, maxX);
-						maxY = m.max(residue.cp1.y, maxY);
-						maxZ = m.max(residue.cp1.z, maxZ);
-						minX = m.min(residue.cp2.x, minX);
-						minY = m.min(residue.cp2.y, minY);
-						minZ = m.min(residue.cp2.z, minZ);
-						maxX = m.max(residue.cp2.x, maxX);
-						maxY = m.max(residue.cp2.y, maxY);
-						maxZ = m.max(residue.cp2.z, maxZ);
+						minX = Math.min(residue.cp1.x, minX);
+						minY = Math.min(residue.cp1.y, minY);
+						minZ = Math.min(residue.cp1.z, minZ);
+						maxX = Math.max(residue.cp1.x, maxX);
+						maxY = Math.max(residue.cp1.y, maxY);
+						maxZ = Math.max(residue.cp1.z, maxZ);
+						minX = Math.min(residue.cp2.x, minX);
+						minY = Math.min(residue.cp2.y, minY);
+						minZ = Math.min(residue.cp2.z, minZ);
+						maxX = Math.max(residue.cp2.x, maxX);
+						maxY = Math.max(residue.cp2.y, maxY);
+						maxZ = Math.max(residue.cp2.z, maxZ);
 					}
 				}
 			}
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = m.min(this.atoms[i].x, minX);
-				minY = m.min(this.atoms[i].y, minY);
-				minZ = m.min(this.atoms[i].z, minZ);
-				maxX = m.max(this.atoms[i].x, maxX);
-				maxY = m.max(this.atoms[i].y, maxY);
-				maxZ = m.max(this.atoms[i].z, maxZ);
+				minX = Math.min(this.atoms[i].x, minX);
+				minY = Math.min(this.atoms[i].y, minY);
+				minZ = Math.min(this.atoms[i].z, minZ);
+				maxX = Math.max(this.atoms[i].x, maxX);
+				maxY = Math.max(this.atoms[i].y, maxY);
+				maxZ = Math.max(this.atoms[i].z, maxZ);
 			}
 			return new structures.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
@@ -1473,10 +1473,10 @@ ChemDoodle.RESIDUE = (function() {
 			var minX = minY = Infinity;
 			var maxX = maxY = -Infinity;
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = m.min(this.atoms[i].x, minX);
-				minY = m.min(this.atoms[i].y, minY);
-				maxX = m.max(this.atoms[i].x, maxX);
-				maxY = m.max(this.atoms[i].y, maxY);
+				minX = Math.min(this.atoms[i].x, minX);
+				minY = Math.min(this.atoms[i].y, minY);
+				maxX = Math.max(this.atoms[i].x, maxX);
+				maxY = Math.max(this.atoms[i].y, maxY);
 			}
 			return new structures.Point((maxX + minX) / 2, (maxY + minY) / 2);
 		};
@@ -1491,14 +1491,14 @@ ChemDoodle.RESIDUE = (function() {
 					var chain = this.chains[i];
 					for ( var j = 0, jj = chain.length; j < jj; j++) {
 						var residue = chain[j];
-						minX = m.min(residue.cp1.x, minX);
-						minY = m.min(residue.cp1.y, minY);
-						maxX = m.max(residue.cp1.x, maxX);
-						maxY = m.max(residue.cp1.y, maxY);
-						minX = m.min(residue.cp2.x, minX);
-						minY = m.min(residue.cp2.y, minY);
-						maxX = m.max(residue.cp2.x, maxX);
-						maxY = m.max(residue.cp2.y, maxY);
+						minX = Math.min(residue.cp1.x, minX);
+						minY = Math.min(residue.cp1.y, minY);
+						maxX = Math.max(residue.cp1.x, maxX);
+						maxY = Math.max(residue.cp1.y, maxY);
+						minX = Math.min(residue.cp2.x, minX);
+						minY = Math.min(residue.cp2.y, minY);
+						maxX = Math.max(residue.cp2.x, maxX);
+						maxY = Math.max(residue.cp2.y, maxY);
 					}
 				}
 				minX -= 30;
@@ -1509,17 +1509,17 @@ ChemDoodle.RESIDUE = (function() {
 				maxZ += 30;
 			}
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = m.min(this.atoms[i].x, minX);
-				minY = m.min(this.atoms[i].y, minY);
-				maxX = m.max(this.atoms[i].x, maxX);
-				maxY = m.max(this.atoms[i].y, maxY);
+				minX = Math.min(this.atoms[i].x, minX);
+				minY = Math.min(this.atoms[i].y, minY);
+				maxX = Math.max(this.atoms[i].x, maxX);
+				maxY = Math.max(this.atoms[i].y, maxY);
 			}
 			return new structures.Point(maxX - minX, maxY - minY);
 		};
 		return true;
 	};
 
-})(ChemDoodle, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, Math);
+})(ChemDoodle, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1529,7 +1529,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
 //
 
-(function(structures, m, m4, v3) {
+(function(structures, m4, v3) {
 	
 	var SB = null;
 	var lastVerticalResolution = -1;
@@ -1618,7 +1618,7 @@ ChemDoodle.RESIDUE = (function() {
 			if (useArrows && this.arrow) {
 				for ( var i = 0, ii = verticalResolution; i < ii; i++) {
 					var mult = 1.5 - 1.3 * i / verticalResolution;
-					var mid = m.floor(this.horizontalResolution / 2);
+					var mid = Math.floor(this.horizontalResolution / 2);
 					var center = segments[mid];
 					for ( var j = 0, jj = segments.length; j < jj; j++) {
 						if (j != mid) {
@@ -1637,7 +1637,7 @@ ChemDoodle.RESIDUE = (function() {
 		};
 	};
 
-})(ChemDoodle.structures, Math, mat4, vec3);
+})(ChemDoodle.structures, mat4, vec3);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1647,7 +1647,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
 //
 
-(function(structures, m) {
+(function(structures) {
 
 	structures._Mesh = function() {
 		return true;
@@ -1728,7 +1728,7 @@ ChemDoodle.RESIDUE = (function() {
 		}
 	};
 
-})(ChemDoodle.structures, Math);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1738,15 +1738,15 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
 //
 
-(function(structures, m) {
+(function(structures) {
 
 	structures.Cylinder = function(radius, height, bands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var i = 0; i < bands; i++) {
-			var theta = i * 2 * m.PI / bands;
-			var cosTheta = m.cos(theta);
-			var sinTheta = m.sin(theta);
+			var theta = i * 2 * Math.PI / bands;
+			var cosTheta = Math.cos(theta);
+			var sinTheta = Math.sin(theta);
 			normalData.push(cosTheta, 0, sinTheta);
 			positionData.push(radius * cosTheta, 0, radius * sinTheta);
 			normalData.push(cosTheta, 0, sinTheta);
@@ -1763,7 +1763,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Cylinder.prototype = new structures._Mesh();
 
-})(ChemDoodle.structures, Math);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1773,20 +1773,20 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-01-05 15:33:29 -0500 (Thu, 05 Jan 2012) $
 //
 
-(function(structures, m) {
+(function(structures) {
 
 	structures.Sphere = function(radius, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-			var theta = latNumber * m.PI / latitudeBands;
-			var sinTheta = m.sin(theta);
-			var cosTheta = m.cos(theta);
+			var theta = latNumber * Math.PI / latitudeBands;
+			var sinTheta = Math.sin(theta);
+			var cosTheta = Math.cos(theta);
 
 			for ( var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-				var phi = longNumber * 2 * m.PI / longitudeBands;
-				var sinPhi = m.sin(phi);
-				var cosPhi = m.cos(phi);
+				var phi = longNumber * 2 * Math.PI / longitudeBands;
+				var sinPhi = Math.sin(phi);
+				var cosPhi = Math.cos(phi);
 
 				var x = cosPhi * sinTheta;
 				var y = cosTheta;
@@ -1820,7 +1820,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Sphere.prototype = new structures._Mesh();
 
-})(ChemDoodle.structures, Math);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1830,7 +1830,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
 //
 
-(function(RESIDUE, structures, m, v3) {
+(function(RESIDUE, structures, v3) {
 
 	var loadPartition = function(gl, p) {
 		// positions
@@ -1959,7 +1959,7 @@ ChemDoodle.RESIDUE = (function() {
 							v3.scale(normal, -1);
 						}
 						currentPartition.normalData.push(normal[0], normal[1], normal[2]);
-						v3.scale(normal, m.abs(offset));
+						v3.scale(normal, Math.abs(offset));
 						currentPartition.positionData.push(a.x + normal[0], a.y + normal[1], a.z + normal[2]);
 						if (j == lineSegmentNum - 1 && k == lineSegmentLength - 1) {
 							doSide2 = true;
@@ -2091,7 +2091,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Ribbon.prototype = new structures._Mesh();
 
-})(ChemDoodle.RESIDUE, ChemDoodle.structures, Math, vec3);
+})(ChemDoodle.RESIDUE, ChemDoodle.structures, vec3);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2486,7 +2486,7 @@ Line
 //  $LastChangedDate: 2012-05-05 15:12:11 -0400 (Sat, 05 May 2012) $
 //
 
-(function(c, extensions, io, structures, ELEMENT, m) {
+(function(c, extensions, io, structures, ELEMENT) {
 
 	io.PDBInterpreter = function() {
 
@@ -2665,7 +2665,7 @@ Line
 			}
 			if(this.deduceResidueBonds){
 				for ( var i = 0, ii = resatoms.length; i < ii; i++) {
-					var max = m.min(ii, i+20);
+					var max = Math.min(ii, i+20);
 					for ( var j = i + 1; j <max; j++) {
 						var first = resatoms[i];
 						var second = resatoms[j];
@@ -2729,7 +2729,7 @@ Line
 		return interpreter.read(content);
 	};
 
-})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.io, ChemDoodle.structures, ChemDoodle.ELEMENT, Math);
+})(ChemDoodle, ChemDoodle.extensions, ChemDoodle.io, ChemDoodle.structures, ChemDoodle.ELEMENT);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2825,7 +2825,7 @@ ChemDoodle.monitor = (function(document) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, monitor, extensions, math, structures, RESIDUE, m, document, m4, m3, v3, window) {
+(function(c, monitor, extensions, math, structures, RESIDUE, document, m4, m3, v3, window) {
 
 	c.Canvas = function(id) {
 		this.rotationMatrix = m4.identity([]);
@@ -3065,7 +3065,7 @@ ChemDoodle.monitor = (function(document) {
 		this.molecule = molecule;
 		this.center();
 		var d = this.molecule.getDimension();
-		this.maxDimension = m.max(d.x, d.y);
+		this.maxDimension = Math.max(d.x, d.y);
 		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		this.setupScene();
 		this.repaint();
@@ -3141,7 +3141,7 @@ ChemDoodle.monitor = (function(document) {
 								// reverse guide points if carbonyl
 								// orientation
 								// flips
-								if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > m.PI / 2) {
+								if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > Math.PI / 2) {
 									rs[i].guidePointsSmall.reverse();
 									rs[i].guidePointsLarge.reverse();
 									v3.scale(rs[i].D, -1);
@@ -3239,8 +3239,8 @@ ChemDoodle.monitor = (function(document) {
 		} else {
 			var difx = e.p.x - this.lastPoint.x;
 			var dify = e.p.y - this.lastPoint.y;
-			var rotation = m4.rotate(m4.identity([]), difx * m.PI / 180.0, [ 0, 1, 0 ]);
-			m4.rotate(rotation, dify * m.PI / 180.0, [ 1, 0, 0 ]);
+			var rotation = m4.rotate(m4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
+			m4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
 			this.rotationMatrix = m4.multiply(rotation, this.rotationMatrix);
 			this.lastPoint = e.p;
 			this.repaint();
@@ -3252,4 +3252,4 @@ ChemDoodle.monitor = (function(document) {
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, Math, document, mat4, mat3, vec3, window);
+})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, document, mat4, mat3, vec3, window);
