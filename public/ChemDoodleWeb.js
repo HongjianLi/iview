@@ -1430,32 +1430,8 @@ ChemDoodle.RESIDUE = (function() {
 			}
 		};
 		this.getCenter3D = function() {
-			if (this.atoms.length == 1) {
-				return new structures.Atom('C', this.atoms[0].x, this.atoms[0].y, this.atoms[0].z);
-			}
 			var minX = minY = minZ = Infinity;
 			var maxX = maxY = maxZ = -Infinity;
-			if (this.chains) {
-				// residues
-				for ( var i = 0, ii = this.chains.length; i < ii; i++) {
-					var chain = this.chains[i];
-					for ( var j = 0, jj = chain.length; j < jj; j++) {
-						var residue = chain[j];
-						minX = Math.min(residue.cp1.x, minX);
-						minY = Math.min(residue.cp1.y, minY);
-						minZ = Math.min(residue.cp1.z, minZ);
-						maxX = Math.max(residue.cp1.x, maxX);
-						maxY = Math.max(residue.cp1.y, maxY);
-						maxZ = Math.max(residue.cp1.z, maxZ);
-						minX = Math.min(residue.cp2.x, minX);
-						minY = Math.min(residue.cp2.y, minY);
-						minZ = Math.min(residue.cp2.z, minZ);
-						maxX = Math.max(residue.cp2.x, maxX);
-						maxY = Math.max(residue.cp2.y, maxY);
-						maxZ = Math.max(residue.cp2.z, maxZ);
-					}
-				}
-			}
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				minX = Math.min(this.atoms[i].x, minX);
 				minY = Math.min(this.atoms[i].y, minY);
@@ -1467,9 +1443,6 @@ ChemDoodle.RESIDUE = (function() {
 			return new structures.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
 		this.getCenter = function() {
-			if (this.atoms.length == 1) {
-				return new structures.Point(this.atoms[0].x, this.atoms[0].y);
-			}
 			var minX = minY = Infinity;
 			var maxX = maxY = -Infinity;
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
@@ -1481,33 +1454,8 @@ ChemDoodle.RESIDUE = (function() {
 			return new structures.Point((maxX + minX) / 2, (maxY + minY) / 2);
 		};
 		this.getDimension = function() {
-			if (this.atoms.length == 1) {
-				return new structures.Point(0, 0);
-			}
 			var minX = minY = Infinity;
 			var maxX = maxY = -Infinity;
-			if (this.chains) {
-				for ( var i = 0, ii = this.chains.length; i < ii; i++) {
-					var chain = this.chains[i];
-					for ( var j = 0, jj = chain.length; j < jj; j++) {
-						var residue = chain[j];
-						minX = Math.min(residue.cp1.x, minX);
-						minY = Math.min(residue.cp1.y, minY);
-						maxX = Math.max(residue.cp1.x, maxX);
-						maxY = Math.max(residue.cp1.y, maxY);
-						minX = Math.min(residue.cp2.x, minX);
-						minY = Math.min(residue.cp2.y, minY);
-						maxX = Math.max(residue.cp2.x, maxX);
-						maxY = Math.max(residue.cp2.y, maxY);
-					}
-				}
-				minX -= 30;
-				minY -= 30;
-				minZ -= 30;
-				maxX += 30;
-				maxY += 30;
-				maxZ += 30;
-			}
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				minX = Math.min(this.atoms[i].x, minX);
 				minY = Math.min(this.atoms[i].y, minY);
@@ -2490,9 +2438,6 @@ Line
 
 	io.PDBInterpreter = function() {
 
-		this.calculateRibbonDistances = false;
-		this.deduceResidueBonds = false;
-
 		function checkContained(residue, set, chainID, index, helix) {
 			for ( var j = 0, jj = set.length; j < jj; j++) {
 				var check = set[j];
@@ -2552,13 +2497,7 @@ Line
 					if (resSeq != Number.NaN && currentChain[currentChain.length - 1].resSeq != resSeq) {
 						var r = new structures.Residue(resSeq);
 						r.name = $.trim(line.substring(17, 20));
-						if (r.name.length == 3) {
-							r.name = r.name.substring(0, 1) + r.name.substring(1).toLowerCase();
-						} else {
-							if (r.name.length == 2 && r.name.charAt(0) == 'D') {
-								r.name = r.name.substring(1);
-							}
-						}
+						r.name = r.name.substring(0, 1) + r.name.substring(1).toLowerCase();
 						currentChain.push(r);
 						var chainID = line.substring(21, 22);
 						checkContained(r, helices, chainID, resSeq, true);
@@ -2906,7 +2845,10 @@ ChemDoodle.monitor = (function(document) {
 	};
 	c.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
-		this.center();
+		var p = this.molecule.getCenter3D();
+		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
+			this.molecule.atoms[i].sub3D(p);
+		}
 		var d = this.molecule.getDimension();
 		this.maxDimension = Math.max(d.x, d.y);
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
@@ -3037,12 +2979,6 @@ ChemDoodle.monitor = (function(document) {
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.molecule.render(this.gl, this.specs);
 		this.gl.flush();
-	};
-	c.Canvas.prototype.center = function() {
-		var p = this.molecule.getCenter3D();
-		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
-			this.molecule.atoms[i].sub3D(p);
-		}
 	};
 	c.Canvas.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
