@@ -337,39 +337,39 @@ ChemDoodle.ELEMENT = (function() {
 	E['Hg'] = new Element('Hg', 'Mercury', 80);
 
 	// set up jmol colors
-	E['H'].jmolColor = '#FFFFFF';
-	E['C'].jmolColor = '#909090';
-	E['N'].jmolColor = '#3050F8';
-	E['O'].jmolColor = '#FF0D0D';
-	E['F'].jmolColor = '#90E050';
-	E['Na'].jmolColor = '#AB5CF2';
-	E['Mg'].jmolColor = '#8AFF00';
-	E['P'].jmolColor = '#FF8000';
-	E['S'].jmolColor = '#FFFF30';
-	E['Cl'].jmolColor = '#1FF01F';
-	E['K'].jmolColor = '#8F40D4';
-	E['Ca'].jmolColor = '#3DFF00';
-	E['Mn'].jmolColor = '#9C7AC7';
-	E['Fe'].jmolColor = '#E06633';
-	E['Co'].jmolColor = '#F090A0';
-	E['Ni'].jmolColor = '#50D050';
-	E['Cu'].jmolColor = '#C88033';
-	E['Zn'].jmolColor = '#7D80B0';
-	E['As'].jmolColor = '#BD80E3';
-	E['Se'].jmolColor = '#FFA100';
-	E['Br'].jmolColor = '#A62929';
-	E['Sr'].jmolColor = '#00FF00';
-	E['Cd'].jmolColor = '#FFD98F';
-	E['I'].jmolColor = '#940094';
-	E['Hg'].jmolColor = '#B8B8D0';
+	E['H'].color = '#FFFFFF';
+	E['C'].color = '#909090';
+	E['N'].color = '#3050F8';
+	E['O'].color = '#FF0D0D';
+	E['F'].color = '#90E050';
+	E['Na'].color = '#AB5CF2';
+	E['Mg'].color = '#8AFF00';
+	E['P'].color = '#FF8000';
+	E['S'].color = '#FFFF30';
+	E['Cl'].color = '#1FF01F';
+	E['K'].color = '#8F40D4';
+	E['Ca'].color = '#3DFF00';
+	E['Mn'].color = '#9C7AC7';
+	E['Fe'].color = '#E06633';
+	E['Co'].color = '#F090A0';
+	E['Ni'].color = '#50D050';
+	E['Cu'].color = '#C88033';
+	E['Zn'].color = '#7D80B0';
+	E['As'].color = '#BD80E3';
+	E['Se'].color = '#FFA100';
+	E['Br'].color = '#A62929';
+	E['Sr'].color = '#00FF00';
+	E['Cd'].color = '#FFD98F';
+	E['I'].color = '#940094';
+	E['Hg'].color = '#B8B8D0';
 
 /* Uncomment these lines to substitute PyMOL colors
-	E['H'].jmolColor = '#E6E6E6';
-	E['C'].jmolColor = '#33FF33';
-	E['N'].jmolColor = '#3333FF';
-	E['O'].jmolColor = '#FF4D4D';
-	E['F'].jmolColor = '#B3FFFF';
-	E['S'].jmolColor = '#E6C640';
+	E['H'].color = '#E6E6E6';
+	E['C'].color = '#33FF33';
+	E['N'].color = '#3333FF';
+	E['O'].color = '#FF4D4D';
+	E['F'].color = '#B3FFFF';
+	E['S'].color = '#E6C640';
 */
 	// set up covalent radii
 	E['H'].covalentRadius = 0.31;
@@ -633,7 +633,7 @@ ChemDoodle.ELEMENT = (function() {
 			}
 			var font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
 			ctx.font = font;
-			ctx.fillStyle = ELEMENT[this.label].jmolColor;
+			ctx.fillStyle = ELEMENT[this.label].color;
 			if (this.isLone && !specs.atoms_displayAllCarbonLabels_2D || specs.atoms_circles_2D) {
 				ctx.beginPath();
 				ctx.arc(this.x, this.y, specs.atoms_circleDiameter_2D / 2, 0, Math.PI * 2, false);
@@ -813,7 +813,7 @@ ChemDoodle.ELEMENT = (function() {
 			}
 			mat4.scale(transform, [ radius, radius, radius ]);
 			// colors
-			var color = ELEMENT[this.label].jmolColor;
+			var color = ELEMENT[this.label].color;
 			gl.material.setDiffuseColor(color);
 			// render
 			gl.setMatrixUniforms(transform);
@@ -937,8 +937,8 @@ ChemDoodle.ELEMENT = (function() {
 			ctx.lineWidth = specs.bonds_width_2D;
 			ctx.lineCap = specs.bonds_ends_2D;
 			var linearGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-			var color1 = ELEMENT[this.a1.label].jmolColor;
-			var color2 = ELEMENT[this.a2.label].jmolColor;
+			var color1 = ELEMENT[this.a1.label].color;
+			var color2 = ELEMENT[this.a2.label].color;
 			linearGradient.addColorStop(0, color1);
 			if(!specs.bonds_colorGradient){
 				linearGradient.addColorStop(0.5, color1);
@@ -1202,7 +1202,7 @@ ChemDoodle.ELEMENT = (function() {
 				}
 				mat4.scale(transformUse, scaleVector);
 				// colors
-				var color = ELEMENT[this.a1.label].jmolColor;
+				var color = ELEMENT[this.a1.label].color;
 				gl.material.setDiffuseColor(color);
 				// render
 				gl.setMatrixUniforms(transformUse);
@@ -1220,7 +1220,7 @@ ChemDoodle.ELEMENT = (function() {
 				mat4.rotate(transformUse, ang + Math.PI, axis);
 				mat4.scale(transformUse, scaleVector);
 				// colors
-				gl.material.setDiffuseColor(ELEMENT[this.a2.label].jmolColor);
+				gl.material.setDiffuseColor(ELEMENT[this.a2.label].color);
 				// render
 				gl.setMatrixUniforms(transformUse);				
 				if (specs.bonds_renderAsLines_3D) {
