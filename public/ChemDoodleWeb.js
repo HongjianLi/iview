@@ -2768,8 +2768,6 @@ ChemDoodle.monitor = (function(document) {
 				me.mousewheel(e, delta);
 			}
 		});
-
-		// setup gl object
 		var canvas = document.getElementById(this.id);
 		this.gl = canvas.getContext('webgl');
 		if (!this.gl) {
@@ -2799,77 +2797,6 @@ ChemDoodle.monitor = (function(document) {
 		this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
 		this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
 		this.gl.lineBuffer = new structures.Line();
-		if (this.molecule && this.molecule!=this.previousMolecule) {
-			this.previousMolecule = this.molecule;
-			if (this.molecule.chains) {
-				this.molecule.ribbons = [];
-				this.molecule.cartoons = [];
-				// set up ribbon diagram if available and not already setup
-				for ( var j = 0, jj = this.molecule.chains.length; j < jj; j++) {
-					var rs = this.molecule.chains[j];
-					if (rs.length > 0 && !rs[0].lineSegments) {
-						for ( var i = 0, ii = rs.length - 1; i < ii; i++) {
-							rs[i].setup(rs[i + 1].cp1, this.specs.proteins_horizontalResolution);
-						}
-						for ( var i = 1, ii = rs.length - 1; i < ii; i++) {
-							// reverse guide points if carbonyl
-							// orientation
-							// flips
-							if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > Math.PI / 2) {
-								rs[i].guidePointsSmall.reverse();
-								rs[i].guidePointsLarge.reverse();
-								vec3.scale(rs[i].D, -1);
-							}
-						}
-						for ( var i = 1, ii = rs.length - 3; i < ii; i++) {
-							// compute line segments
-							rs[i].computeLineSegments(rs[i - 1], rs[i + 1], rs[i + 2], true, this.specs.proteins_verticalResolution);
-						}
-						// remove unneeded dummies
-						rs.pop();
-						rs.pop();
-						rs.pop();
-						rs.shift();
-					}
-					// create the hsl color for the chain
-					var rgb = math.hsl2rgb(jj==1?.5:j / jj, 1, .5);
-					var chainColor = 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
-					rs.chainColor = chainColor;
-					var r = {
-						front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, false),
-						back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, false)
-					};
-					r.front.chainColor = chainColor;
-					r.back.chainColor = chainColor;
-					for ( var i = 0, ii = r.front.segments.length; i < ii; i++) {
-						r.front.segments[i].chainColor = chainColor;
-					}
-					for ( var i = 0, ii = r.back.segments.length; i < ii; i++) {
-						r.back.segments[i].chainColor = chainColor;
-					}
-					this.molecule.ribbons.push(r);
-					var c = {
-						front : new structures.Ribbon(rs, this.specs.proteins_ribbonThickness, true),
-						back : new structures.Ribbon(rs, -this.specs.proteins_ribbonThickness, true)
-					};
-					c.front.chainColor = chainColor;
-					c.back.chainColor = chainColor;
-					for ( var i = 0, ii = c.front.segments.length; i < ii; i++) {
-						c.front.segments[i].chainColor = chainColor;
-					}
-					for ( var i = 0, ii = c.back.segments.length; i < ii; i++) {
-						c.back.segments[i].chainColor = chainColor;
-					}
-					for ( var i = 0, ii = c.front.cartoonSegments.length; i < ii; i++) {
-						c.front.cartoonSegments[i].chainColor = chainColor;
-					}
-					for ( var i = 0, ii = c.back.cartoonSegments.length; i < ii; i++) {
-						c.back.cartoonSegments[i].chainColor = chainColor;
-					}
-					this.molecule.cartoons.push(c);
-				}
-			}
-		}
 		this.gl.lighting = new structures.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
 		this.gl.material = new structures.Material(this.gl);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
