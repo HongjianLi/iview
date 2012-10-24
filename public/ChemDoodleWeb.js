@@ -2816,10 +2816,6 @@ ChemDoodle.monitor = (function(document) {
 		this.repaint();
 	};
 	c.Canvas.prototype.prehandleEvent = function(e) {
-		if (e.originalEvent.changedTouches) {
-			e.pageX = e.originalEvent.changedTouches[0].pageX;
-			e.pageY = e.originalEvent.changedTouches[0].pageY;
-		}
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
