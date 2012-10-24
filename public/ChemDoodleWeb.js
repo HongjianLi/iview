@@ -2740,79 +2740,78 @@ Line
 //
 
 ChemDoodle.monitor = (function(document) {
-	var m = {};
 
+	var m = {};
 	m.CANVAS_DRAGGING = null;
 	m.CANVAS_OVER = null;
 	m.ALT = false;
 	m.SHIFT = false;
 	m.META = false;
 
-	if (!('ontouchstart' in window)) {
-		$(document).ready(function() {
-			// handles dragging beyond the canvas bounds
-			$(document).mousemove(function(e) {
-				if (m.CANVAS_DRAGGING != null) {
-					if (m.CANVAS_DRAGGING.drag) {
-						m.CANVAS_DRAGGING.prehandleEvent(e);
-						m.CANVAS_DRAGGING.drag(e);
-					}
+	var doc = $(document);
+	doc.ready(function() {
+		// handles dragging beyond the canvas bounds
+		doc.mousemove(function(e) {
+			if (m.CANVAS_DRAGGING != null) {
+				if (m.CANVAS_DRAGGING.drag) {
+					m.CANVAS_DRAGGING.prehandleEvent(e);
+					m.CANVAS_DRAGGING.drag(e);
 				}
-			});
-			$(document).mouseup(function(e) {
-				if (m.CANVAS_DRAGGING != null && m.CANVAS_DRAGGING != m.CANVAS_OVER) {
-					if (m.CANVAS_DRAGGING.mouseup) {
-						m.CANVAS_DRAGGING.prehandleEvent(e);
-						m.CANVAS_DRAGGING.mouseup(e);
-					}
-				}
-				m.CANVAS_DRAGGING = null;
-			});
-			// handles modifier keys from a single keyboard
-			$(document).keydown(function(e) {
-				m.SHIFT = e.shiftKey;
-				m.ALT = e.altKey;
-				m.META = e.metaKey;
-				var affecting = m.CANVAS_OVER;
-				if (m.CANVAS_DRAGGING != null) {
-					affecting = m.CANVAS_DRAGGING;
-				}
-				if (affecting != null) {
-					if (affecting.keydown) {
-						affecting.prehandleEvent(e);
-						affecting.keydown(e);
-					}
-				}
-			});
-			$(document).keypress(function(e) {
-				var affecting = m.CANVAS_OVER;
-				if (m.CANVAS_DRAGGING != null) {
-					affecting = m.CANVAS_DRAGGING;
-				}
-				if (affecting != null) {
-					if (affecting.keypress) {
-						affecting.prehandleEvent(e);
-						affecting.keypress(e);
-					}
-				}
-			});
-			$(document).keyup(function(e) {
-				m.SHIFT = e.shiftKey;
-				m.ALT = e.altKey;
-				m.META = e.metaKey;
-				var affecting = m.CANVAS_OVER;
-				if (m.CANVAS_DRAGGING != null) {
-					affecting = m.CANVAS_DRAGGING;
-				}
-				if (affecting != null) {
-					if (affecting.keyup) {
-						affecting.prehandleEvent(e);
-						affecting.keyup(e);
-					}
-				}
-			});
+			}
 		});
-	}
+		doc.mouseup(function(e) {
+			if (m.CANVAS_DRAGGING != null && m.CANVAS_DRAGGING != m.CANVAS_OVER) {
+				if (m.CANVAS_DRAGGING.mouseup) {
+					m.CANVAS_DRAGGING.prehandleEvent(e);
+					m.CANVAS_DRAGGING.mouseup(e);
+				}
+			}
+			m.CANVAS_DRAGGING = null;
+		});
+		// handles modifier keys from a single keyboard
+		doc.keydown(function(e) {
+			m.SHIFT = e.shiftKey;
+			m.ALT = e.altKey;
+			m.META = e.metaKey;
+			var affecting = m.CANVAS_OVER;
+			if (m.CANVAS_DRAGGING != null) {
+				affecting = m.CANVAS_DRAGGING;
+			}
+			if (affecting != null) {
+				if (affecting.keydown) {
+					affecting.prehandleEvent(e);
+					affecting.keydown(e);
+				}
+			}
+		});
+		doc.keypress(function(e) {
+			var affecting = m.CANVAS_OVER;
+			if (m.CANVAS_DRAGGING != null) {
+				affecting = m.CANVAS_DRAGGING;
+			}
+			if (affecting != null) {
+				if (affecting.keypress) {
+					affecting.prehandleEvent(e);
+					affecting.keypress(e);
+				}
+			}
+		});
+		doc.keyup(function(e) {
+			m.SHIFT = e.shiftKey;
+			m.ALT = e.altKey;
+			m.META = e.metaKey;
+			var affecting = m.CANVAS_OVER;
+			if (m.CANVAS_DRAGGING != null) {
+				affecting = m.CANVAS_DRAGGING;
+			}
+			if (affecting != null) {
+				if (affecting.keyup) {
+					affecting.prehandleEvent(e);
+					affecting.keyup(e);
+				}
+			}
+		});
+	});
 
 	return m;
 
@@ -2839,217 +2838,115 @@ ChemDoodle.monitor = (function(document) {
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
 		var me = this;
-		if ('ontouchstart' in window) {
-			// for iPhone OS and Android devices (and other mobile browsers that
-			// support mobile events)
-			jqCapsule.bind('touchstart', function(e) {
-				var time = new Date().getTime();
-				if (me.lastTouch && e.originalEvent.touches.length == 1 && (time - me.lastTouch) < 500) {
-					if (me.dbltap) {
-						me.prehandleEvent(e);
-						me.dbltap(e);
-					} else if (me.dblclick) {
-						me.prehandleEvent(e);
-						me.dblclick(e);
-					} else if (me.touchstart) {
-						me.prehandleEvent(e);
-						me.touchstart(e);
-					} else if (me.mousedown) {
-						me.prehandleEvent(e);
-						me.mousedown(e);
-					}
-				} else if (me.touchstart) {
+		jqCapsule.click(function(e) {
+			switch (e.which) {
+			case 1:
+				// left mouse button pressed
+				if (me.click) {
 					me.prehandleEvent(e);
-					me.touchstart(e);
-					if(this.hold){
-						clearTimeout(this.hold);
-					}
-					if(this.touchhold){
-						this.hold = setTimeout(function(){
-							me.touchhold(e);
-						}, 1000);
-					}
-				} else if (me.mousedown) {
+					me.click(e);
+				}
+				break;
+			case 2:
+				// middle mouse button pressed
+				if (me.middleclick) {
+					me.prehandleEvent(e);
+					me.middleclick(e);
+				}
+				break;
+			case 3:
+				// right mouse button pressed
+				if (me.rightclick) {
+					me.prehandleEvent(e);
+					me.rightclick(e);
+				}
+				break;
+			}
+		});
+		jqCapsule.dblclick(function(e) {
+			if (me.dblclick) {
+				me.prehandleEvent(e);
+				me.dblclick(e);
+			}
+		});
+		jqCapsule.mousedown(function(e) {
+			switch (e.which) {
+			case 1:
+				// left mouse button pressed
+				monitor.CANVAS_DRAGGING = me;
+				if (me.mousedown) {
 					me.prehandleEvent(e);
 					me.mousedown(e);
 				}
-				me.lastTouch = time;
-			});
-			jqCapsule.bind('touchmove', function(e) {
-				if(this.hold!=null){
-					clearTimeout(this.hold);
-					this.hold = null;
+				break;
+			case 2:
+				// middle mouse button pressed
+				if (me.middlemousedown) {
+					me.prehandleEvent(e);
+					me.middlemousedown(e);
 				}
-				if (e.originalEvent.touches.length > 1 && me.multitouchmove) {
-					var numFingers = e.originalEvent.touches.length;
+				break;
+			case 3:
+				// right mouse button pressed
+				if (me.rightmousedown) {
 					me.prehandleEvent(e);
-					var center = new structures.Point(-e.offset.left * numFingers, -e.offset.top * numFingers);
-					for ( var i = 0; i < numFingers; i++) {
-						center.x += e.originalEvent.changedTouches[i].pageX;
-						center.y += e.originalEvent.changedTouches[i].pageY;
-					}
-					center.x /= numFingers;
-					center.y /= numFingers;
-					e.p = center;
-					me.multitouchmove(e, numFingers);
-				} else if (me.touchmove) {
-					me.prehandleEvent(e);
-					me.touchmove(e);
-				} else if (me.drag) {
-					me.prehandleEvent(e);
-					me.drag(e);
+					me.rightmousedown(e);
 				}
-			});
-			jqCapsule.bind('touchend', function(e) {
-				if(this.hold!=null){
-					clearTimeout(this.hold);
-					this.hold = null;
-				}
-				if (me.touchend) {
-					me.prehandleEvent(e);
-					me.touchend(e);
-				} else if (me.mouseup) {
+				break;
+			}
+		});
+		jqCapsule.mousemove(function(e) {
+			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
+				me.prehandleEvent(e);
+				me.mousemove(e);
+			}
+		});
+		jqCapsule.mouseout(function(e) {
+			monitor.CANVAS_OVER = null;
+			if (me.mouseout) {
+				me.prehandleEvent(e);
+				me.mouseout(e);
+			}
+		});
+		jqCapsule.mouseover(function(e) {
+			monitor.CANVAS_OVER = me;
+			if (me.mouseover) {
+				me.prehandleEvent(e);
+				me.mouseover(e);
+			}
+		});
+		jqCapsule.mouseup(function(e) {
+			switch (e.which) {
+			case 1:
+				// left mouse button pressed
+				if (me.mouseup) {
 					me.prehandleEvent(e);
 					me.mouseup(e);
 				}
-				if((new Date().getTime() - me.lastTouch) < 250){
-					if(me.tap){
-						me.prehandleEvent(e);
-						me.tap(e);
-					}else if(me.click){
-						me.prehandleEvent(e);
-						me.click(e);
-					}
-				}
-			});
-			jqCapsule.bind('gesturestart', function(e) {
-				if (me.gesturestart) {
+				break;
+			case 2:
+				// middle mouse button pressed
+				if (me.middlemouseup) {
 					me.prehandleEvent(e);
-					me.gesturestart(e);
+					me.middlemouseup(e);
 				}
-			});
-			jqCapsule.bind('gesturechange', function(e) {
-				if (me.gesturechange) {
+				break;
+			case 3:
+				// right mouse button pressed
+				if (me.rightmouseup) {
 					me.prehandleEvent(e);
-					me.gesturechange(e);
+					me.rightmouseup(e);
 				}
-			});
-			jqCapsule.bind('gestureend', function(e) {
-				if (me.gestureend) {
-					me.prehandleEvent(e);
-					me.gestureend(e);
-				}
-			});
-		} else {
-			jqCapsule.click(function(e) {
-				switch (e.which) {
-				case 1:
-					// left mouse button pressed
-					if (me.click) {
-						me.prehandleEvent(e);
-						me.click(e);
-					}
-					break;
-				case 2:
-					// middle mouse button pressed
-					if (me.middleclick) {
-						me.prehandleEvent(e);
-						me.middleclick(e);
-					}
-					break;
-				case 3:
-					// right mouse button pressed
-					if (me.rightclick) {
-						me.prehandleEvent(e);
-						me.rightclick(e);
-					}
-					break;
-				}
-			});
-			jqCapsule.dblclick(function(e) {
-				if (me.dblclick) {
-					me.prehandleEvent(e);
-					me.dblclick(e);
-				}
-			});
-			jqCapsule.mousedown(function(e) {
-				switch (e.which) {
-				case 1:
-					// left mouse button pressed
-					monitor.CANVAS_DRAGGING = me;
-					if (me.mousedown) {
-						me.prehandleEvent(e);
-						me.mousedown(e);
-					}
-					break;
-				case 2:
-					// middle mouse button pressed
-					if (me.middlemousedown) {
-						me.prehandleEvent(e);
-						me.middlemousedown(e);
-					}
-					break;
-				case 3:
-					// right mouse button pressed
-					if (me.rightmousedown) {
-						me.prehandleEvent(e);
-						me.rightmousedown(e);
-					}
-					break;
-				}
-			});
-			jqCapsule.mousemove(function(e) {
-				if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
-					me.prehandleEvent(e);
-					me.mousemove(e);
-				}
-			});
-			jqCapsule.mouseout(function(e) {
-				monitor.CANVAS_OVER = null;
-				if (me.mouseout) {
-					me.prehandleEvent(e);
-					me.mouseout(e);
-				}
-			});
-			jqCapsule.mouseover(function(e) {
-				monitor.CANVAS_OVER = me;
-				if (me.mouseover) {
-					me.prehandleEvent(e);
-					me.mouseover(e);
-				}
-			});
-			jqCapsule.mouseup(function(e) {
-				switch (e.which) {
-				case 1:
-					// left mouse button pressed
-					if (me.mouseup) {
-						me.prehandleEvent(e);
-						me.mouseup(e);
-					}
-					break;
-				case 2:
-					// middle mouse button pressed
-					if (me.middlemouseup) {
-						me.prehandleEvent(e);
-						me.middlemouseup(e);
-					}
-					break;
-				case 3:
-					// right mouse button pressed
-					if (me.rightmouseup) {
-						me.prehandleEvent(e);
-						me.rightmouseup(e);
-					}
-					break;
-				}
-			});
-			jqCapsule.mousewheel(function(e, delta) {
-				if (me.mousewheel) {
-					me.prehandleEvent(e);
-					me.mousewheel(e, delta);
-				}
-			});
-		}
+				break;
+			}
+		});
+		jqCapsule.mousewheel(function(e, delta) {
+			if (me.mousewheel) {
+				me.prehandleEvent(e);
+				me.mousewheel(e, delta);
+			}
+		});
+
 		// setup gl object
 		var canvas = document.getElementById(this.id);
 		this.gl = canvas.getContext('webgl');
@@ -3058,7 +2955,6 @@ ChemDoodle.monitor = (function(document) {
 		}
 		this.gl.program = this.gl.createProgram();
 		this.gl.shader = new structures.Shader(this.gl);
-		this.setupScene();
 		return true;
 	};
 	c.Canvas.prototype.loadMolecule = function(molecule) {
@@ -3067,51 +2963,6 @@ ChemDoodle.monitor = (function(document) {
 		var d = this.molecule.getDimension();
 		this.maxDimension = Math.max(d.x, d.y);
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
-		this.setupScene();
-		this.repaint();
-	};
-	c.Canvas.prototype.prehandleEvent = function(e) {
-		if (e.originalEvent.changedTouches) {
-			e.pageX = e.originalEvent.changedTouches[0].pageX;
-			e.pageY = e.originalEvent.changedTouches[0].pageY;
-		}
-		e.preventDefault();
-		e.offset = $('#' + this.id).offset();
-		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
-	};
-	c.Canvas.prototype.setViewDistance = function(distance) {
-		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -distance ]);
-	};
-	c.Canvas.prototype.repaint = function() {
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
-		this.gl.rotationMatrix = this.rotationMatrix;
-		this.molecule.render(this.gl, this.specs);
-		this.gl.flush();
-	};
-	c.Canvas.prototype.center = function() {
-		var canvas = document.getElementById(this.id);
-		var p = this.molecule.getCenter3D();
-		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
-			this.molecule.atoms[i].sub3D(p);
-		}
-		if (this.molecule.chains && this.molecule.fromJSON) {
-			for ( var i = 0, ii = this.molecule.chains.length; i < ii; i++) {
-				var chain = this.molecule.chains[i];
-				for ( var j = 0, jj = chain.length; j < jj; j++) {
-					var residue = chain[j];
-					residue.cp1.sub3D(p);
-					residue.cp2.sub3D(p);
-					if (residue.cp3) {
-						residue.cp3.sub3D(p);
-						residue.cp4.sub3D(p);
-						residue.cp5.sub3D(p);
-					}
-				}
-			}
-		}
-	};
-	c.Canvas.prototype.setupScene = function() {
 		// clear the canvas
 		var cs = math.getRGB(this.specs.backgroundColor);
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
@@ -3222,6 +3073,29 @@ ChemDoodle.monitor = (function(document) {
 			var normalMatrix = mat3.transpose(mat4.toInverseMat3(mvMatrix, []));
 			this.uniformMatrix3fv(nUL, false, normalMatrix);
 		};
+		this.repaint();
+	};
+	c.Canvas.prototype.prehandleEvent = function(e) {
+		if (e.originalEvent.changedTouches) {
+			e.pageX = e.originalEvent.changedTouches[0].pageX;
+			e.pageY = e.originalEvent.changedTouches[0].pageY;
+		}
+		e.preventDefault();
+		e.offset = $('#' + this.id).offset();
+		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
+	};
+	c.Canvas.prototype.repaint = function() {
+		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
+		this.gl.rotationMatrix = this.rotationMatrix;
+		this.molecule.render(this.gl, this.specs);
+		this.gl.flush();
+	};
+	c.Canvas.prototype.center = function() {
+		var p = this.molecule.getCenter3D();
+		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
+			this.molecule.atoms[i].sub3D(p);
+		}
 	};
 	c.Canvas.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
