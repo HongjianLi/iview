@@ -2085,12 +2085,6 @@ ChemDoodle.RESIDUE = (function() {
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 		};
-		this.setAlpha = function(alpha) {
-			if(!this.alCache || this.alCache!=alpha){
-				this.alCache = alpha;
-				gl.uniform1f(alUL, alpha);
-			}
-		};
 		return true;
 	};
 
