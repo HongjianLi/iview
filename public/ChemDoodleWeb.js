@@ -637,7 +637,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(ELEMENT, extensions, structures, m4) {
+(function(ELEMENT, extensions, structures) {
 
 	structures.Atom = function(label, x, y, z) {
 		this.x = x ? x : 0;
@@ -857,12 +857,12 @@ ChemDoodle.RESIDUE = (function() {
 			if (this.specs) {
 				specs = this.specs;
 			}
-			var transform = m4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			var radius = specs.atoms_useVDWDiameters_3D ? ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
 			if (radius == 0) {
 				radius = 1;
 			}
-			m4.scale(transform, [ radius, radius, radius ]);
+			mat4.scale(transform, [ radius, radius, radius ]);
 			// colors
 			var color = ELEMENT[this.label].jmolColor;
 			gl.material.setDiffuseColor(color);
@@ -896,7 +896,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Atom.prototype = new structures.Point(0, 0);
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, mat4);
+})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -906,7 +906,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(ELEMENT, extensions, structures, math, m4, v3) {
+(function(ELEMENT, extensions, structures, math) {
 
 	structures.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
@@ -1206,12 +1206,12 @@ ChemDoodle.RESIDUE = (function() {
 			}
 			var scaleVector = [ specs.bonds_cylinderDiameter_3D / 2, height, specs.bonds_cylinderDiameter_3D / 2 ];
 			// transform to the atom as well as the opposite atom
-			var transform = m4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
 			var transformOpposite = null;
 			// align bond
 			var a2b = [ this.a2.x - this.a1.x, this.a2.y - this.a1.y, this.a2.z - this.a1.z ];
-			v3.scale(a2b, .5);
-			transformOpposite = m4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
+			vec3.scale(a2b, .5);
+			transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
 			// calculate the translations for unsaturated bonds
 			var others = [ 0 ];
 			var saturatedCross = null;
@@ -1226,10 +1226,10 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				if (others.length > 1) {
 					var z = [ 0, 0, 1 ];
-					var inverse = m4.inverse(gl.rotationMatrix, []);
-					m4.multiplyVec3(inverse, z);
-					saturatedCross = v3.cross(a2b, z, []);
-					v3.normalize(saturatedCross);
+					var inverse = mat4.inverse(gl.rotationMatrix, []);
+					mat4.multiplyVec3(inverse, z);
+					saturatedCross = vec3.cross(a2b, z, []);
+					vec3.normalize(saturatedCross);
 				}
 			}
 			// calculate the rotation
@@ -1243,18 +1243,18 @@ ChemDoodle.RESIDUE = (function() {
 				}
 			} else {
 				ang = extensions.vec3AngleFrom(y, a2b);
-				axis = v3.cross(y, a2b, []);
+				axis = vec3.cross(y, a2b, []);
 			}
 			// render bonds
 			for ( var i = 0, ii = others.length; i < ii; i++) {
-				var transformUse = m4.set(transform, []);
+				var transformUse = mat4.set(transform, []);
 				if (others[i] != 0) {
-					m4.translate(transformUse, v3.scale(saturatedCross, others[i], []));
+					mat4.translate(transformUse, vec3.scale(saturatedCross, others[i], []));
 				}
 				if (ang != 0) {
-					m4.rotate(transformUse, ang, axis);
+					mat4.rotate(transformUse, ang, axis);
 				}
-				m4.scale(transformUse, scaleVector);
+				mat4.scale(transformUse, scaleVector);
 				// colors
 				var color = ELEMENT[this.a1.label].jmolColor;
 				gl.material.setDiffuseColor(color);
@@ -1265,14 +1265,14 @@ ChemDoodle.RESIDUE = (function() {
 				}else {
 					gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 				}
-				m4.set(transformOpposite, transformUse);
+				mat4.set(transformOpposite, transformUse);
 				if (others[i] != 0) {
-					m4.translate(transformUse, v3.scale(saturatedCross, others[i], []));
+					mat4.translate(transformUse, vec3.scale(saturatedCross, others[i], []));
 				}
 				// don't check for 0 here as that means it should be rotated
 				// by PI, but PI will be negated
-				m4.rotate(transformUse, ang + Math.PI, axis);
-				m4.scale(transformUse, scaleVector);
+				mat4.rotate(transformUse, ang + Math.PI, axis);
+				mat4.scale(transformUse, scaleVector);
 				// colors
 				gl.material.setDiffuseColor(ELEMENT[this.a2.label].jmolColor);
 				// render
@@ -1291,7 +1291,7 @@ ChemDoodle.RESIDUE = (function() {
 	structures.Bond.STEREO_RECESSED = 'recessed';
 	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.math, mat4, vec3);
+})(ChemDoodle.ELEMENT, ChemDoodle.extensions, ChemDoodle.structures, ChemDoodle.math);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1529,7 +1529,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
 //
 
-(function(structures, m4, v3) {
+(function(structures) {
 	
 	var SB = null;
 	var lastVerticalResolution = -1;
@@ -1539,7 +1539,7 @@ ChemDoodle.RESIDUE = (function() {
 		var n3 = verticalResolution*verticalResolution*verticalResolution;
 		var S = [ 6 / n3, 0, 0, 0, 6 / n3, 2 / n2, 0, 0, 1 / n3, 1 / n2, 1 / verticalResolution, 0, 0, 0, 0, 1 ];
 		var Bm = [ -1 / 6, 1 / 2, -1 / 2, 1 / 6, 1 / 2, -1, 1 / 2, 0, -1 / 2, 0, 1 / 2, 0, 1 / 6, 2 / 3, 1 / 6, 0 ];
-		SB = m4.multiply(Bm, S, []);
+		SB = mat4.multiply(Bm, S, []);
 		lastVerticalResolution = verticalResolution;
 	};
 
@@ -1551,10 +1551,10 @@ ChemDoodle.RESIDUE = (function() {
 			// define plane
 			var A = [ nextAlpha.x - this.cp1.x, nextAlpha.y - this.cp1.y, nextAlpha.z - this.cp1.z ];
 			var B = [ this.cp2.x - this.cp1.x, this.cp2.y - this.cp1.y, this.cp2.z - this.cp1.z ];
-			var C = v3.cross(A, B, []);
-			this.D = v3.cross(C, A, []);
-			v3.normalize(C);
-			v3.normalize(this.D);
+			var C = vec3.cross(A, B, []);
+			this.D = vec3.cross(C, A, []);
+			vec3.normalize(C);
+			vec3.normalize(this.D);
 			// generate guide coordinates
 			// guides for the narrow parts of the ribbons
 			this.guidePointsSmall = [];
@@ -1563,14 +1563,14 @@ ChemDoodle.RESIDUE = (function() {
 			var P = [ (nextAlpha.x + this.cp1.x) / 2, (nextAlpha.y + this.cp1.y) / 2, (nextAlpha.z + this.cp1.z) / 2 ];
 			if (this.helix) {
 				// expand helices
-				v3.scale(C, 1.5);
-				v3.add(P, C);
+				vec3.scale(C, 1.5);
+				vec3.add(P, C);
 			}
 			this.guidePointsSmall[0] = new structures.Atom('', P[0] - this.D[0] / 2, P[1] - this.D[1] / 2, P[2] - this.D[2] / 2);
 			for ( var i = 1; i < horizontalResolution; i++) {
 				this.guidePointsSmall[i] = new structures.Atom('', this.guidePointsSmall[0].x + this.D[0] * i / horizontalResolution, this.guidePointsSmall[0].y + this.D[1] * i / horizontalResolution, this.guidePointsSmall[0].z + this.D[2] * i / horizontalResolution);
 			}
-			v3.scale(this.D, 4);
+			vec3.scale(this.D, 4);
 			this.guidePointsLarge[0] = new structures.Atom('', P[0] - this.D[0] / 2, P[1] - this.D[1] / 2, P[2] - this.D[2] / 2);
 			for ( var i = 1; i < horizontalResolution; i++) {
 				this.guidePointsLarge[i] = new structures.Atom('', this.guidePointsLarge[0].x + this.D[0] * i / horizontalResolution, this.guidePointsLarge[0].y + this.D[1] * i / horizontalResolution, this.guidePointsLarge[0].z + this.D[2] * i / horizontalResolution);
@@ -1603,7 +1603,7 @@ ChemDoodle.RESIDUE = (function() {
 			var usea4 = a4.getGuidePointSet(set);
 			for ( var l = 0, ll = this.guidePointsLarge.length; l < ll; l++) {
 				var G = [ useb1[l].x, useb1[l].y, useb1[l].z, 1, use[l].x, use[l].y, use[l].z, 1, usea3[l].x, usea3[l].y, usea3[l].z, 1, usea4[l].x, usea4[l].y, usea4[l].z, 1 ];
-				var M = m4.multiply(G, SB, []);
+				var M = mat4.multiply(G, SB, []);
 				var strand = [];
 				for ( var k = 0; k < verticalResolution; k++) {
 					for ( var i = 3; i > 0; i--) {
@@ -1625,7 +1625,7 @@ ChemDoodle.RESIDUE = (function() {
 							var o = center[i];
 							var f = segments[j][i];
 							var vec = [ f.x - o.x, f.y - o.y, f.z - o.z ];
-							v3.scale(vec, mult);
+							vec3.scale(vec, mult);
 							f.x = o.x + vec[0];
 							f.y = o.y + vec[1];
 							f.z = o.z + vec[2];
@@ -1637,7 +1637,7 @@ ChemDoodle.RESIDUE = (function() {
 		};
 	};
 
-})(ChemDoodle.structures, mat4, vec3);
+})(ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -1830,7 +1830,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-02-06 18:27:15 -0500 (Sun, 06 Feb 2011) $
 //
 
-(function(RESIDUE, structures, v3) {
+(function(RESIDUE, structures) {
 
 	var loadPartition = function(gl, p) {
 		// positions
@@ -1933,19 +1933,19 @@ ChemDoodle.RESIDUE = (function() {
 					var side = cartoon ? residue.lineSegmentsCartoon[nextj][k] : residue.lineSegments[nextj][k];
 					var toAbove = [ above.x - a.x, above.y - a.y, above.z - a.z ];
 					var toSide = [ side.x - a.x, side.y - a.y, side.z - a.z ];
-					var normal = v3.cross(toAbove, toSide, []);
+					var normal = vec3.cross(toAbove, toSide, []);
 					// positions
 					if (k == 0) {
 						// tip
-						v3.normalize(toAbove);
-						v3.scale(toAbove, -1);
+						vec3.normalize(toAbove);
+						vec3.scale(toAbove, -1);
 						currentPartition.normalData.push(toAbove[0], toAbove[1], toAbove[2]);
 						currentPartition.positionData.push(a.x, a.y, a.z);
 					}
 					if (doSide1 || doSide2) {
 						// sides
-						v3.normalize(toSide);
-						v3.scale(toSide, -1);
+						vec3.normalize(toSide);
+						vec3.scale(toSide, -1);
 						currentPartition.normalData.push(toSide[0], toSide[1], toSide[2]);
 						currentPartition.positionData.push(a.x, a.y, a.z);
 						if (doSide1 && k == lineSegmentLength - 1) {
@@ -1954,12 +1954,12 @@ ChemDoodle.RESIDUE = (function() {
 						}
 					} else {
 						// center strips
-						v3.normalize(normal);
+						vec3.normalize(normal);
 						if (negate && !this.front || !negate && this.front) {
-							v3.scale(normal, -1);
+							vec3.scale(normal, -1);
 						}
 						currentPartition.normalData.push(normal[0], normal[1], normal[2]);
-						v3.scale(normal, Math.abs(offset));
+						vec3.scale(normal, Math.abs(offset));
 						currentPartition.positionData.push(a.x + normal[0], a.y + normal[1], a.z + normal[2]);
 						if (j == lineSegmentNum - 1 && k == lineSegmentLength - 1) {
 							doSide2 = true;
@@ -1968,7 +1968,7 @@ ChemDoodle.RESIDUE = (function() {
 					}
 					if (k == -1 || k == lineSegmentLength - 1) {
 						// end
-						v3.normalize(toAbove);
+						vec3.normalize(toAbove);
 						currentPartition.normalData.push(toAbove[0], toAbove[1], toAbove[2]);
 						currentPartition.positionData.push(a.x, a.y, a.z);
 					}
@@ -2091,7 +2091,7 @@ ChemDoodle.RESIDUE = (function() {
 	};
 	structures.Ribbon.prototype = new structures._Mesh();
 
-})(ChemDoodle.RESIDUE, ChemDoodle.structures, vec3);
+})(ChemDoodle.RESIDUE, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2101,7 +2101,7 @@ ChemDoodle.RESIDUE = (function() {
 //  $LastChangedDate: 2011-09-18 11:40:07 -0400 (Sun, 18 Sep 2011) $
 //
 
-(function(math, structures, v3) {
+(function(math, structures) {
 
 	structures.Light = function(diffuseColor, specularColor, direction) {
 		this.diffuseRGB = math.getRGB(diffuseColor);
@@ -2112,26 +2112,26 @@ ChemDoodle.RESIDUE = (function() {
 			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
 			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'specular_color'), this.specularRGB[0], this.specularRGB[1], this.specularRGB[2]);
 
-			var lightingDirection = v3.create(this.direction);
-			v3.normalize(lightingDirection);
-			v3.negate(lightingDirection);
+			var lightingDirection = vec3.create(this.direction);
+			vec3.normalize(lightingDirection);
+			vec3.negate(lightingDirection);
 			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'direction'), lightingDirection[0], lightingDirection[1], lightingDirection[2]);
 
 			// compute the half vector
 			var eyeVector = [ 0, 0, 0 ];
 			var halfVector = [ eyeVector[0] + lightingDirection[0], eyeVector[1] + lightingDirection[1], eyeVector[2] + lightingDirection[2] ];
-			var length = v3.length(halfVector);
+			var length = vec3.length(halfVector);
 			if (length == 0)
 				halfVector = [ 0, 0, 1 ];
 			else {
-				v3.scale(1 / length);
+				vec3.scale(1 / length);
 			}
 			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
 		};
 		return true;
 	};
 
-})(ChemDoodle.math, ChemDoodle.structures, vec3);
+})(ChemDoodle.math, ChemDoodle.structures);
 
 //
 //  Copyright 2009 iChemLabs, LLC.  All rights reserved.
@@ -2825,11 +2825,11 @@ ChemDoodle.monitor = (function(document) {
 //  $LastChangedDate: 2012-05-02 20:59:30 -0400 (Wed, 02 May 2012) $
 //
 
-(function(c, monitor, extensions, math, structures, RESIDUE, document, m4, m3, v3, window) {
+(function(c, monitor, extensions, math, structures, RESIDUE, document, window) {
 
 	c.Canvas = function(id) {
-		this.rotationMatrix = m4.identity([]);
-		this.translationMatrix = m4.identity([]);
+		this.rotationMatrix = mat4.identity([]);
+		this.translationMatrix = mat4.identity([]);
 		this.id = id;
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
@@ -3066,7 +3066,7 @@ ChemDoodle.monitor = (function(document) {
 		this.center();
 		var d = this.molecule.getDimension();
 		this.maxDimension = Math.max(d.x, d.y);
-		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
+		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		this.setupScene();
 		this.repaint();
 	};
@@ -3080,11 +3080,11 @@ ChemDoodle.monitor = (function(document) {
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
 	};
 	c.Canvas.prototype.setViewDistance = function(distance) {
-		this.translationMatrix = m4.translate(m4.identity([]), [ 0, 0, -distance ]);
+		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -distance ]);
 	};
 	c.Canvas.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-		this.gl.modelViewMatrix = m4.multiply(this.translationMatrix, this.rotationMatrix, []);
+		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.molecule.render(this.gl, this.specs);
 		this.gl.flush();
@@ -3144,7 +3144,7 @@ ChemDoodle.monitor = (function(document) {
 								if (extensions.vec3AngleFrom(rs[i - 1].D, rs[i].D) > Math.PI / 2) {
 									rs[i].guidePointsSmall.reverse();
 									rs[i].guidePointsLarge.reverse();
-									v3.scale(rs[i].D, -1);
+									vec3.scale(rs[i].D, -1);
 								}
 							}
 						}
@@ -3208,7 +3208,7 @@ ChemDoodle.monitor = (function(document) {
 		// arg3: front culling
 		// arg4: back culling
 		var widthHeightRatio = this.width/this.height;
-		this.gl.projectionMatrix = m4.perspective(this.specs.projectionPerspectiveVerticalFieldOfView_3D, widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D);
+		this.gl.projectionMatrix = mat4.perspective(this.specs.projectionPerspectiveVerticalFieldOfView_3D, widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D);
 		// push the projection matrix to the graphics card
 		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
 		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
@@ -3219,7 +3219,7 @@ ChemDoodle.monitor = (function(document) {
 			// push the model-view matrix to the graphics card
 			this.uniformMatrix4fv(mvUL, false, mvMatrix);
 			// create the normal matrix and push it to the graphics card
-			var normalMatrix = m3.transpose(m4.toInverseMat3(mvMatrix, []));
+			var normalMatrix = mat3.transpose(mat4.toInverseMat3(mvMatrix, []));
 			this.uniformMatrix3fv(nUL, false, normalMatrix);
 		};
 	};
@@ -3233,23 +3233,23 @@ ChemDoodle.monitor = (function(document) {
 		if (c.monitor.ALT) {
 			var t = new structures.Point(e.p.x, e.p.y);
 			t.sub(this.lastPoint);
-			m4.translate(this.translationMatrix, [ t.x / 20, -t.y / 20, 0 ]);
+			mat4.translate(this.translationMatrix, [ t.x / 20, -t.y / 20, 0 ]);
 			this.lastPoint = e.p;
 			this.repaint();
 		} else {
 			var difx = e.p.x - this.lastPoint.x;
 			var dify = e.p.y - this.lastPoint.y;
-			var rotation = m4.rotate(m4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
-			m4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
-			this.rotationMatrix = m4.multiply(rotation, this.rotationMatrix);
+			var rotation = mat4.rotate(mat4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
+			mat4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
+			this.rotationMatrix = mat4.multiply(rotation, this.rotationMatrix);
 			this.lastPoint = e.p;
 			this.repaint();
 		}
 	};
 	c.Canvas.prototype.mousewheel = function(e, delta) {
 		var dz = delta * this.maxDimension/8;
-		m4.translate(this.translationMatrix, [ 0, 0, dz ]);
+		mat4.translate(this.translationMatrix, [ 0, 0, dz ]);
 		this.repaint();
 	};
 
-})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, document, mat4, mat3, vec3, window);
+})(ChemDoodle, ChemDoodle.monitor, ChemDoodle.extensions, ChemDoodle.math, ChemDoodle.structures, ChemDoodle.RESIDUE, document, window);
