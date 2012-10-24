@@ -851,9 +851,6 @@ ChemDoodle.RESIDUE = (function() {
 			}
 		};
 		this.render = function(gl, specs) {
-			if (this.specs) {
-				specs = this.specs;
-			}
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			var radius = specs.atoms_useVDWDiameters_3D ? ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
 			if (radius == 0) {
@@ -1191,9 +1188,6 @@ ChemDoodle.RESIDUE = (function() {
 			}
 		};
 		this.render = function(gl, specs) {
-			if(this.specs){
-				specs = this.specs;
-			}
 			// this is the elongation vector for the cylinder
 			var height = (specs.bonds_renderAsLines_3D?1.1:1.001) * this.a1.distance3D(this.a2) / 2;
 			if (height == 0) {
@@ -1304,10 +1298,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.atoms = [];
 		this.bonds = [];
 		this.draw = function(ctx, specs) {
-			if (this.specs) {
-				specs = this.specs;
-			}
-			// draw
 			// need this weird render of atoms before and after, just in case circles are rendered, as those should be on top
 			if (specs.atoms_display && !specs.atoms_circles_2D) {
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
@@ -1326,40 +1316,34 @@ ChemDoodle.RESIDUE = (function() {
 			}
 		};
 		this.render = function(gl, specs) {
-			if (this.specs) {
-				specs = this.specs;
-			}
-			var isMacro = this.atoms.length > 0 && this.atoms[0].hetatm != undefined;
-			if (isMacro) {
-				if (specs.macro_displayBonds) {
-					if (this.bonds.length > 0) {
-						if (specs.bonds_renderAsLines_3D && !this.residueSpecs || this.residueSpecs && this.residueSpecs.bonds_renderAsLines_3D) {
-							gl.lineWidth(this.residueSpecs ? this.residueSpecs.bonds_width_2D : specs.bonds_width_2D);
-							gl.lineBuffer.bindBuffers(gl);
-						} else {
-							gl.cylinderBuffer.bindBuffers(gl);
-						}
-						// colors
-						gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
+			if (specs.macro_displayBonds) {
+				if (this.bonds.length > 0) {
+					if (specs.bonds_renderAsLines_3D) {
+						gl.lineWidth(specs.bonds_width_2D);
+						gl.lineBuffer.bindBuffers(gl);
+					} else {
+						gl.cylinderBuffer.bindBuffers(gl);
 					}
-					for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-						var b = this.bonds[i];
-						if (!b.a1.hetatm && (specs.macro_atomToLigandDistance == -1 || (b.a1.closestDistance != undefined && specs.macro_atomToLigandDistance >= b.a1.closestDistance && specs.macro_atomToLigandDistance >= b.a2.closestDistance))) {
-							b.render(gl, this.residueSpecs ? this.residueSpecs : specs);
-						}
+					// colors
+					gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
+				}
+				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
+					var b = this.bonds[i];
+					if (!b.a1.hetatm && (specs.macro_atomToLigandDistance == -1 || (b.a1.closestDistance != undefined && specs.macro_atomToLigandDistance >= b.a1.closestDistance && specs.macro_atomToLigandDistance >= b.a2.closestDistance))) {
+						b.render(gl, specs);
 					}
 				}
-				if (specs.macro_displayAtoms) {
-					if (this.atoms.length > 0) {
-						gl.sphereBuffer.bindBuffers(gl);
-						// colors
-						gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
-					}
-					for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-						var a = this.atoms[i];
-						if (!a.hetatm && (specs.macro_atomToLigandDistance == -1 || (a.closestDistance != undefined && specs.macro_atomToLigandDistance >= a.closestDistance))) {
-							a.render(gl, this.residueSpecs ? this.residueSpecs : specs);
-						}
+			}
+			if (specs.macro_displayAtoms) {
+				if (this.atoms.length > 0) {
+					gl.sphereBuffer.bindBuffers(gl);
+					// colors
+					gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
+				}
+				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
+					var a = this.atoms[i];
+					if (!a.hetatm && (specs.macro_atomToLigandDistance == -1 || (a.closestDistance != undefined && specs.macro_atomToLigandDistance >= a.closestDistance))) {
+						a.render(gl, specs);
 					}
 				}
 			}
@@ -1376,7 +1360,7 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
 					var b = this.bonds[i];
-					if (!isMacro || b.a1.hetatm) {
+					if (b.a1.hetatm) {
 						b.render(gl, specs);
 					}
 				}
@@ -1398,30 +1382,8 @@ ChemDoodle.RESIDUE = (function() {
 				}
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 					var a = this.atoms[i];
-					if (!isMacro || (a.hetatm && !a.isWater)) {
+					if (a.hetatm && !a.isWater) {
 						a.render(gl, specs);
-					}
-				}
-			}
-			if (this.chains) {
-				// set up the model view matrix, since it won't be modified
-				// for macromolecules
-				gl.setMatrixUniforms(gl.modelViewMatrix);
-				// render chains
-				if (specs.proteins_displayRibbon) {
-					// proteins
-					// colors
-					gl.material.setTempColors(specs.proteins_materialAmbientColor_3D, null, specs.proteins_materialSpecularColor_3D, specs.proteins_materialShininess_3D);
-					for ( var j = 0, jj = this.ribbons.length; j < jj; j++) {
-						var use = this.cartoons[j];
-						use.front.bindBuffers(gl);
-						for ( var i = 0, ii = use.front.cartoonSegments.length; i < ii; i++) {
-							use.front.cartoonSegments[i].render(gl, specs);
-						}
-						use.back.bindBuffers(gl);
-						for ( var i = 0, ii = use.back.cartoonSegments.length; i < ii; i++) {
-							use.back.cartoonSegments[i].render(gl, specs);
-						}
 					}
 				}
 			}
@@ -2048,31 +2010,29 @@ ChemDoodle.RESIDUE = (function() {
 
 (function(math, structures) {
 
-	structures.Light = function(diffuseColor, specularColor, direction) {
+	structures.Light = function(diffuseColor, specularColor, direction, gl) {
 		this.diffuseRGB = math.getRGB(diffuseColor);
 		this.specularRGB = math.getRGB(specularColor);
 		this.direction = direction;
-		this.lightScene = function(gl) {
-			var prefix = 'u_light.';
-			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
-			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'specular_color'), this.specularRGB[0], this.specularRGB[1], this.specularRGB[2]);
+		var prefix = 'u_light.';
+		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
+		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'specular_color'), this.specularRGB[0], this.specularRGB[1], this.specularRGB[2]);
 
-			var lightingDirection = vec3.create(this.direction);
-			vec3.normalize(lightingDirection);
-			vec3.negate(lightingDirection);
-			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'direction'), lightingDirection[0], lightingDirection[1], lightingDirection[2]);
+		var lightingDirection = vec3.create(this.direction);
+		vec3.normalize(lightingDirection);
+		vec3.negate(lightingDirection);
+		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'direction'), lightingDirection[0], lightingDirection[1], lightingDirection[2]);
 
-			// compute the half vector
-			var eyeVector = [ 0, 0, 0 ];
-			var halfVector = [ eyeVector[0] + lightingDirection[0], eyeVector[1] + lightingDirection[1], eyeVector[2] + lightingDirection[2] ];
-			var length = vec3.length(halfVector);
-			if (length == 0)
-				halfVector = [ 0, 0, 1 ];
-			else {
-				vec3.scale(1 / length);
-			}
-			gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
-		};
+		// compute the half vector
+		var eyeVector = [ 0, 0, 0 ];
+		var halfVector = [ eyeVector[0] + lightingDirection[0], eyeVector[1] + lightingDirection[1], eyeVector[2] + lightingDirection[2] ];
+		var length = vec3.length(halfVector);
+		if (length == 0)
+			halfVector = [ 0, 0, 1 ];
+		else {
+			vec3.scale(1 / length);
+		}
+		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
 		return true;
 	};
 
@@ -2295,16 +2255,6 @@ ChemDoodle.RESIDUE = (function() {
 
 		// canvas properties
 		this.backgroundColor = '#FFFFFF';
-		this.scale = 1;
-		this.rotateAngle = 0;
-		this.bondLength = 20;
-		this.angstromsPerBondLength = 1.25;
-		this.lightDirection_3D = [ -.1, -.1, -1 ];
-		this.lightDiffuseColor_3D = '#FFFFFF';
-		this.lightSpecularColor_3D = '#FFFFFF';
-		this.projectionPerspectiveVerticalFieldOfView_3D = 45;
-		this.projectionFrontCulling_3D = .1;
-		this.projectionBackCulling_3D = 10000;
 
 		// atom properties
 		this.atoms_display = true;
@@ -2354,10 +2304,6 @@ ChemDoodle.RESIDUE = (function() {
 		this.bonds_materialShininess_3D = 32;
 
 		// macromolecular properties
-		this.proteins_displayRibbon = true;
-		this.proteins_displayBackbone = false;
-		this.proteins_backboneThickness = 1.5;
-		this.proteins_backboneColor = '#CCCCCC';
 		this.proteins_primaryColor = '#FF0D0D';
 		this.proteins_secondaryColor = '#FFFF30';
 		this.proteins_ribbonCartoonHelixPrimaryColor = '#00E740';
@@ -2369,15 +2315,8 @@ ChemDoodle.RESIDUE = (function() {
 		this.proteins_materialAmbientColor_3D = '#222222';
 		this.proteins_materialSpecularColor_3D = '#555555';
 		this.proteins_materialShininess_3D = 32;
-		this.nucleics_display = true;
-		this.nucleics_baseColor = '#C10000';
-		this.nucleics_useShapelyColors = true;
-		this.nucleics_verticalResolution = 10;
-		this.nucleics_materialAmbientColor_3D = '#222222';
-		this.nucleics_materialSpecularColor_3D = '#555555';
-		this.nucleics_materialShininess_3D = 32;
-		this.macro_displayAtoms = false;
-		this.macro_displayBonds = false;
+		this.macro_displayAtoms = true;
+		this.macro_displayBonds = true;
 		this.macro_atomToLigandDistance = -1;
 
 /*
@@ -2931,18 +2870,9 @@ ChemDoodle.monitor = (function(document) {
 				}
 			}
 		}
-		// set up lighting
-		this.gl.lighting = new structures.Light(this.specs.lightDiffuseColor_3D, this.specs.lightSpecularColor_3D, this.specs.lightDirection_3D);
-		this.gl.lighting.lightScene(this.gl);
-		// set up material
+		this.gl.lighting = new structures.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
 		this.gl.material = new structures.Material(this.gl);
-		// projection matrix
-		// arg1: vertical field of view (degrees)
-		// arg2: width to height ratio
-		// arg3: front culling
-		// arg4: back culling
-		var widthHeightRatio = this.width/this.height;
-		this.gl.projectionMatrix = mat4.perspective(this.specs.projectionPerspectiveVerticalFieldOfView_3D, widthHeightRatio, this.specs.projectionFrontCulling_3D, this.specs.projectionBackCulling_3D);
+		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
 		// push the projection matrix to the graphics card
 		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
 		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
