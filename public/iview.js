@@ -68,25 +68,15 @@ var iview = (function() {
 		}
 	};
 
-	iview.structures = {};
-
-	return iview;
-
-})();
-
-iview.math = (function() {
-
-	var math = {};
-
-	math.isBetween = function(x, left, right) {
+	iview.isBetween = function(x, left, right) {
 		return x >= left && x <= right;
 	};
 
-	math.getRGB = function(color) {
+	iview.getRGB = function(color) {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
 
-	math.calculateDistanceInterior = function(to, from, r) {
+	iview.calculateDistanceInterior = function(to, from, r) {
 		if (this.isBetween(from.x, r.x, r.x + r.w) && this.isBetween(from.y, r.y, r.y + r.w)) {
 			return to.distance(from);
 		}
@@ -143,7 +133,7 @@ iview.math = (function() {
 		return max;
 	};
 
-	math.intersectLines = function(ax, ay, bx, by, cx, cy, dx, dy) {
+	iview.intersectLines = function(ax, ay, bx, by, cx, cy, dx, dy) {
 		// calculate the direction vectors
 		bx -= ax;
 		by -= ay;
@@ -167,7 +157,9 @@ iview.math = (function() {
 			return false;
 	};
 
-	return math;
+	iview.structures = {};
+
+	return iview;
 
 })();
 
@@ -702,7 +694,7 @@ iview.ELEMENT = (function() {
 
 })(iview, iview.ELEMENT, iview.structures);
 
-(function(iview, ELEMENT, structures, math) {
+(function(iview, ELEMENT, structures) {
 
 	structures.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
@@ -745,7 +737,7 @@ iview.ELEMENT = (function() {
 			if (specs.atoms_display && !specs.atoms_circles_2D && this.a1.isLabelVisible(specs)) {
 				var distShrink = 0;
 				for(var i = 0, ii = this.a1.textBounds.length; i<ii; i++){
-					distShrink = Math.max(distShrink, math.calculateDistanceInterior(this.a1, this.a2, this.a1.textBounds[i]));
+					distShrink = Math.max(distShrink, iview.calculateDistanceInterior(this.a1, this.a2, this.a1.textBounds[i]));
 				}
 				distShrink += specs.bonds_atomLabelBuffer_2D;
 				var perc = distShrink / dist;
@@ -755,7 +747,7 @@ iview.ELEMENT = (function() {
 			if (specs.atoms_display && !specs.atoms_circles_2D && this.a2.isLabelVisible(specs)) {
 				var distShrink = 0;
 				for(var i = 0, ii = this.a2.textBounds.length; i<ii; i++){
-					distShrink = Math.max(distShrink, math.calculateDistanceInterior(this.a2, this.a1, this.a2.textBounds[i]));
+					distShrink = Math.max(distShrink, iview.calculateDistanceInterior(this.a2, this.a1, this.a2.textBounds[i]));
 				}
 				distShrink += specs.bonds_atomLabelBuffer_2D;
 				var perc = distShrink / dist;
@@ -1081,9 +1073,9 @@ iview.ELEMENT = (function() {
 	structures.Bond.STEREO_RECESSED = 'recessed';
 	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(iview, iview.ELEMENT, iview.structures, iview.math);
+})(iview, iview.ELEMENT, iview.structures);
 
-(function(c, math, structures) {
+(function(c, structures) {
 
 	structures.Molecule = function() {
 		this.atoms = [];
@@ -1217,7 +1209,7 @@ iview.ELEMENT = (function() {
 		return true;
 	};
 
-})(iview, iview.math, iview.structures);
+})(iview, iview.structures);
 
 (function(structures) {
 
@@ -1378,11 +1370,11 @@ iview.ELEMENT = (function() {
 
 })(iview.structures);
 
-(function(math, structures) {
+(function(iview, structures) {
 
 	structures.Light = function(diffuseColor, specularColor, direction, gl) {
-		this.diffuseRGB = math.getRGB(diffuseColor);
-		this.specularRGB = math.getRGB(specularColor);
+		this.diffuseRGB = iview.getRGB(diffuseColor);
+		this.specularRGB = iview.getRGB(specularColor);
 		this.direction = direction;
 		var prefix = 'u_light.';
 		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
@@ -1406,9 +1398,9 @@ iview.ELEMENT = (function() {
 		return true;
 	};
 
-})(iview.math, iview.structures);
+})(iview, iview.structures);
 
-(function(math, structures) {
+(function(iview, structures) {
 
 	structures.Material = function(gl) {
 		var prefix = 'u_material.';
@@ -1420,17 +1412,17 @@ iview.ELEMENT = (function() {
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
 			if(!this.aCache || this.aCache!=ambientColor){
 				this.aCache = ambientColor;
-				var cs = math.getRGB(ambientColor);
+				var cs = iview.getRGB(ambientColor);
 				gl.uniform3f(aUL, cs[0], cs[1], cs[2]);
 			}
 			if(diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)){
 				this.dCache = diffuseColor;
-				var cs = math.getRGB(diffuseColor);
+				var cs = iview.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 			if(!this.sCache || this.sCache!=specularColor){
 				this.sCache = specularColor;
-				var cs = math.getRGB(specularColor);
+				var cs = iview.getRGB(specularColor);
 				gl.uniform3f(sUL, cs[0], cs[1], cs[2]);
 			}
 			if(!this.snCache || this.snCache!=shininess){
@@ -1443,14 +1435,14 @@ iview.ELEMENT = (function() {
 		this.setDiffuseColor = function(diffuseColor) {
 			if(!this.dCache || this.dCache!=diffuseColor){
 				this.dCache = diffuseColor;
-				var cs = math.getRGB(diffuseColor);
+				var cs = iview.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 		};
 		return true;
 	};
 
-})(iview.math, iview.structures);
+})(iview, iview.structures);
 
 (function(structures) {
 
@@ -1800,9 +1792,9 @@ iview.monitor = (function() {
 
 })();
 
-(function(c, monitor, math, structures) {
+(function(iview, monitor, structures) {
 
-	c.Canvas = function(id) {
+	iview.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
 		this.translationMatrix = mat4.identity([]);
 		this.id = id;
@@ -1931,7 +1923,7 @@ iview.monitor = (function() {
 		this.gl.shader = new structures.Shader(this.gl);
 		return true;
 	};
-	c.Canvas.prototype.loadMolecule = function(molecule) {
+	iview.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
 		var p = this.molecule.getCenter3D();
 		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
@@ -1941,7 +1933,7 @@ iview.monitor = (function() {
 		this.maxDimension = Math.max(d.x, d.y);
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		// clear the canvas
-		var cs = math.getRGB(this.specs.backgroundColor);
+		var cs = iview.getRGB(this.specs.backgroundColor);
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
@@ -1968,26 +1960,26 @@ iview.monitor = (function() {
 		};
 		this.repaint();
 	};
-	c.Canvas.prototype.prehandleEvent = function(e) {
+	iview.Canvas.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
 		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
 	};
-	c.Canvas.prototype.repaint = function() {
+	iview.Canvas.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.molecule.render(this.gl, this.specs);
 		this.gl.flush();
 	};
-	c.Canvas.prototype.mousedown = function(e) {
+	iview.Canvas.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c.Canvas.prototype.rightmousedown = function(e) {
+	iview.Canvas.prototype.rightmousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	c.Canvas.prototype.drag = function(e) {
-		if (c.monitor.ALT) {
+	iview.Canvas.prototype.drag = function(e) {
+		if (iview.monitor.ALT) {
 			var t = new structures.Point(e.p.x, e.p.y);
 			t.sub(this.lastPoint);
 			mat4.translate(this.translationMatrix, [ t.x / 20, -t.y / 20, 0 ]);
@@ -2003,10 +1995,10 @@ iview.monitor = (function() {
 			this.repaint();
 		}
 	};
-	c.Canvas.prototype.mousewheel = function(e, delta) {
+	iview.Canvas.prototype.mousewheel = function(e, delta) {
 		var dz = delta * this.maxDimension/8;
 		mat4.translate(this.translationMatrix, [ 0, 0, dz ]);
 		this.repaint();
 	};
 
-})(iview, iview.monitor, iview.math, iview.structures);
+})(iview, iview.monitor, iview.structures);
