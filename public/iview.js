@@ -753,9 +753,6 @@ iview.ELEMENT = (function() {
 				// return, as there is nothing to render, will only cause fill overflows
 				return;
 			}
-			if(this.specs){
-				specs = this.specs;
-			}
 			var x1 = this.a1.x;
 			var x2 = this.a2.x;
 			var y1 = this.a1.y;
@@ -1743,7 +1740,7 @@ Line
 
 })(iview, iview.extensions, iview.structures, iview.ELEMENT);
 
-iview.monitor = (function(document) {
+iview.monitor = (function() {
 
 	var m = {};
 	m.CANVAS_DRAGGING = null;
@@ -1819,9 +1816,9 @@ iview.monitor = (function(document) {
 
 	return m;
 
-})(document);
+})();
 
-(function(c, monitor, extensions, math, structures, document, window) {
+(function(c, monitor, extensions, math, structures) {
 
 	c.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
@@ -2030,4 +2027,4 @@ iview.monitor = (function(document) {
 		this.repaint();
 	};
 
-})(iview, iview.monitor, iview.extensions, iview.math, iview.structures, document, window);
+})(iview, iview.monitor, iview.extensions, iview.math, iview.structures);
