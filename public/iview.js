@@ -157,198 +157,189 @@ var iview = (function() {
 			return false;
 	};
 
-	iview.structures = {};
+	iview.ELEMENT = (function() {
 
-	return iview;
+		function Element(symbol, name, atomicNumber) {
+			this.symbol = symbol;
+			this.name = name;
+			this.atomicNumber = atomicNumber;
+		}
 
-})();
+		var E = [];
+		E['H'] = new Element('H', 'Hydrogen', 1);
+		E['C'] = new Element('C', 'Carbon', 6);
+		E['N'] = new Element('N', 'Nitrogen', 7);
+		E['O'] = new Element('O', 'Oxygen', 8);
+		E['F'] = new Element('F', 'Fluorine', 9);
+		E['Na'] = new Element('Na', 'Sodium', 11);
+		E['Mg'] = new Element('Mg', 'Magnesium', 12);
+		E['P'] = new Element('P', 'Phosphorus', 15);
+		E['S'] = new Element('S', 'Sulfur', 16);
+		E['Cl'] = new Element('Cl', 'Chlorine', 17);
+		E['K'] = new Element('K', 'Potassium', 19);
+		E['Ca'] = new Element('Ca', 'Calcium', 20);
+		E['Mn'] = new Element('Mn', 'Manganese', 25);
+		E['Fe'] = new Element('Fe', 'Iron', 26);
+		E['Co'] = new Element('Co', 'Cobalt', 27);
+		E['Ni'] = new Element('Ni', 'Nickel', 28);
+		E['Cu'] = new Element('Cu', 'Copper', 29);
+		E['Zn'] = new Element('Zn', 'Zinc', 30);
+		E['As'] = new Element('As', 'Arsenic', 33);
+		E['Se'] = new Element('Se', 'Selenium', 34);
+		E['Br'] = new Element('Br', 'Bromine', 35);
+		E['Sr'] = new Element('Sr', 'Strontium', 38);
+		E['Cd'] = new Element('Cd', 'Cadmium', 48);
+		E['I'] = new Element('I', 'Iodine', 53);
+		E['Hg'] = new Element('Hg', 'Mercury', 80);
 
-iview.ELEMENT = (function() {
+		// set up jmol colors
+		E['H'].color = '#FFFFFF';
+		E['C'].color = '#909090';
+		E['N'].color = '#3050F8';
+		E['O'].color = '#FF0D0D';
+		E['F'].color = '#90E050';
+		E['Na'].color = '#AB5CF2';
+		E['Mg'].color = '#8AFF00';
+		E['P'].color = '#FF8000';
+		E['S'].color = '#FFFF30';
+		E['Cl'].color = '#1FF01F';
+		E['K'].color = '#8F40D4';
+		E['Ca'].color = '#3DFF00';
+		E['Mn'].color = '#9C7AC7';
+		E['Fe'].color = '#E06633';
+		E['Co'].color = '#F090A0';
+		E['Ni'].color = '#50D050';
+		E['Cu'].color = '#C88033';
+		E['Zn'].color = '#7D80B0';
+		E['As'].color = '#BD80E3';
+		E['Se'].color = '#FFA100';
+		E['Br'].color = '#A62929';
+		E['Sr'].color = '#00FF00';
+		E['Cd'].color = '#FFD98F';
+		E['I'].color = '#940094';
+		E['Hg'].color = '#B8B8D0';
 
-	function Element(symbol, name, atomicNumber) {
-		this.symbol = symbol;
-		this.name = name;
-		this.atomicNumber = atomicNumber;
-		return true;
-	}
+	/* Uncomment these lines to substitute PyMOL colors
+		E['H'].color = '#E6E6E6';
+		E['C'].color = '#33FF33';
+		E['N'].color = '#3333FF';
+		E['O'].color = '#FF4D4D';
+		E['F'].color = '#B3FFFF';
+		E['S'].color = '#E6C640';
+	*/
+		// set up covalent radii
+		E['H'].covalentRadius = 0.31;
+		E['C'].covalentRadius = 0.76;
+		E['N'].covalentRadius = 0.71;
+		E['O'].covalentRadius = 0.66;
+		E['F'].covalentRadius = 0.57;
+		E['Na'].covalentRadius = 1.66;
+		E['Mg'].covalentRadius = 1.41;
+		E['P'].covalentRadius = 1.07;
+		E['S'].covalentRadius = 1.05;
+		E['Cl'].covalentRadius = 1.02;
+		E['K'].covalentRadius = 2.03;
+		E['Ca'].covalentRadius = 1.76;
+		E['Mn'].covalentRadius = 1.39;
+		E['Fe'].covalentRadius = 1.32;
+		E['Co'].covalentRadius = 1.26;
+		E['Ni'].covalentRadius = 1.24;
+		E['Cu'].covalentRadius = 1.32;
+		E['Zn'].covalentRadius = 1.22;
+		E['As'].covalentRadius = 1.19;
+		E['Se'].covalentRadius = 1.2;
+		E['Br'].covalentRadius = 1.2;
+		E['Sr'].covalentRadius = 1.95;
+		E['Cd'].covalentRadius = 1.44;
+		E['I'].covalentRadius = 1.39;
+		E['Hg'].covalentRadius = 1.32;
 
-	var E = [];
-	E['H'] = new Element('H', 'Hydrogen', 1);
-	E['C'] = new Element('C', 'Carbon', 6);
-	E['N'] = new Element('N', 'Nitrogen', 7);
-	E['O'] = new Element('O', 'Oxygen', 8);
-	E['F'] = new Element('F', 'Fluorine', 9);
-	E['Na'] = new Element('Na', 'Sodium', 11);
-	E['Mg'] = new Element('Mg', 'Magnesium', 12);
-	E['P'] = new Element('P', 'Phosphorus', 15);
-	E['S'] = new Element('S', 'Sulfur', 16);
-	E['Cl'] = new Element('Cl', 'Chlorine', 17);
-	E['K'] = new Element('K', 'Potassium', 19);
-	E['Ca'] = new Element('Ca', 'Calcium', 20);
-	E['Mn'] = new Element('Mn', 'Manganese', 25);
-	E['Fe'] = new Element('Fe', 'Iron', 26);
-	E['Co'] = new Element('Co', 'Cobalt', 27);
-	E['Ni'] = new Element('Ni', 'Nickel', 28);
-	E['Cu'] = new Element('Cu', 'Copper', 29);
-	E['Zn'] = new Element('Zn', 'Zinc', 30);
-	E['As'] = new Element('As', 'Arsenic', 33);
-	E['Se'] = new Element('Se', 'Selenium', 34);
-	E['Br'] = new Element('Br', 'Bromine', 35);
-	E['Sr'] = new Element('Sr', 'Strontium', 38);
-	E['Cd'] = new Element('Cd', 'Cadmium', 48);
-	E['I'] = new Element('I', 'Iodine', 53);
-	E['Hg'] = new Element('Hg', 'Mercury', 80);
+		// set up vdW radii
+		E['H'].vdWRadius = 1.2;
+		E['C'].vdWRadius = 1.7;
+		E['N'].vdWRadius = 1.55;
+		E['O'].vdWRadius = 1.52;
+		E['F'].vdWRadius = 1.47;
+		E['Na'].vdWRadius = 2.27;
+		E['Mg'].vdWRadius = 1.73;
+		E['P'].vdWRadius = 1.8;
+		E['S'].vdWRadius = 1.8;
+		E['Cl'].vdWRadius = 1.75;
+		E['K'].vdWRadius = 2.75;
+		E['Ca'].vdWRadius = 0.0;
+		E['Mn'].vdWRadius = 0.0;
+		E['Fe'].vdWRadius = 0.0;
+		E['Co'].vdWRadius = 0.0;
+		E['Ni'].vdWRadius = 1.63;
+		E['Cu'].vdWRadius = 1.4;
+		E['Zn'].vdWRadius = 1.39;
+		E['As'].vdWRadius = 1.85;
+		E['Se'].vdWRadius = 1.9;
+		E['Br'].vdWRadius = 1.85;
+		E['Sr'].vdWRadius = 0.0;
+		E['Cd'].vdWRadius = 1.58;
+		E['I'].vdWRadius = 1.98;
+		E['Hg'].vdWRadius = 1.55;
 
-	// set up jmol colors
-	E['H'].color = '#FFFFFF';
-	E['C'].color = '#909090';
-	E['N'].color = '#3050F8';
-	E['O'].color = '#FF0D0D';
-	E['F'].color = '#90E050';
-	E['Na'].color = '#AB5CF2';
-	E['Mg'].color = '#8AFF00';
-	E['P'].color = '#FF8000';
-	E['S'].color = '#FFFF30';
-	E['Cl'].color = '#1FF01F';
-	E['K'].color = '#8F40D4';
-	E['Ca'].color = '#3DFF00';
-	E['Mn'].color = '#9C7AC7';
-	E['Fe'].color = '#E06633';
-	E['Co'].color = '#F090A0';
-	E['Ni'].color = '#50D050';
-	E['Cu'].color = '#C88033';
-	E['Zn'].color = '#7D80B0';
-	E['As'].color = '#BD80E3';
-	E['Se'].color = '#FFA100';
-	E['Br'].color = '#A62929';
-	E['Sr'].color = '#00FF00';
-	E['Cd'].color = '#FFD98F';
-	E['I'].color = '#940094';
-	E['Hg'].color = '#B8B8D0';
+		E['H'].valency = 1;
+		E['C'].valency = 4;
+		E['N'].valency = 3;
+		E['O'].valency = 2;
+		E['F'].valency = 1;
+		E['Na'].valency = 1;
+		E['Mg'].valency = 0;
+		E['P'].valency = 3;
+		E['S'].valency = 2;
+		E['Cl'].valency = 1;
+		E['K'].valency = 0;
+		E['Ca'].valency = 0;
+		E['Mn'].valency = 3;
+		E['Fe'].valency = 2;
+		E['Co'].valency = 1;
+		E['Ni'].valency = 1;
+		E['Cu'].valency = 0;
+		E['Zn'].valency = 0;
+		E['As'].valency = 3;
+		E['Se'].valency = 2;
+		E['Br'].valency = 1;
+		E['Sr'].valency = 0;
+		E['Cd'].valency = 0;
+		E['I'].valency = 1;
+		E['Hg'].valency = 0;
 
-/* Uncomment these lines to substitute PyMOL colors
-	E['H'].color = '#E6E6E6';
-	E['C'].color = '#33FF33';
-	E['N'].color = '#3333FF';
-	E['O'].color = '#FF4D4D';
-	E['F'].color = '#B3FFFF';
-	E['S'].color = '#E6C640';
-*/
-	// set up covalent radii
-	E['H'].covalentRadius = 0.31;
-	E['C'].covalentRadius = 0.76;
-	E['N'].covalentRadius = 0.71;
-	E['O'].covalentRadius = 0.66;
-	E['F'].covalentRadius = 0.57;
-	E['Na'].covalentRadius = 1.66;
-	E['Mg'].covalentRadius = 1.41;
-	E['P'].covalentRadius = 1.07;
-	E['S'].covalentRadius = 1.05;
-	E['Cl'].covalentRadius = 1.02;
-	E['K'].covalentRadius = 2.03;
-	E['Ca'].covalentRadius = 1.76;
-	E['Mn'].covalentRadius = 1.39;
-	E['Fe'].covalentRadius = 1.32;
-	E['Co'].covalentRadius = 1.26;
-	E['Ni'].covalentRadius = 1.24;
-	E['Cu'].covalentRadius = 1.32;
-	E['Zn'].covalentRadius = 1.22;
-	E['As'].covalentRadius = 1.19;
-	E['Se'].covalentRadius = 1.2;
-	E['Br'].covalentRadius = 1.2;
-	E['Sr'].covalentRadius = 1.95;
-	E['Cd'].covalentRadius = 1.44;
-	E['I'].covalentRadius = 1.39;
-	E['Hg'].covalentRadius = 1.32;
+		E['H'].mass = 1;
+		E['C'].mass = 12;
+		E['N'].mass = 14;
+		E['O'].mass = 16;
+		E['F'].mass = 19;
+		E['Na'].mass = 23;
+		E['Mg'].mass = 24;
+		E['P'].mass = 31;
+		E['S'].mass = 32;
+		E['Cl'].mass = 35;
+		E['K'].mass = 39;
+		E['Ca'].mass = 40;
+		E['Mn'].mass = 55;
+		E['Fe'].mass = 56;
+		E['Co'].mass = 59;
+		E['Ni'].mass = 58;
+		E['Cu'].mass = 63;
+		E['Zn'].mass = 64;
+		E['As'].mass = 75;
+		E['Se'].mass = 80;
+		E['Br'].mass = 79;
+		E['Sr'].mass = 88;
+		E['Cd'].mass = 114;
+		E['I'].mass = 127;
+		E['Hg'].mass = 202;
 
-	// set up vdW radii
-	E['H'].vdWRadius = 1.2;
-	E['C'].vdWRadius = 1.7;
-	E['N'].vdWRadius = 1.55;
-	E['O'].vdWRadius = 1.52;
-	E['F'].vdWRadius = 1.47;
-	E['Na'].vdWRadius = 2.27;
-	E['Mg'].vdWRadius = 1.73;
-	E['P'].vdWRadius = 1.8;
-	E['S'].vdWRadius = 1.8;
-	E['Cl'].vdWRadius = 1.75;
-	E['K'].vdWRadius = 2.75;
-	E['Ca'].vdWRadius = 0.0;
-	E['Mn'].vdWRadius = 0.0;
-	E['Fe'].vdWRadius = 0.0;
-	E['Co'].vdWRadius = 0.0;
-	E['Ni'].vdWRadius = 1.63;
-	E['Cu'].vdWRadius = 1.4;
-	E['Zn'].vdWRadius = 1.39;
-	E['As'].vdWRadius = 1.85;
-	E['Se'].vdWRadius = 1.9;
-	E['Br'].vdWRadius = 1.85;
-	E['Sr'].vdWRadius = 0.0;
-	E['Cd'].vdWRadius = 1.58;
-	E['I'].vdWRadius = 1.98;
-	E['Hg'].vdWRadius = 1.55;
+		return E;
 
-	E['H'].valency = 1;
-	E['C'].valency = 4;
-	E['N'].valency = 3;
-	E['O'].valency = 2;
-	E['F'].valency = 1;
-	E['Na'].valency = 1;
-	E['Mg'].valency = 0;
-	E['P'].valency = 3;
-	E['S'].valency = 2;
-	E['Cl'].valency = 1;
-	E['K'].valency = 0;
-	E['Ca'].valency = 0;
-	E['Mn'].valency = 3;
-	E['Fe'].valency = 2;
-	E['Co'].valency = 1;
-	E['Ni'].valency = 1;
-	E['Cu'].valency = 0;
-	E['Zn'].valency = 0;
-	E['As'].valency = 3;
-	E['Se'].valency = 2;
-	E['Br'].valency = 1;
-	E['Sr'].valency = 0;
-	E['Cd'].valency = 0;
-	E['I'].valency = 1;
-	E['Hg'].valency = 0;
+	})();
 
-	E['H'].mass = 1;
-	E['C'].mass = 12;
-	E['N'].mass = 14;
-	E['O'].mass = 16;
-	E['F'].mass = 19;
-	E['Na'].mass = 23;
-	E['Mg'].mass = 24;
-	E['P'].mass = 31;
-	E['S'].mass = 32;
-	E['Cl'].mass = 35;
-	E['K'].mass = 39;
-	E['Ca'].mass = 40;
-	E['Mn'].mass = 55;
-	E['Fe'].mass = 56;
-	E['Co'].mass = 59;
-	E['Ni'].mass = 58;
-	E['Cu'].mass = 63;
-	E['Zn'].mass = 64;
-	E['As'].mass = 75;
-	E['Se'].mass = 80;
-	E['Br'].mass = 79;
-	E['Sr'].mass = 88;
-	E['Cd'].mass = 114;
-	E['I'].mass = 127;
-	E['Hg'].mass = 202;
-
-	return E;
-
-})();
-
-(function(structures) {
-
-	structures.Point = function(x, y) {
-		this.x = x ? x : 0;
-		this.y = y ? y : 0;
+	iview.Point = function(x, y) {
+		this.x = x;
+		this.y = y;
 		this.sub = function(p) {
 			this.x -= p.x;
 			this.y -= p.y;
@@ -431,17 +422,12 @@ iview.ELEMENT = (function() {
 			angle = angle % (Math.PI * 2);
 			return angle;
 		};
-		return true;
 	};
 
-})(iview.structures);
-
-(function(iview, ELEMENT, structures) {
-
-	structures.Atom = function(label, x, y, z) {
-		this.x = x ? x : 0;
-		this.y = y ? y : 0;
-		this.z = z ? z : 0;
+	iview.Atom = function(label, x, y, z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
 		this.charge = 0;
 		this.numLonePair = 0;
 		this.mass = -1;
@@ -451,9 +437,6 @@ iview.ELEMENT = (function() {
 		this.isHidden = false;
 		this.label = label ? label.replace(/\s/g, '') : 'C';
 		this.altLabel = null;
-		if (!ELEMENT[this.label]) {
-			this.label = 'C';
-		}
 		this.isLone = false;
 		this.isHover = false;
 		this.isSelected = false;
@@ -480,7 +463,7 @@ iview.ELEMENT = (function() {
 			}
 			var font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
 			ctx.font = font;
-			ctx.fillStyle = ELEMENT[this.label].color;
+			ctx.fillStyle = iview.ELEMENT[this.label].color;
 			if (this.isLone && !specs.atoms_displayAllCarbonLabels_2D || specs.atoms_circles_2D) {
 				ctx.beginPath();
 				ctx.arc(this.x, this.y, specs.atoms_circleDiameter_2D / 2, 0, Math.PI * 2, false);
@@ -654,13 +637,13 @@ iview.ELEMENT = (function() {
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
-			var radius = specs.atoms_useVDWDiameters_3D ? ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
+			var radius = specs.atoms_useVDWDiameters_3D ? iview.ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
 			if (radius == 0) {
 				radius = 1;
 			}
 			mat4.scale(transform, [ radius, radius, radius ]);
 			// colors
-			var color = ELEMENT[this.label].color;
+			var color = iview.ELEMENT[this.label].color;
 			gl.material.setDiffuseColor(color);
 			// render
 			gl.setMatrixUniforms(transform);
@@ -671,10 +654,10 @@ iview.ELEMENT = (function() {
 			return specs.atoms_displayAllCarbonLabels_2D || this.label != 'C' || this.altLabel || this.mass != -1 || this.charge != 0 || this.numLonePair != 0 || (this.isHidden && specs.atoms_showHiddenCarbons_2D) || (specs.atoms_displayTerminalCarbonLabels_2D && this.bondNumber == 1);
 		};
 		this.getImplicitHydrogenCount = function() {
-			if (this.label == 'H' || ELEMENT[this.label] == null) {
+			if (this.label == 'H' || iview.ELEMENT[this.label] == null) {
 				return 0;
 			}
-			var valence = ELEMENT[this.label].valency;
+			var valence = iview.ELEMENT[this.label].valency;
 			var dif = valence - this.coordinationNumber;
 			if (this.charge > 0) {
 				var vdif = 4 - valence;
@@ -688,22 +671,17 @@ iview.ELEMENT = (function() {
 			}
 			return dif < 0 ? 0 : dif;
 		};
-		return true;
 	};
-	structures.Atom.prototype = new structures.Point(0, 0);
+	iview.Atom.prototype = new iview.Point(0, 0);
 
-})(iview, iview.ELEMENT, iview.structures);
-
-(function(iview, ELEMENT, structures) {
-
-	structures.Bond = function(a1, a2, bondOrder) {
+	iview.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.bondOrder = bondOrder ? bondOrder : 1;
-		this.stereo = structures.Bond.STEREO_NONE;
+		this.stereo = iview.Bond.STEREO_NONE;
 		this.isHover = false;
 		this.getCenter = function() {
-			return new structures.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
+			return new iview.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
 		};
 		this.getLength = function() {
 			return this.a1.distance(this.a2);
@@ -773,8 +751,8 @@ iview.ELEMENT = (function() {
 			ctx.lineWidth = specs.bonds_width_2D;
 			ctx.lineCap = specs.bonds_ends_2D;
 			var linearGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-			var color1 = ELEMENT[this.a1.label].color;
-			var color2 = ELEMENT[this.a2.label].color;
+			var color1 = iview.ELEMENT[this.a1.label].color;
+			var color2 = iview.ELEMENT[this.a2.label].color;
 			linearGradient.addColorStop(0, color1);
 			if(!specs.bonds_colorGradient){
 				linearGradient.addColorStop(0.5, color1);
@@ -791,7 +769,7 @@ iview.ELEMENT = (function() {
 				ctx.stroke();
 				break;
 			case 1:
-				if (this.stereo == structures.Bond.STEREO_PROTRUDING || this.stereo == structures.Bond.STEREO_RECESSED) {
+				if (this.stereo == iview.Bond.STEREO_PROTRUDING || this.stereo == iview.Bond.STEREO_RECESSED) {
 					var thinSpread = specs.bonds_width_2D / 2;
 					var useDist = this.a1.distance(this.a2) * specs.bonds_wedgeThickness_2D / 2;
 					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
@@ -811,7 +789,7 @@ iview.ELEMENT = (function() {
 					ctx.lineTo(cx3, cy3);
 					ctx.lineTo(cx4, cy4);
 					ctx.closePath();
-					if (this.stereo == structures.Bond.STEREO_PROTRUDING) {
+					if (this.stereo == iview.Bond.STEREO_PROTRUDING) {
 						ctx.fill();
 					} else {
 						ctx.save();
@@ -824,7 +802,7 @@ iview.ELEMENT = (function() {
 						ctx.stroke();
 						ctx.restore();
 					}
-				} else if (this.stereo == structures.Bond.STEREO_AMBIGUOUS) {
+				} else if (this.stereo == iview.Bond.STEREO_AMBIGUOUS) {
 					ctx.beginPath();
 					ctx.moveTo(x1, y1);
 					var curves = Math.floor(Math.sqrt(difX * difX + difY * difY) / specs.bonds_wavyLength_2D);
@@ -866,7 +844,7 @@ iview.ELEMENT = (function() {
 				ctx.stroke();
 				break;
 			case 2:
-				if (this.stereo == structures.Bond.STEREO_AMBIGUOUS) {
+				if (this.stereo == iview.Bond.STEREO_AMBIGUOUS) {
 					var useDist = this.a1.distance(this.a2) * specs.bonds_saturationWidth_2D / 2;
 					var perpendicular = this.a1.angle(this.a2) + Math.PI / 2;
 					var cx1 = x1 - Math.cos(perpendicular) * useDist;
@@ -1038,7 +1016,7 @@ iview.ELEMENT = (function() {
 				}
 				mat4.scale(transformUse, scaleVector);
 				// colors
-				var color = ELEMENT[this.a1.label].color;
+				var color = iview.ELEMENT[this.a1.label].color;
 				gl.material.setDiffuseColor(color);
 				// render
 				gl.setMatrixUniforms(transformUse);
@@ -1056,7 +1034,7 @@ iview.ELEMENT = (function() {
 				mat4.rotate(transformUse, ang + Math.PI, axis);
 				mat4.scale(transformUse, scaleVector);
 				// colors
-				gl.material.setDiffuseColor(ELEMENT[this.a2.label].color);
+				gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
 				// render
 				gl.setMatrixUniforms(transformUse);				
 				if (specs.bonds_renderAsLines_3D) {
@@ -1066,18 +1044,13 @@ iview.ELEMENT = (function() {
 				}
 			}
 		};
-		return true;
 	};
-	structures.Bond.STEREO_NONE = 'none';
-	structures.Bond.STEREO_PROTRUDING = 'protruding';
-	structures.Bond.STEREO_RECESSED = 'recessed';
-	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
+	iview.Bond.STEREO_NONE = 'none';
+	iview.Bond.STEREO_PROTRUDING = 'protruding';
+	iview.Bond.STEREO_RECESSED = 'recessed';
+	iview.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(iview, iview.ELEMENT, iview.structures);
-
-(function(c, structures) {
-
-	structures.Molecule = function() {
+	iview.Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
 		this.draw = function(ctx, specs) {
@@ -1182,7 +1155,7 @@ iview.ELEMENT = (function() {
 				maxY = Math.max(this.atoms[i].y, maxY);
 				maxZ = Math.max(this.atoms[i].z, maxZ);
 			}
-			return new structures.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
+			return new iview.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
 		this.getCenter = function() {
 			var minX = minY = Infinity;
@@ -1193,7 +1166,7 @@ iview.ELEMENT = (function() {
 				maxX = Math.max(this.atoms[i].x, maxX);
 				maxY = Math.max(this.atoms[i].y, maxY);
 			}
-			return new structures.Point((maxX + minX) / 2, (maxY + minY) / 2);
+			return new iview.Point((maxX + minX) / 2, (maxY + minY) / 2);
 		};
 		this.getDimension = function() {
 			var minX = minY = Infinity;
@@ -1204,24 +1177,18 @@ iview.ELEMENT = (function() {
 				maxX = Math.max(this.atoms[i].x, maxX);
 				maxY = Math.max(this.atoms[i].y, maxY);
 			}
-			return new structures.Point(maxX - minX, maxY - minY);
+			return new iview.Point(maxX - minX, maxY - minY);
 		};
-		return true;
 	};
 
-})(iview, iview.structures);
-
-(function(structures) {
-
-	structures._Mesh = function() {
-		return true;
+	iview._Mesh = function() {
 	};
-	structures._Mesh.prototype.storeData = function(positionData, normalData, indexData) {
+	iview._Mesh.prototype.storeData = function(positionData, normalData, indexData) {
 		this.positionData = positionData;
 		this.normalData = normalData;
 		this.indexData = indexData;
 	};
-	structures._Mesh.prototype.setupBuffers = function(gl) {
+	iview._Mesh.prototype.setupBuffers = function(gl) {
 		this.vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
@@ -1252,7 +1219,7 @@ iview.ELEMENT = (function() {
 			}
 		}
 	};
-	structures._Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
+	iview._Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
 		var vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
@@ -1276,7 +1243,7 @@ iview.ELEMENT = (function() {
 		
 		return [vertexPositionBuffer, vertexNormalBuffer, vertexIndexBuffer];
 	};
-	structures._Mesh.prototype.bindBuffers = function(gl) {
+	iview._Mesh.prototype.bindBuffers = function(gl) {
 		if(!this.vertexPositionBuffer){
 			this.setupBuffers(gl);
 		}
@@ -1292,11 +1259,7 @@ iview.ELEMENT = (function() {
 		}
 	};
 
-})(iview.structures);
-
-(function(structures) {
-
-	structures.Cylinder = function(radius, height, bands) {
+	iview.Cylinder = function(radius, height, bands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var i = 0; i < bands; i++) {
@@ -1314,16 +1277,10 @@ iview.ELEMENT = (function() {
 		positionData.push(radius, height, 0);
 
 		this.storeData(positionData, normalData);
-		
-		return true;
 	};
-	structures.Cylinder.prototype = new structures._Mesh();
+	iview.Cylinder.prototype = new iview._Mesh();
 
-})(iview.structures);
-
-(function(structures) {
-
-	structures.Sphere = function(radius, latitudeBands, longitudeBands) {
+	iview.Sphere = function(radius, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
@@ -1363,16 +1320,10 @@ iview.ELEMENT = (function() {
 		}
 
 		this.storeData(positionData, normalData, indexData);
-		
-		return true;
 	};
-	structures.Sphere.prototype = new structures._Mesh();
+	iview.Sphere.prototype = new iview._Mesh();
 
-})(iview.structures);
-
-(function(iview, structures) {
-
-	structures.Light = function(diffuseColor, specularColor, direction, gl) {
+	iview.Light = function(diffuseColor, specularColor, direction, gl) {
 		this.diffuseRGB = iview.getRGB(diffuseColor);
 		this.specularRGB = iview.getRGB(specularColor);
 		this.direction = direction;
@@ -1395,14 +1346,9 @@ iview.ELEMENT = (function() {
 			vec3.scale(1 / length);
 		}
 		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
-		return true;
 	};
 
-})(iview, iview.structures);
-
-(function(iview, structures) {
-
-	structures.Material = function(gl) {
+	iview.Material = function(gl) {
 		var prefix = 'u_material.';
 		var aUL = gl.getUniformLocation(gl.program, prefix + 'ambient_color');
 		var dUL = gl.getUniformLocation(gl.program, prefix + 'diffuse_color');
@@ -1439,14 +1385,9 @@ iview.ELEMENT = (function() {
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 		};
-		return true;
 	};
 
-})(iview, iview.structures);
-
-(function(structures) {
-
-	structures.Shader = function(gl) {
+	iview.Shader = function(gl) {
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertexShader, [	// phong shader
 			'struct Light',
@@ -1558,15 +1499,9 @@ iview.ELEMENT = (function() {
 		gl.enableVertexAttribArray(this.vertexPositionAttribute);
 		this.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
 		gl.enableVertexAttribArray(this.vertexNormalAttribute);
-
-		return true;
 	};
 
-})(iview.structures);
-
-(function(c, structures) {
-
-	structures.VisualSpecifications = function() {
+	iview.VisualSpecifications = function() {
 
 		// canvas properties
 		this.backgroundColor = '#FFFFFF';
@@ -1664,19 +1599,15 @@ Line
 		};
 	};
 
-})(iview, iview.structures);
-
-(function(iview, structures, ELEMENT) {
-
 	iview.readPDB = function(content) {
-		var molecule = new structures.Molecule();
+		var molecule = new iview.Molecule();
 		var resatoms = [];
 		var atomSerials = [];
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
 			if (iview.stringStartsWith(line, 'ATOM')) {
-				var a = new structures.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				var a = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				a.hetatm = false;
 				a.resSeq = parseInt(line.substring(22, 26));
 				a.resName = $.trim(line.substring(17, 20));
@@ -1686,7 +1617,7 @@ Line
 				if (symbol.length > 1) {
 					symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
 				}
-				var het = new structures.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				var het = new iview.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				het.hetatm = true;
 				var residueName = $.trim(line.substring(17, 20));
 				molecule.atoms.push(het);
@@ -1702,8 +1633,8 @@ Line
 				for ( var j = i + 1; j < ii; j++) {
 					var first = molecule.atoms[i];
 					var second = molecule.atoms[j];
-					if (first.distance3D(second) < (ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) * 1.1) {
-						molecule.bonds.push(new structures.Bond(first, second, 1));
+					if (first.distance3D(second) < (iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) * 1.1) {
+						molecule.bonds.push(new iview.Bond(first, second, 1));
 					}
 				}
 			}
@@ -1712,7 +1643,9 @@ Line
 		return molecule;
 	};
 
-})(iview, iview.structures, iview.ELEMENT);
+	return iview;
+
+})();
 
 iview.monitor = (function() {
 
@@ -1792,7 +1725,7 @@ iview.monitor = (function() {
 
 })();
 
-(function(iview, monitor, structures) {
+(function(iview) {
 
 	iview.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
@@ -1801,7 +1734,7 @@ iview.monitor = (function() {
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
 		this.height = jqCapsule.attr('height');
-		this.specs = new structures.VisualSpecifications();
+		this.specs = new iview.VisualSpecifications();
 		// setup input events
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
@@ -1841,7 +1774,7 @@ iview.monitor = (function() {
 			switch (e.which) {
 			case 1:
 				// left mouse button pressed
-				monitor.CANVAS_DRAGGING = me;
+				iview.monitor.CANVAS_DRAGGING = me;
 				if (me.mousedown) {
 					me.prehandleEvent(e);
 					me.mousedown(e);
@@ -1864,20 +1797,20 @@ iview.monitor = (function() {
 			}
 		});
 		jqCapsule.mousemove(function(e) {
-			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
+			if (iview.monitor.CANVAS_DRAGGING == null && me.mousemove) {
 				me.prehandleEvent(e);
 				me.mousemove(e);
 			}
 		});
 		jqCapsule.mouseout(function(e) {
-			monitor.CANVAS_OVER = null;
+			iview.monitor.CANVAS_OVER = null;
 			if (me.mouseout) {
 				me.prehandleEvent(e);
 				me.mouseout(e);
 			}
 		});
 		jqCapsule.mouseover(function(e) {
-			monitor.CANVAS_OVER = me;
+			iview.monitor.CANVAS_OVER = me;
 			if (me.mouseover) {
 				me.prehandleEvent(e);
 				me.mouseover(e);
@@ -1920,8 +1853,7 @@ iview.monitor = (function() {
 			this.gl = canvas.getContext('experimental-webgl');
 		}
 		this.gl.program = this.gl.createProgram();
-		this.gl.shader = new structures.Shader(this.gl);
-		return true;
+		this.gl.shader = new iview.Shader(this.gl);
 	};
 	iview.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
@@ -1940,10 +1872,10 @@ iview.monitor = (function() {
 		this.gl.depthFunc(this.gl.LEQUAL);
 		// here is the sphere buffer to be drawn, make it once, then scale
 		// and translate to draw atoms
-		this.gl.sphereBuffer = new structures.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
-		this.gl.cylinderBuffer = new structures.Cylinder(1, 1, this.specs.bonds_resolution_3D);
-		this.gl.lighting = new structures.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
-		this.gl.material = new structures.Material(this.gl);
+		this.gl.sphereBuffer = new iview.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
+		this.gl.cylinderBuffer = new iview.Cylinder(1, 1, this.specs.bonds_resolution_3D);
+		this.gl.lighting = new iview.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
+		this.gl.material = new iview.Material(this.gl);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
 		// push the projection matrix to the graphics card
 		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
@@ -1963,7 +1895,7 @@ iview.monitor = (function() {
 	iview.Canvas.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
-		e.p = new structures.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
+		e.p = new iview.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
 	};
 	iview.Canvas.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -1980,7 +1912,7 @@ iview.monitor = (function() {
 	};
 	iview.Canvas.prototype.drag = function(e) {
 		if (iview.monitor.ALT) {
-			var t = new structures.Point(e.p.x, e.p.y);
+			var t = new iview.Point(e.p.x, e.p.y);
 			t.sub(this.lastPoint);
 			mat4.translate(this.translationMatrix, [ t.x / 20, -t.y / 20, 0 ]);
 			this.lastPoint = e.p;
@@ -2001,4 +1933,4 @@ iview.monitor = (function() {
 		this.repaint();
 	};
 
-})(iview, iview.monitor, iview.structures);
+})(iview);
