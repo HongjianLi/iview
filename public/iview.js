@@ -20,22 +20,11 @@ var iview = (function() {
 
 	var iview = {};
 
-	iview.structures = {};
-
-	return iview;
-
-})();
-
-
-iview.extensions = (function() {
-
-	var ext = {};
-
-	ext.stringStartsWith = function(str, match) {
+	iview.stringStartsWith = function(str, match) {
 		return str.match('^' + match) == match;
 	};
 
-	ext.vec3AngleFrom = function(v1, v2) {
+	iview.vec3AngleFrom = function(v1, v2) {
 		var length1 = vec3.length(v1);
 		var length2 = vec3.length(v2);
 		var dot = vec3.dot(v1, v2);
@@ -43,7 +32,7 @@ iview.extensions = (function() {
 		return Math.acos(cosine);
 	};
 
-	ext.contextHashTo = function(ctx, xs, ys, xt, yt, width, spacing) {
+	iview.contextHashTo = function(ctx, xs, ys, xt, yt, width, spacing) {
 		var travelled = 0;
 		var space = false;
 		var lastX = xs;
@@ -79,7 +68,9 @@ iview.extensions = (function() {
 		}
 	};
 
-	return ext;
+	iview.structures = {};
+
+	return iview;
 
 })();
 
@@ -453,7 +444,7 @@ iview.ELEMENT = (function() {
 
 })(iview.structures);
 
-(function(ELEMENT, extensions, structures) {
+(function(iview, ELEMENT, structures) {
 
 	structures.Atom = function(label, x, y, z) {
 		this.x = x ? x : 0;
@@ -616,7 +607,7 @@ iview.ELEMENT = (function() {
 						s = '+';
 					} else if (s == '-1') {
 						s = '\u2013';
-					} else if (extensions.stringStartsWith(s, '-')) {
+					} else if (iview.stringStartsWith(s, '-')) {
 						s = s.substring(1) + '\u2013';
 					} else {
 						s += '+';
@@ -709,9 +700,9 @@ iview.ELEMENT = (function() {
 	};
 	structures.Atom.prototype = new structures.Point(0, 0);
 
-})(iview.ELEMENT, iview.extensions, iview.structures);
+})(iview, iview.ELEMENT, iview.structures);
 
-(function(ELEMENT, extensions, structures, math) {
+(function(iview, ELEMENT, structures, math) {
 
 	structures.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
@@ -804,7 +795,7 @@ iview.ELEMENT = (function() {
 			case 0.5:
 				ctx.beginPath();
 				ctx.moveTo(x1, y1);
-				extensions.contextHashTo(ctx, x1, y1, x2, y2, specs.bonds_hashSpacing_2D, specs.bonds_hashSpacing_2D);
+				iview.contextHashTo(ctx, x1, y1, x2, y2, specs.bonds_hashSpacing_2D, specs.bonds_hashSpacing_2D);
 				ctx.stroke();
 				break;
 			case 1:
@@ -837,7 +828,7 @@ iview.ELEMENT = (function() {
 						ctx.lineCap = 'butt';
 						ctx.beginPath();
 						ctx.moveTo(x1, y1);
-						extensions.contextHashTo(ctx, x1, y1, x2, y2, specs.bonds_hashWidth_2D, specs.bonds_hashSpacing_2D);
+						iview.contextHashTo(ctx, x1, y1, x2, y2, specs.bonds_hashWidth_2D, specs.bonds_hashSpacing_2D);
 						ctx.stroke();
 						ctx.restore();
 					}
@@ -1041,7 +1032,7 @@ iview.ELEMENT = (function() {
 					ang = Math.PI;
 				}
 			} else {
-				ang = extensions.vec3AngleFrom(y, a2b);
+				ang = iview.vec3AngleFrom(y, a2b);
 				axis = vec3.cross(y, a2b, []);
 			}
 			// render bonds
@@ -1090,7 +1081,7 @@ iview.ELEMENT = (function() {
 	structures.Bond.STEREO_RECESSED = 'recessed';
 	structures.Bond.STEREO_AMBIGUOUS = 'ambiguous';
 
-})(iview.ELEMENT, iview.extensions, iview.structures, iview.math);
+})(iview, iview.ELEMENT, iview.structures, iview.math);
 
 (function(c, math, structures) {
 
@@ -1683,22 +1674,22 @@ Line
 
 })(iview, iview.structures);
 
-(function(c, extensions, structures, ELEMENT) {
+(function(iview, structures, ELEMENT) {
 
-	c.readPDB = function(content) {
+	iview.readPDB = function(content) {
 		var molecule = new structures.Molecule();
 		var resatoms = [];
 		var atomSerials = [];
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
-			if (extensions.stringStartsWith(line, 'ATOM')) {
+			if (iview.stringStartsWith(line, 'ATOM')) {
 				var a = new structures.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				a.hetatm = false;
 				a.resSeq = parseInt(line.substring(22, 26));
 				a.resName = $.trim(line.substring(17, 20));
 				resatoms.push(a);
-			} else if (extensions.stringStartsWith(line, 'HETATM')) {
+			} else if (iview.stringStartsWith(line, 'HETATM')) {
 				var symbol = $.trim(line.substring(76, 78));
 				if (symbol.length > 1) {
 					symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
@@ -1708,9 +1699,9 @@ Line
 				var residueName = $.trim(line.substring(17, 20));
 				molecule.atoms.push(het);
 				atomSerials[parseInt($.trim(line.substring(6, 11)))] = het;
-			} else if (extensions.stringStartsWith(line, 'TER')) {
+			} else if (iview.stringStartsWith(line, 'TER')) {
 				// start a new chain.
-			} else if (extensions.stringStartsWith(line, 'ENDMDL')) {
+			} else if (iview.stringStartsWith(line, 'ENDMDL')) {
 				break;
 			}
 		}
@@ -1729,7 +1720,7 @@ Line
 		return molecule;
 	};
 
-})(iview, iview.extensions, iview.structures, iview.ELEMENT);
+})(iview, iview.structures, iview.ELEMENT);
 
 iview.monitor = (function() {
 
@@ -1809,7 +1800,7 @@ iview.monitor = (function() {
 
 })();
 
-(function(c, monitor, extensions, math, structures) {
+(function(c, monitor, math, structures) {
 
 	c.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
@@ -2018,4 +2009,4 @@ iview.monitor = (function() {
 		this.repaint();
 	};
 
-})(iview, iview.monitor, iview.extensions, iview.math, iview.structures);
+})(iview, iview.monitor, iview.math, iview.structures);
