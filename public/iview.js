@@ -17,16 +17,17 @@
 */
 
 var iview = (function() {
-	
-	var c = {};
 
-	c.structures = {};
+	var iview = {};
 
-	return c;
-	
+	iview.structures = {};
+
+	return iview;
+
 })();
 
-iview.extensions = (function(structures) {
+
+iview.extensions = (function() {
 
 	var ext = {};
 
@@ -44,12 +45,12 @@ iview.extensions = (function(structures) {
 
 	ext.contextHashTo = function(ctx, xs, ys, xt, yt, width, spacing) {
 		var travelled = 0;
-		var dist = new structures.Point(xs, ys).distance(new structures.Point(xt, yt));
 		var space = false;
 		var lastX = xs;
 		var lastY = ys;
 		var difX = xt - xs;
 		var difY = yt - ys;
+		var dist = Math.sqrt(difX*difX+difY*difY);
 		while (travelled < dist) {
 			if (space) {
 				if (travelled + spacing > dist) {
@@ -80,31 +81,21 @@ iview.extensions = (function(structures) {
 
 	return ext;
 
-})(iview.structures);
+})();
 
-iview.math = (function(extensions, structures) {
+iview.math = (function() {
 
-	var pack = {};
+	var math = {};
 
-	pack.isBetween = function(x, left, right) {
+	math.isBetween = function(x, left, right) {
 		return x >= left && x <= right;
 	};
 
-	pack.getRGB = function(color) {
-		var err = [ 0, 0, 0 ];
-		if (color.charAt(0) == '#') {
-			return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
-		} else if (extensions.stringStartsWith(color, 'rgb')) {
-			var cs = color.replace(/rgb\(|\)/g, '').split(',');
-			if (cs.length != 3) {
-				return err;
-			}
-			return [ parseInt(cs[0]) / 255.0, parseInt(cs[1]) / 255.0, parseInt(cs[2]) / 255.0 ];
-		}
-		return err;
+	math.getRGB = function(color) {
+		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
 
-	pack.calculateDistanceInterior = function(to, from, r) {
+	math.calculateDistanceInterior = function(to, from, r) {
 		if (this.isBetween(from.x, r.x, r.x + r.w) && this.isBetween(from.y, r.y, r.y + r.w)) {
 			return to.distance(from);
 		}
@@ -161,7 +152,7 @@ iview.math = (function(extensions, structures) {
 		return max;
 	};
 
-	pack.intersectLines = function(ax, ay, bx, by, cx, cy, dx, dy) {
+	math.intersectLines = function(ax, ay, bx, by, cx, cy, dx, dy) {
 		// calculate the direction vectors
 		bx -= ax;
 		by -= ay;
@@ -185,9 +176,9 @@ iview.math = (function(extensions, structures) {
 			return false;
 	};
 
-	return pack;
+	return math;
 
-})(iview.extensions, iview.structures);
+})();
 
 iview.ELEMENT = (function() {
 
