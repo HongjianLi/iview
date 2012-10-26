@@ -1599,50 +1599,6 @@ Line
 		};
 	};
 
-	iview.readPDB = function(content) {
-		var molecule = new iview.Molecule();
-		var resatoms = [];
-		var atomSerials = [];
-		var lines = content.split('\n');
-		for ( var i = 0, ii = lines.length; i < ii; i++) {
-			var line = lines[i];
-			if (iview.stringStartsWith(line, 'ATOM')) {
-				var a = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				a.hetatm = false;
-				a.resSeq = parseInt(line.substring(22, 26));
-				a.resName = $.trim(line.substring(17, 20));
-				resatoms.push(a);
-			} else if (iview.stringStartsWith(line, 'HETATM')) {
-				var symbol = $.trim(line.substring(76, 78));
-				if (symbol.length > 1) {
-					symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
-				}
-				var het = new iview.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				het.hetatm = true;
-				var residueName = $.trim(line.substring(17, 20));
-				molecule.atoms.push(het);
-				atomSerials[parseInt($.trim(line.substring(6, 11)))] = het;
-			} else if (iview.stringStartsWith(line, 'TER')) {
-				// start a new chain.
-			} else if (iview.stringStartsWith(line, 'ENDMDL')) {
-				break;
-			}
-		}
-		if(molecule.bonds.length==0){
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				for ( var j = i + 1; j < ii; j++) {
-					var first = molecule.atoms[i];
-					var second = molecule.atoms[j];
-					if (first.distance3D(second) < (iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) * 1.1) {
-						molecule.bonds.push(new iview.Bond(first, second, 1));
-					}
-				}
-			}
-		}
-		molecule.atoms = molecule.atoms.concat(resatoms);
-		return molecule;
-	};
-
 	return iview;
 
 })();
@@ -1854,6 +1810,49 @@ iview.monitor = (function() {
 		}
 		this.gl.program = this.gl.createProgram();
 		this.gl.shader = new iview.Shader(this.gl);
+	};
+	iview.Canvas.prototype.readPDB = function(content) {
+		var molecule = new iview.Molecule();
+		var resatoms = [];
+		var atomSerials = [];
+		var lines = content.split('\n');
+		for ( var i = 0, ii = lines.length; i < ii; i++) {
+			var line = lines[i];
+			if (iview.stringStartsWith(line, 'ATOM')) {
+				var a = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				a.hetatm = false;
+				a.resSeq = parseInt(line.substring(22, 26));
+				a.resName = $.trim(line.substring(17, 20));
+				resatoms.push(a);
+			} else if (iview.stringStartsWith(line, 'HETATM')) {
+				var symbol = $.trim(line.substring(76, 78));
+				if (symbol.length > 1) {
+					symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
+				}
+				var het = new iview.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				het.hetatm = true;
+				var residueName = $.trim(line.substring(17, 20));
+				molecule.atoms.push(het);
+				atomSerials[parseInt($.trim(line.substring(6, 11)))] = het;
+			} else if (iview.stringStartsWith(line, 'TER')) {
+				// start a new chain.
+			} else if (iview.stringStartsWith(line, 'ENDMDL')) {
+				break;
+			}
+		}
+		if(molecule.bonds.length==0){
+			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
+				for ( var j = i + 1; j < ii; j++) {
+					var first = molecule.atoms[i];
+					var second = molecule.atoms[j];
+					if (first.distance3D(second) < (iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) * 1.1) {
+						molecule.bonds.push(new iview.Bond(first, second, 1));
+					}
+				}
+			}
+		}
+		molecule.atoms = molecule.atoms.concat(resatoms);
+		return molecule;
 	};
 	iview.Canvas.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;

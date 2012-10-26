@@ -6,6 +6,6 @@ $(function() {
 
 	$.get('2ZD1.pdb', function(complex) {
 		var c = new iview.Canvas('iview');
-		c.loadMolecule(iview.readPDB(complex));
+		c.loadMolecule(c.readPDB(complex));
 	});
 });
