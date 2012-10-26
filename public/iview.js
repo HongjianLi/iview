@@ -475,78 +475,6 @@ var iview = (function() {
 				ctx.fillText(this.mass, this.x - massWidth - .5, this.y - specs.atoms_font_size_2D * .3);
 				ctx.font = fontSave;
 			}
-			// implicit hydrogens
-			var numHs = this.getImplicitHydrogenCount();
-			if (specs.atoms_implicitHydrogens_2D && numHs > 0) {
-				var hWidth = ctx.measureText('H').width;
-				if (numHs > 1) {
-					var xoffset = symbolWidth / 2 + hWidth / 2;
-					var yoffset = 0;
-					var subFont = specs.getFontString(specs.atoms_font_size_2D * .8, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-					ctx.font = subFont;
-					var numWidth = ctx.measureText(numHs).width;
-					if (this.bondNumber == 1) {
-						if (this.angleOfLeastInterference > Math.PI / 2 && this.angleOfLeastInterference < 3 * Math.PI / 2) {
-							xoffset = -symbolWidth / 2 - numWidth - hWidth / 2;
-						}
-					} else {
-						if (this.angleOfLeastInterference <= Math.PI / 4) {
-							// default
-						} else if (this.angleOfLeastInterference < 3 * Math.PI / 4) {
-							xoffset = 0;
-							yoffset = -specs.atoms_font_size_2D * .9;
-						} else if (this.angleOfLeastInterference <= 5 * Math.PI / 4) {
-							xoffset = -symbolWidth / 2 - numWidth - hWidth / 2;
-						} else if (this.angleOfLeastInterference < 7 * Math.PI / 4) {
-							xoffset = 0;
-							yoffset = specs.atoms_font_size_2D * .9;
-						}
-					}
-					ctx.font = font;
-					ctx.fillText('H', this.x + xoffset, this.y + yoffset);
-					ctx.font = subFont;
-					ctx.fillText(numHs, this.x + xoffset + hWidth / 2 + numWidth / 2, this.y + yoffset + specs.atoms_font_size_2D * .3);
-					this.textBounds.push({
-						x : this.x + xoffset - hWidth / 2,
-						y : this.y + yoffset - specs.atoms_font_size_2D / 2+1,
-						w : hWidth,
-						h : specs.atoms_font_size_2D-2
-					});
-					this.textBounds.push({
-						x : this.x + xoffset+ hWidth / 2,
-						y : this.y + yoffset + specs.atoms_font_size_2D * .3 - specs.atoms_font_size_2D / 2+1,
-						w : numWidth,
-						h : specs.atoms_font_size_2D * .8-2
-					});
-				} else {
-					var xoffset = symbolWidth / 2 + hWidth / 2;
-					var yoffset = 0;
-					if (this.bondNumber == 1) {
-						if (this.angleOfLeastInterference > Math.PI / 2 && this.angleOfLeastInterference < 3 * Math.PI / 2) {
-							xoffset = -symbolWidth / 2 - hWidth / 2;
-						}
-					} else {
-						if (this.angleOfLeastInterference <= Math.PI / 4) {
-							// default
-						} else if (this.angleOfLeastInterference < 3 * Math.PI / 4) {
-							xoffset = 0;
-							yoffset = -specs.atoms_font_size_2D * .9;
-						} else if (this.angleOfLeastInterference <= 5 * Math.PI / 4) {
-							xoffset = -symbolWidth / 2 - hWidth / 2;
-						} else if (this.angleOfLeastInterference < 7 * Math.PI / 4) {
-							xoffset = 0;
-							yoffset = specs.atoms_font_size_2D * .9;
-						}
-					}
-					ctx.fillText('H', this.x + xoffset, this.y + yoffset);
-					this.textBounds.push({
-						x : this.x + xoffset - hWidth / 2,
-						y : this.y + yoffset - specs.atoms_font_size_2D / 2+1,
-						w : hWidth,
-						h : specs.atoms_font_size_2D-2
-					});
-				}
-			}
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
@@ -555,21 +483,11 @@ var iview = (function() {
 				radius = 1;
 			}
 			mat4.scale(transform, [ radius, radius, radius ]);
-			// colors
 			var color = iview.ELEMENT[this.label].color;
 			gl.material.setDiffuseColor(color);
-			// render
 			gl.setMatrixUniforms(transform);
 			var buffer = gl.sphereBuffer;
 			gl.drawElements(gl.TRIANGLES, buffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-		};
-		this.getImplicitHydrogenCount = function() {
-			if (this.label == 'H' || iview.ELEMENT[this.label] == null) {
-				return 0;
-			}
-			var valence = iview.ELEMENT[this.label].valency;
-			var dif = valence - this.coordinationNumber;
-			return dif < 0 ? 0 : dif;
 		};
 	};
 	iview.Atom.prototype = new iview.Point(0, 0);
