@@ -157,133 +157,47 @@ var iview = (function() {
 			return false;
 	};
 
-	iview.ELEMENT = (function() {
+	function Element(color, vdWRadius, covalentRadius) {
+		this.color = color;
+		this.vdWRadius = vdWRadius;
+		this.covalentRadius = covalentRadius;
+	}
 
-		function Element(symbol, name, atomicNumber) {
-			this.symbol = symbol;
-			this.name = name;
-			this.atomicNumber = atomicNumber;
-		}
+	iview.ELEMENT = [];
+	iview.ELEMENT['H'] = new Element('#FFFFFF', 1.2, 0.31);
+	iview.ELEMENT['C'] = new Element('#909090', 1.7, 0.76);
+	iview.ELEMENT['N'] = new Element('#3050F8', 1.55, 0.71);
+	iview.ELEMENT['O'] = new Element('#FF0D0D', 1.52, 0.66);
+	iview.ELEMENT['F'] = new Element('#90E050', 1.47, 0.57);
+	iview.ELEMENT['Na'] = new Element('#AB5CF2', 2.27, 1.66);
+	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.73, 1.41);
+	iview.ELEMENT['P'] = new Element('#FF8000', 1.8, 1.07);
+	iview.ELEMENT['S'] = new Element('#FFFF30', 1.8, 1.05);
+	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.75, 1.02);
+	iview.ELEMENT['K'] = new Element('#8F40D4', 2.75, 2.03);
+	iview.ELEMENT['Ca'] = new Element('#3DFF00', 0.0, 1.76);
+	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 0.0, 1.39);
+	iview.ELEMENT['Fe'] = new Element('#E06633', 0.0, 1.32);
+	iview.ELEMENT['Co'] = new Element('#F090A0', 0.0, 1.26);
+	iview.ELEMENT['Ni'] = new Element('#50D050', 1.63, 1.24);
+	iview.ELEMENT['Cu'] = new Element('#C88033', 1.4, 1.32);
+	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.39, 1.22);
+	iview.ELEMENT['As'] = new Element('#BD80E3', 1.85, 1.19);
+	iview.ELEMENT['Se'] = new Element('#FFA100', 1.9, 1.2);
+	iview.ELEMENT['Br'] = new Element('#A62929', 1.85, 1.2);
+	iview.ELEMENT['Sr'] = new Element('#00FF00', 0.0, 1.95);
+	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.58, 1.44);
+	iview.ELEMENT['I'] = new Element('#940094', 1.98, 1.39);
+	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.55, 1.32);
 
-		var E = [];
-		E['H'] = new Element('H', 'Hydrogen', 1);
-		E['C'] = new Element('C', 'Carbon', 6);
-		E['N'] = new Element('N', 'Nitrogen', 7);
-		E['O'] = new Element('O', 'Oxygen', 8);
-		E['F'] = new Element('F', 'Fluorine', 9);
-		E['Na'] = new Element('Na', 'Sodium', 11);
-		E['Mg'] = new Element('Mg', 'Magnesium', 12);
-		E['P'] = new Element('P', 'Phosphorus', 15);
-		E['S'] = new Element('S', 'Sulfur', 16);
-		E['Cl'] = new Element('Cl', 'Chlorine', 17);
-		E['K'] = new Element('K', 'Potassium', 19);
-		E['Ca'] = new Element('Ca', 'Calcium', 20);
-		E['Mn'] = new Element('Mn', 'Manganese', 25);
-		E['Fe'] = new Element('Fe', 'Iron', 26);
-		E['Co'] = new Element('Co', 'Cobalt', 27);
-		E['Ni'] = new Element('Ni', 'Nickel', 28);
-		E['Cu'] = new Element('Cu', 'Copper', 29);
-		E['Zn'] = new Element('Zn', 'Zinc', 30);
-		E['As'] = new Element('As', 'Arsenic', 33);
-		E['Se'] = new Element('Se', 'Selenium', 34);
-		E['Br'] = new Element('Br', 'Bromine', 35);
-		E['Sr'] = new Element('Sr', 'Strontium', 38);
-		E['Cd'] = new Element('Cd', 'Cadmium', 48);
-		E['I'] = new Element('I', 'Iodine', 53);
-		E['Hg'] = new Element('Hg', 'Mercury', 80);
-
-		// set up jmol colors
-		E['H'].color = '#FFFFFF';
-		E['C'].color = '#909090';
-		E['N'].color = '#3050F8';
-		E['O'].color = '#FF0D0D';
-		E['F'].color = '#90E050';
-		E['Na'].color = '#AB5CF2';
-		E['Mg'].color = '#8AFF00';
-		E['P'].color = '#FF8000';
-		E['S'].color = '#FFFF30';
-		E['Cl'].color = '#1FF01F';
-		E['K'].color = '#8F40D4';
-		E['Ca'].color = '#3DFF00';
-		E['Mn'].color = '#9C7AC7';
-		E['Fe'].color = '#E06633';
-		E['Co'].color = '#F090A0';
-		E['Ni'].color = '#50D050';
-		E['Cu'].color = '#C88033';
-		E['Zn'].color = '#7D80B0';
-		E['As'].color = '#BD80E3';
-		E['Se'].color = '#FFA100';
-		E['Br'].color = '#A62929';
-		E['Sr'].color = '#00FF00';
-		E['Cd'].color = '#FFD98F';
-		E['I'].color = '#940094';
-		E['Hg'].color = '#B8B8D0';
-
-	/* Uncomment these lines to substitute PyMOL colors
-		E['H'].color = '#E6E6E6';
-		E['C'].color = '#33FF33';
-		E['N'].color = '#3333FF';
-		E['O'].color = '#FF4D4D';
-		E['F'].color = '#B3FFFF';
-		E['S'].color = '#E6C640';
-	*/
-		// set up covalent radii
-		E['H'].covalentRadius = 0.31;
-		E['C'].covalentRadius = 0.76;
-		E['N'].covalentRadius = 0.71;
-		E['O'].covalentRadius = 0.66;
-		E['F'].covalentRadius = 0.57;
-		E['Na'].covalentRadius = 1.66;
-		E['Mg'].covalentRadius = 1.41;
-		E['P'].covalentRadius = 1.07;
-		E['S'].covalentRadius = 1.05;
-		E['Cl'].covalentRadius = 1.02;
-		E['K'].covalentRadius = 2.03;
-		E['Ca'].covalentRadius = 1.76;
-		E['Mn'].covalentRadius = 1.39;
-		E['Fe'].covalentRadius = 1.32;
-		E['Co'].covalentRadius = 1.26;
-		E['Ni'].covalentRadius = 1.24;
-		E['Cu'].covalentRadius = 1.32;
-		E['Zn'].covalentRadius = 1.22;
-		E['As'].covalentRadius = 1.19;
-		E['Se'].covalentRadius = 1.2;
-		E['Br'].covalentRadius = 1.2;
-		E['Sr'].covalentRadius = 1.95;
-		E['Cd'].covalentRadius = 1.44;
-		E['I'].covalentRadius = 1.39;
-		E['Hg'].covalentRadius = 1.32;
-
-		// set up vdW radii
-		E['H'].vdWRadius = 1.2;
-		E['C'].vdWRadius = 1.7;
-		E['N'].vdWRadius = 1.55;
-		E['O'].vdWRadius = 1.52;
-		E['F'].vdWRadius = 1.47;
-		E['Na'].vdWRadius = 2.27;
-		E['Mg'].vdWRadius = 1.73;
-		E['P'].vdWRadius = 1.8;
-		E['S'].vdWRadius = 1.8;
-		E['Cl'].vdWRadius = 1.75;
-		E['K'].vdWRadius = 2.75;
-		E['Ca'].vdWRadius = 0.0;
-		E['Mn'].vdWRadius = 0.0;
-		E['Fe'].vdWRadius = 0.0;
-		E['Co'].vdWRadius = 0.0;
-		E['Ni'].vdWRadius = 1.63;
-		E['Cu'].vdWRadius = 1.4;
-		E['Zn'].vdWRadius = 1.39;
-		E['As'].vdWRadius = 1.85;
-		E['Se'].vdWRadius = 1.9;
-		E['Br'].vdWRadius = 1.85;
-		E['Sr'].vdWRadius = 0.0;
-		E['Cd'].vdWRadius = 1.58;
-		E['I'].vdWRadius = 1.98;
-		E['Hg'].vdWRadius = 1.55;
-
-		return E;
-
-	})();
+/* Uncomment these lines to substitute PyMOL colors
+	iview.ELEMENT['H'].color = '#E6E6E6';
+	iview.ELEMENT['C'].color = '#33FF33';
+	iview.ELEMENT['N'].color = '#3333FF';
+	iview.ELEMENT['O'].color = '#FF4D4D';
+	iview.ELEMENT['F'].color = '#B3FFFF';
+	iview.ELEMENT['S'].color = '#E6C640';
+*/
 
 	iview.Point = function(x, y) {
 		this.x = x;
