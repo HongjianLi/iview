@@ -958,7 +958,7 @@ var iview = (function() {
 		};
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
-			var height = (specs.bonds_renderAsLines_3D?1.1:1.001) * this.a1.distance3D(this.a2) / 2;
+			var height = 1.001 * this.a1.distance3D(this.a2) / 2;
 			if (height == 0) {
 				// if there is no height, then no point in rendering this bond,
 				// just return
@@ -1020,11 +1020,7 @@ var iview = (function() {
 				gl.material.setDiffuseColor(color);
 				// render
 				gl.setMatrixUniforms(transformUse);
-				if (specs.bonds_renderAsLines_3D) {
-					gl.drawArrays(gl.LINES, 0, gl.lineBuffer.vertexPositionBuffer.numItems);
-				}else {
-					gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-				}
+				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 				mat4.set(transformOpposite, transformUse);
 				if (others[i] != 0) {
 					mat4.translate(transformUse, vec3.scale(saturatedCross, others[i], []));
@@ -1037,11 +1033,7 @@ var iview = (function() {
 				gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
 				// render
 				gl.setMatrixUniforms(transformUse);				
-				if (specs.bonds_renderAsLines_3D) {
-					gl.drawArrays(gl.LINES, 0, gl.lineBuffer.vertexPositionBuffer.numItems);
-				}else {
-					gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-				}
+				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			}
 		};
 	};
@@ -1072,75 +1064,57 @@ var iview = (function() {
 			}
 		};
 		this.render = function(gl, specs) {
-			if (specs.macro_displayBonds) {
-				if (this.bonds.length > 0) {
-					if (specs.bonds_renderAsLines_3D) {
-						gl.lineWidth(specs.bonds_width_2D);
-						gl.lineBuffer.bindBuffers(gl);
-					} else {
-						gl.cylinderBuffer.bindBuffers(gl);
-					}
-					// colors
-					gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
-				}
-				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-					var b = this.bonds[i];
-					if (!b.a1.hetatm && (specs.macro_atomToLigandDistance == -1 || (b.a1.closestDistance != undefined && specs.macro_atomToLigandDistance >= b.a1.closestDistance && specs.macro_atomToLigandDistance >= b.a2.closestDistance))) {
-						b.render(gl, specs);
-					}
+// receptor bonds
+			if (this.bonds.length > 0) {
+				gl.cylinderBuffer.bindBuffers(gl);
+				gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
+			}
+			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
+				var b = this.bonds[i];
+				if (!b.a1.hetatm && (specs.macro_atomToLigandDistance == -1 || (b.a1.closestDistance != undefined && specs.macro_atomToLigandDistance >= b.a1.closestDistance && specs.macro_atomToLigandDistance >= b.a2.closestDistance))) {
+					b.render(gl, specs);
 				}
 			}
-			if (specs.macro_displayAtoms) {
-				if (this.atoms.length > 0) {
-					gl.sphereBuffer.bindBuffers(gl);
-					// colors
-					gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
-				}
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					var a = this.atoms[i];
-					if (!a.hetatm && (specs.macro_atomToLigandDistance == -1 || (a.closestDistance != undefined && specs.macro_atomToLigandDistance >= a.closestDistance))) {
-						a.render(gl, specs);
-					}
+// receptor atoms
+			if (this.atoms.length > 0) {
+				gl.sphereBuffer.bindBuffers(gl);
+				gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
+			}
+			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
+				var a = this.atoms[i];
+				if (!a.hetatm && (specs.macro_atomToLigandDistance == -1 || (a.closestDistance != undefined && specs.macro_atomToLigandDistance >= a.closestDistance))) {
+					a.render(gl, specs);
 				}
 			}
-			if (specs.bonds_display) {
-				if (this.bonds.length > 0) {
-					if (specs.bonds_renderAsLines_3D) {
-						gl.lineWidth(specs.bonds_width_2D);
-						gl.lineBuffer.bindBuffers(gl);
-					} else {
-						gl.cylinderBuffer.bindBuffers(gl);
-					}
-					// colors
-					gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
-				}
-				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-					var b = this.bonds[i];
-					if (b.a1.hetatm) {
-						b.render(gl, specs);
-					}
+// ligand bonds
+			if (this.bonds.length > 0) {
+				gl.cylinderBuffer.bindBuffers(gl);
+				gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
+			}
+			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
+				var b = this.bonds[i];
+				if (b.a1.hetatm) {
+					b.render(gl, specs);
 				}
 			}
-			if (specs.atoms_display) {
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					var a = this.atoms[i];
-					a.bondNumber = 0;
-				}
-				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-					var b = this.bonds[i];
-					b.a1.bondNumber++;
-					b.a2.bondNumber++;
-				}
-				if (this.atoms.length > 0) {
-					gl.sphereBuffer.bindBuffers(gl);
-					// colors
-					gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
-				}
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					var a = this.atoms[i];
-					if (a.hetatm) {
-						a.render(gl, specs);
-					}
+// ligand atoms
+			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
+				var a = this.atoms[i];
+				a.bondNumber = 0;
+			}
+			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
+				var b = this.bonds[i];
+				b.a1.bondNumber++;
+				b.a2.bondNumber++;
+			}
+			if (this.atoms.length > 0) {
+				gl.sphereBuffer.bindBuffers(gl);
+				gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
+			}
+			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
+				var a = this.atoms[i];
+				if (a.hetatm) {
+					a.render(gl, specs);
 				}
 			}
 		};
@@ -1547,7 +1521,6 @@ var iview = (function() {
 		this.bonds_hashSpacing_2D = 2.5;
 		this.bonds_showBondOrders_3D = false;
 		this.bonds_resolution_3D = 60;
-		this.bonds_renderAsLines_3D = false;
 		this.bonds_cylinderDiameter_3D = .8;
 		this.bonds_materialAmbientColor_3D = '#000000';
 		this.bonds_materialSpecularColor_3D = '#555555';
