@@ -479,15 +479,10 @@ var iview = (function() {
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			var radius = specs.atoms_useVDWDiameters_3D ? iview.ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
-			if (radius == 0) {
-				radius = 1;
-			}
 			mat4.scale(transform, [ radius, radius, radius ]);
-			var color = iview.ELEMENT[this.label].color;
-			gl.material.setDiffuseColor(color);
+			gl.material.setDiffuseColor(iview.ELEMENT[this.label].color);
 			gl.setMatrixUniforms(transform);
-			var buffer = gl.sphereBuffer;
-			gl.drawElements(gl.TRIANGLES, buffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 	};
 	iview.Atom.prototype = new iview.Point(0, 0);
@@ -864,76 +859,27 @@ var iview = (function() {
 		this.atoms = [];
 		this.bonds = [];
 		this.draw = function(ctx, specs) {
-			// need this weird render of atoms before and after, just in case circles are rendered, as those should be on top
-			if (specs.atoms_display && !specs.atoms_circles_2D) {
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					this.atoms[i].draw(ctx, specs);
-				}
+			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
+				this.atoms[i].draw(ctx, specs);
 			}
-			if (specs.bonds_display) {
-				for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-					this.bonds[i].draw(ctx, specs);
-				}
-			}
-			if (specs.atoms_display && specs.atoms_circles_2D) {
-				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-					this.atoms[i].draw(ctx, specs);
-				}
+			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
+				this.bonds[i].draw(ctx, specs);
 			}
 		};
 		this.render = function(gl, specs) {
-// receptor bonds
 			if (this.bonds.length > 0) {
 				gl.cylinderBuffer.bindBuffers(gl);
 				gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
 			}
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				var b = this.bonds[i];
-				if (!b.a1.hetatm && (specs.macro_atomToLigandDistance == -1 || (b.a1.closestDistance != undefined && specs.macro_atomToLigandDistance >= b.a1.closestDistance && specs.macro_atomToLigandDistance >= b.a2.closestDistance))) {
-					b.render(gl, specs);
-				}
-			}
-// receptor atoms
-			if (this.atoms.length > 0) {
-				gl.sphereBuffer.bindBuffers(gl);
-				gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
-			}
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				var a = this.atoms[i];
-				if (!a.hetatm && (specs.macro_atomToLigandDistance == -1 || (a.closestDistance != undefined && specs.macro_atomToLigandDistance >= a.closestDistance))) {
-					a.render(gl, specs);
-				}
-			}
-// ligand bonds
-			if (this.bonds.length > 0) {
-				gl.cylinderBuffer.bindBuffers(gl);
-				gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
-			}
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				var b = this.bonds[i];
-				if (b.a1.hetatm) {
-					b.render(gl, specs);
-				}
-			}
-// ligand atoms
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				var a = this.atoms[i];
-				a.bondNumber = 0;
-			}
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				var b = this.bonds[i];
-				b.a1.bondNumber++;
-				b.a2.bondNumber++;
+				this.bonds[i].render(gl, specs);
 			}
 			if (this.atoms.length > 0) {
 				gl.sphereBuffer.bindBuffers(gl);
 				gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
 			}
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				var a = this.atoms[i];
-				if (a.hetatm) {
-					a.render(gl, specs);
-				}
+				this.atoms[i].render(gl, specs);
 			}
 		};
 		this.getCenter3D = function() {
@@ -1314,14 +1260,10 @@ var iview = (function() {
 		this.atoms_resolution_3D = 60;
 		this.atoms_sphereDiameter_3D = .8;
 		this.atoms_useVDWDiameters_3D = false;
-		this.atoms_vdwMultiplier_3D = 1;
+		this.atoms_vdwMultiplier_3D = .5;
 		this.atoms_materialAmbientColor_3D = '#000000';
 		this.atoms_materialSpecularColor_3D = '#555555';
 		this.atoms_materialShininess_3D = 32;
-		this.atoms_implicitHydrogens_2D = true;
-		this.atoms_displayTerminalCarbonLabels_2D = false;
-		this.atoms_showHiddenCarbons_2D = true;
-		this.atoms_displayAllCarbonLabels_2D = false;
 
 		// bond properties
 		this.bonds_display = true;
@@ -1345,8 +1287,6 @@ var iview = (function() {
 		this.bonds_materialShininess_3D = 32;
 
 		// macromolecular properties
-		this.macro_displayAtoms = true;
-		this.macro_displayBonds = true;
 		this.macro_atomToLigandDistance = -1;
 
 		this.getFontString = function(size, families, bold, italic) {
