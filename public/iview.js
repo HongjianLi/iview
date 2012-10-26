@@ -79,31 +79,31 @@ var iview = (function() {
 	}
 
 	iview.ELEMENT = [];
-	iview.ELEMENT['H'] = new Element('#FFFFFF', 1.2, 0.31);
-	iview.ELEMENT['C'] = new Element('#909090', 1.7, 0.76);
-	iview.ELEMENT['N'] = new Element('#3050F8', 1.55, 0.71);
-	iview.ELEMENT['O'] = new Element('#FF0D0D', 1.52, 0.66);
-	iview.ELEMENT['F'] = new Element('#90E050', 1.47, 0.57);
-	iview.ELEMENT['Na'] = new Element('#AB5CF2', 2.27, 1.66);
-	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.73, 1.41);
-	iview.ELEMENT['P'] = new Element('#FF8000', 1.8, 1.07);
-	iview.ELEMENT['S'] = new Element('#FFFF30', 1.8, 1.05);
-	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.75, 1.02);
-	iview.ELEMENT['K'] = new Element('#8F40D4', 2.75, 2.03);
-	iview.ELEMENT['Ca'] = new Element('#3DFF00', 0.0, 1.76);
-	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 0.0, 1.39);
-	iview.ELEMENT['Fe'] = new Element('#E06633', 0.0, 1.32);
-	iview.ELEMENT['Co'] = new Element('#F090A0', 0.0, 1.26);
-	iview.ELEMENT['Ni'] = new Element('#50D050', 1.63, 1.24);
-	iview.ELEMENT['Cu'] = new Element('#C88033', 1.4, 1.32);
-	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.39, 1.22);
-	iview.ELEMENT['As'] = new Element('#BD80E3', 1.85, 1.19);
-	iview.ELEMENT['Se'] = new Element('#FFA100', 1.9, 1.2);
-	iview.ELEMENT['Br'] = new Element('#A62929', 1.85, 1.2);
-	iview.ELEMENT['Sr'] = new Element('#00FF00', 0.0, 1.95);
-	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.58, 1.44);
-	iview.ELEMENT['I'] = new Element('#940094', 1.98, 1.39);
-	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.55, 1.32);
+	iview.ELEMENT['H'] = new Element('#FFFFFF', 1.2, 0.407);
+	iview.ELEMENT['C'] = new Element('#909090', 1.7, 0.847);
+	iview.ELEMENT['N'] = new Element('#3050F8', 1.55, 0.825);
+	iview.ELEMENT['O'] = new Element('#FF0D0D', 1.52, 0.803);
+	iview.ELEMENT['S'] = new Element('#FFFF30', 1.8, 1.122);
+	iview.ELEMENT['Se'] = new Element('#FFA100', 1.9, 1.276);
+	iview.ELEMENT['P'] = new Element('#FF8000', 1.8, 1.166);
+	iview.ELEMENT['F'] = new Element('#90E050', 1.47, 0.781);
+	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.75, 1.089);
+	iview.ELEMENT['Br'] = new Element('#A62929', 1.85, 1.254);
+	iview.ELEMENT['I'] = new Element('#940094', 1.98, 1.463);
+	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.39, 1.441);
+	iview.ELEMENT['Fe'] = new Element('#E06633', 0.0, 1.375);
+	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.73, 1.430);
+	iview.ELEMENT['Ca'] = new Element('#3DFF00', 0.0, 1.914);
+	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 0.0, 1.529);
+	iview.ELEMENT['Cu'] = new Element('#C88033', 1.4, 1.518);
+	iview.ELEMENT['Na'] = new Element('#AB5CF2', 2.27, 1.694);
+	iview.ELEMENT['K'] = new Element('#8F40D4', 2.75, 2.156);
+	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.55, 1.639);
+	iview.ELEMENT['Ni'] = new Element('#50D050', 1.63, 1.331);
+	iview.ELEMENT['Co'] = new Element('#F090A0', 0.0, 1.386);
+	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.58, 1.628);
+	iview.ELEMENT['As'] = new Element('#BD80E3', 1.85, 1.309);
+	iview.ELEMENT['Sr'] = new Element('#00FF00', 0.0, 2.112);
 
 /* Uncomment these lines to substitute PyMOL colors
 	iview.ELEMENT['H'].color = '#E6E6E6';
@@ -616,44 +616,18 @@ var iview = (function() {
 
 	iview.VisualSpecifications = function() {
 
-		// canvas properties
 		this.backgroundColor = '#FFFFFF';
-
-		// atom properties
-		this.atoms_display = true;
-		this.atoms_color = '#000000';
 		this.atoms_font_size_2D = 12;
 		this.atoms_font_families_2D = [ 'Helvetica', 'Arial', 'Dialog' ];
 		this.atoms_font_bold_2D = false;
 		this.atoms_font_italic_2D = false;
-		this.atoms_circles_2D = false;
-		this.atoms_circleDiameter_2D = 10;
-		this.atoms_circleBorderWidth_2D = 1;
-		this.atoms_lonePairDistance_2D = 8;
-		this.atoms_lonePairSpread_2D = 4;
-		this.atoms_lonePairDiameter_2D = 1;
 		this.atoms_resolution_3D = 60;
 		this.atoms_sphereDiameter_3D = .8;
 		this.atoms_useVDWDiameters_3D = false;
-		this.atoms_vdwMultiplier_3D = .5;
+		this.atoms_vdwMultiplier_3D = .8;
 		this.atoms_materialAmbientColor_3D = '#000000';
 		this.atoms_materialSpecularColor_3D = '#555555';
 		this.atoms_materialShininess_3D = 32;
-
-		// bond properties
-		this.bonds_display = true;
-		this.bonds_color = '#777777';
-		this.bonds_width_2D = 1;
-		this.bonds_saturationWidth_2D = .2;
-		this.bonds_ends_2D = 'round';
-		this.bonds_colorGradient = false;
-		this.bonds_symmetrical_2D = false;
-		this.bonds_clearOverlaps_2D = false;
-		this.bonds_overlapClearWidth_2D = .5;
-		this.bonds_atomLabelBuffer_2D = 1;
-		this.bonds_wedgeThickness_2D = .22;
-		this.bonds_hashWidth_2D = 1;
-		this.bonds_hashSpacing_2D = 2.5;
 		this.bonds_resolution_3D = 60;
 		this.bonds_cylinderDiameter_3D = .8;
 		this.bonds_materialAmbientColor_3D = '#000000';
@@ -926,7 +900,7 @@ iview.monitor = (function() {
 				for ( var j = i + 1; j < ii; j++) {
 					var first = molecule.atoms[i];
 					var second = molecule.atoms[j];
-					if (first.distance3D(second) < (iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) * 1.1) {
+					if (first.distance3D(second) < iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) {
 						molecule.bonds.push(new iview.Bond(first, second, 1));
 					}
 				}
