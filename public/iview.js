@@ -548,16 +548,6 @@ var iview = (function() {
 				}
 			}
 		};
-		this.drawDecorations = function(ctx) {
-			if (this.isHover || this.isSelected) {
-				ctx.strokeStyle = this.isHover ? '#885110' : '#0060B2';
-				ctx.lineWidth = 1.2;
-				ctx.beginPath();
-				var radius = this.isHover ? 7 : 15;
-				ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
-				ctx.stroke();
-			}
-		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			var radius = specs.atoms_useVDWDiameters_3D ? iview.ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
