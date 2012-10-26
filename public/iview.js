@@ -428,7 +428,6 @@ var iview = (function() {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.charge = 0;
 		this.numLonePair = 0;
 		this.mass = -1;
 		this.coordinationNumber = 0;
@@ -563,26 +562,6 @@ var iview = (function() {
 						});
 					}
 				}
-				if (this.charge != 0) {
-					var s = this.charge.toFixed(0);
-					if (s == '1') {
-						s = '+';
-					} else if (s == '-1') {
-						s = '\u2013';
-					} else if (iview.stringStartsWith(s, '-')) {
-						s = s.substring(1) + '\u2013';
-					} else {
-						s += '+';
-					}
-					var angleUse = this.angleOfLeastInterference;
-					var distanceUse = specs.atoms_font_size_2D;
-					if (this.isLabelVisible(specs) && numHs > 0) {
-						angleUse += Math.PI / 4;
-					}
-					ctx.textAlign = 'center';
-					ctx.textBaseline = 'middle';
-					ctx.fillText(s, this.x + distanceUse * Math.cos(angleUse), this.y - distanceUse * Math.sin(angleUse));
-				}
 				if (this.numLonePair > 0) {
 					ctx.fillStyle = 'black';
 					if (this.bondNumber == 2 && Math.abs(this.largestAngle - Math.PI) < Math.PI / 60) {
@@ -638,7 +617,7 @@ var iview = (function() {
 			gl.drawElements(gl.TRIANGLES, buffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 		this.isLabelVisible = function(specs) {
-			return specs.atoms_displayAllCarbonLabels_2D || this.label != 'C' || this.altLabel || this.mass != -1 || this.charge != 0 || this.numLonePair != 0 || (this.isHidden && specs.atoms_showHiddenCarbons_2D) || (specs.atoms_displayTerminalCarbonLabels_2D && this.bondNumber == 1);
+			return specs.atoms_displayAllCarbonLabels_2D || this.label != 'C' || this.altLabel || this.mass != -1 || this.numLonePair != 0 || (this.isHidden && specs.atoms_showHiddenCarbons_2D) || (specs.atoms_displayTerminalCarbonLabels_2D && this.bondNumber == 1);
 		};
 		this.getImplicitHydrogenCount = function() {
 			if (this.label == 'H' || iview.ELEMENT[this.label] == null) {
@@ -646,16 +625,6 @@ var iview = (function() {
 			}
 			var valence = iview.ELEMENT[this.label].valency;
 			var dif = valence - this.coordinationNumber;
-			if (this.charge > 0) {
-				var vdif = 4 - valence;
-				if (this.charge <= vdif) {
-					dif += this.charge;
-				} else {
-					dif = 4 - this.coordinationNumber - this.charge + vdif;
-				}
-			} else {
-				dif += this.charge;
-			}
 			return dif < 0 ? 0 : dif;
 		};
 	};
