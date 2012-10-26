@@ -68,93 +68,8 @@ var iview = (function() {
 		}
 	};
 
-	iview.isBetween = function(x, left, right) {
-		return x >= left && x <= right;
-	};
-
 	iview.getRGB = function(color) {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
-	};
-
-	iview.calculateDistanceInterior = function(to, from, r) {
-		if (this.isBetween(from.x, r.x, r.x + r.w) && this.isBetween(from.y, r.y, r.y + r.w)) {
-			return to.distance(from);
-		}
-		// calculates the distance that a line needs to remove from itself to be
-		// outside that rectangle
-		var lines = [];
-		// top
-		lines.push({
-			x1 : r.x,
-			y1 : r.y,
-			x2 : r.x + r.w,
-			y2 : r.y
-		});
-		// bottom
-		lines.push({
-			x1 : r.x,
-			y1 : r.y + r.h,
-			x2 : r.x + r.w,
-			y2 : r.y + r.h
-		});
-		// left
-		lines.push({
-			x1 : r.x,
-			y1 : r.y,
-			x2 : r.x,
-			y2 : r.y + r.h
-		});
-		// right
-		lines.push({
-			x1 : r.x + r.w,
-			y1 : r.y,
-			x2 : r.x + r.w,
-			y2 : r.y + r.h
-		});
-
-		var intersections = [];
-		for ( var i = 0; i < 4; i++) {
-			var l = lines[i];
-			var p = this.intersectLines(from.x, from.y, to.x, to.y, l.x1, l.y1, l.x2, l.y2);
-			if (p) {
-				intersections.push(p);
-			}
-		}
-		if (intersections.length == 0) {
-			return 0;
-		}
-		var max = 0;
-		for ( var i = 0, ii = intersections.length; i < ii; i++) {
-			var p = intersections[i];
-			var dx = to.x - p.x;
-			var dy = to.y - p.y;
-			max = Math.max(max, Math.sqrt(dx * dx + dy * dy));
-		}
-		return max;
-	};
-
-	iview.intersectLines = function(ax, ay, bx, by, cx, cy, dx, dy) {
-		// calculate the direction vectors
-		bx -= ax;
-		by -= ay;
-		dx -= cx;
-		dy -= cy;
-
-		// are they parallel?
-		var denominator = by * dx - bx * dy;
-		if (denominator == 0)
-			return false;
-
-		// calculate point of intersection
-		var r = (dy * (ax - cx) - dx * (ay - cy)) / denominator;
-		var s = (by * (ax - cx) - bx * (ay - cy)) / denominator;
-		if ((s >= 0) && (s <= 1) && (r >= 0) && (r <= 1))
-			return {
-				x : (ax + r * bx),
-				y : (ay + r * by)
-			};
-		else
-			return false;
 	};
 
 	function Element(color, vdWRadius, covalentRadius) {
@@ -206,102 +121,14 @@ var iview = (function() {
 			this.x -= p.x;
 			this.y -= p.y;
 		};
-		this.add = function(p) {
-			this.x += p.x;
-			this.y += p.y;
-		};
-		this.distance = function(p) {
-			var dx = p.x - this.x;
-			var dy = p.y - this.y;
-			return Math.sqrt(dx*dx+dy*dy);
-		};
-		this.angleForStupidCanvasArcs = function(p) {
-			var dx = p.x - this.x;
-			var dy = p.y - this.y;
-			var angle = 0;
-			// Calculate angle
-			if (dx == 0) {
-				if (dy == 0) {
-					angle = 0;
-				} else if (dy > 0) {
-					angle = Math.PI / 2;
-				} else {
-					angle = 3 * Math.PI / 2;
-				}
-			} else if (dy == 0) {
-				if (dx > 0) {
-					angle = 0;
-				} else {
-					angle = Math.PI;
-				}
-			} else {
-				if (dx < 0) {
-					angle = Math.atan(dy / dx) + Math.PI;
-				} else if (dy < 0) {
-					angle = Math.atan(dy / dx) + 2 * Math.PI;
-				} else {
-					angle = Math.atan(dy / dx);
-				}
-			}
-			while (angle < 0) {
-				angle += Math.PI * 2;
-			}
-			angle = angle % (Math.PI * 2);
-			return angle;
-		};
-		this.angle = function(p) {
-			// y is upside down to account for inverted canvas
-			var dx = p.x - this.x;
-			var dy = this.y - p.y;
-			var angle = 0;
-			// Calculate angle
-			if (dx == 0) {
-				if (dy == 0) {
-					angle = 0;
-				} else if (dy > 0) {
-					angle = Math.PI / 2;
-				} else {
-					angle = 3 * Math.PI / 2;
-				}
-			} else if (dy == 0) {
-				if (dx > 0) {
-					angle = 0;
-				} else {
-					angle = Math.PI;
-				}
-			} else {
-				if (dx < 0) {
-					angle = Math.atan(dy / dx) + Math.PI;
-				} else if (dy < 0) {
-					angle = Math.atan(dy / dx) + 2 * Math.PI;
-				} else {
-					angle = Math.atan(dy / dx);
-				}
-			}
-			while (angle < 0) {
-				angle += Math.PI * 2;
-			}
-			angle = angle % (Math.PI * 2);
-			return angle;
-		};
 	};
 
 	iview.Atom = function(label, x, y, z) {
+		this.label = label;
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.coordinationNumber = 0;
 		this.bondNumber = 0;
-		this.angleOfLeastInterference = 0;
-		this.isHidden = false;
-		this.label = label ? label.replace(/\s/g, '') : 'C';
-		this.isHover = false;
-		this.isSelected = false;
-		this.add3D = function(p) {
-			this.x += p.x;
-			this.y += p.y;
-			this.z += p.z;
-		};
 		this.sub3D = function(p) {
 			this.x -= p.x;
 			this.y -= p.y;
@@ -314,20 +141,11 @@ var iview = (function() {
 			return Math.sqrt(dx * dx + dy * dy + dz * dz);
 		};
 		this.draw = function(ctx, specs) {
-			this.textBounds = [];
-			var font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-			ctx.font = font;
+			ctx.font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
 			ctx.fillStyle = iview.ELEMENT[this.label].color;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.fillText(this.label, this.x, this.y);
-			var symbolWidth = ctx.measureText(this.label).width;
-			this.textBounds.push({
-				x : this.x - symbolWidth / 2,
-				y : this.y - specs.atoms_font_size_2D / 2+1,
-				w : symbolWidth,
-				h : specs.atoms_font_size_2D-2
-			});
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
@@ -338,25 +156,16 @@ var iview = (function() {
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 	};
-	iview.Atom.prototype = new iview.Point(0, 0);
 
 	iview.Bond = function(a1, a2, bondOrder) {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.bondOrder = bondOrder ? bondOrder : 1;
-		this.stereo = iview.Bond.STEREO_NONE;
-		this.isHover = false;
 		this.getCenter = function() {
 			return new iview.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
 		};
-		this.getLength = function() {
-			return this.a1.distance(this.a2);
-		};
 		this.getLength3D = function() {
 			return this.a1.distance3D(this.a2);
-		};
-		this.contains = function(a) {
-			return a == this.a1 || a == this.a2;
 		};
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
@@ -850,9 +659,6 @@ var iview = (function() {
 		this.bonds_materialAmbientColor_3D = '#000000';
 		this.bonds_materialSpecularColor_3D = '#555555';
 		this.bonds_materialShininess_3D = 32;
-
-		// macromolecular properties
-		this.macro_atomToLigandDistance = -1;
 
 		this.getFontString = function(size, families, bold, italic) {
 			var sb = [];
