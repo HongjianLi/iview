@@ -72,38 +72,37 @@ var iview = (function() {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
 
-	function Element(color, vdWRadius, covalentRadius) {
+	function Element(color, covalentRadius) {
 		this.color = color;
-		this.vdWRadius = vdWRadius;
 		this.covalentRadius = covalentRadius;
 	}
 
 	iview.ELEMENT = [];
-	iview.ELEMENT['H'] = new Element('#FFFFFF', 1.2, 0.407);
-	iview.ELEMENT['C'] = new Element('#909090', 1.7, 0.847);
-	iview.ELEMENT['N'] = new Element('#3050F8', 1.55, 0.825);
-	iview.ELEMENT['O'] = new Element('#FF0D0D', 1.52, 0.803);
-	iview.ELEMENT['S'] = new Element('#FFFF30', 1.8, 1.122);
-	iview.ELEMENT['Se'] = new Element('#FFA100', 1.9, 1.276);
-	iview.ELEMENT['P'] = new Element('#FF8000', 1.8, 1.166);
-	iview.ELEMENT['F'] = new Element('#90E050', 1.47, 0.781);
-	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.75, 1.089);
-	iview.ELEMENT['Br'] = new Element('#A62929', 1.85, 1.254);
-	iview.ELEMENT['I'] = new Element('#940094', 1.98, 1.463);
-	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.39, 1.441);
-	iview.ELEMENT['Fe'] = new Element('#E06633', 0.0, 1.375);
-	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.73, 1.430);
-	iview.ELEMENT['Ca'] = new Element('#3DFF00', 0.0, 1.914);
-	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 0.0, 1.529);
-	iview.ELEMENT['Cu'] = new Element('#C88033', 1.4, 1.518);
-	iview.ELEMENT['Na'] = new Element('#AB5CF2', 2.27, 1.694);
-	iview.ELEMENT['K'] = new Element('#8F40D4', 2.75, 2.156);
-	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.55, 1.639);
-	iview.ELEMENT['Ni'] = new Element('#50D050', 1.63, 1.331);
-	iview.ELEMENT['Co'] = new Element('#F090A0', 0.0, 1.386);
-	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.58, 1.628);
-	iview.ELEMENT['As'] = new Element('#BD80E3', 1.85, 1.309);
-	iview.ELEMENT['Sr'] = new Element('#00FF00', 0.0, 2.112);
+	iview.ELEMENT['H' ] = new Element('#FFFFFF', 0.407);
+	iview.ELEMENT['C' ] = new Element('#909090', 0.847);
+	iview.ELEMENT['N' ] = new Element('#3050F8', 0.825);
+	iview.ELEMENT['O' ] = new Element('#FF0D0D', 0.803);
+	iview.ELEMENT['S' ] = new Element('#FFFF30', 1.122);
+	iview.ELEMENT['Se'] = new Element('#FFA100', 1.276);
+	iview.ELEMENT['P' ] = new Element('#FF8000', 1.166);
+	iview.ELEMENT['F' ] = new Element('#90E050', 0.781);
+	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.089);
+	iview.ELEMENT['Br'] = new Element('#A62929', 1.254);
+	iview.ELEMENT['I' ] = new Element('#940094', 1.463);
+	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.441);
+	iview.ELEMENT['Fe'] = new Element('#E06633', 1.375);
+	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.430);
+	iview.ELEMENT['Ca'] = new Element('#3DFF00', 1.914);
+	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 1.529);
+	iview.ELEMENT['Cu'] = new Element('#C88033', 1.518);
+	iview.ELEMENT['Na'] = new Element('#AB5CF2', 1.694);
+	iview.ELEMENT['K' ] = new Element('#8F40D4', 2.156);
+	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.639);
+	iview.ELEMENT['Ni'] = new Element('#50D050', 1.331);
+	iview.ELEMENT['Co'] = new Element('#F090A0', 1.386);
+	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.628);
+	iview.ELEMENT['As'] = new Element('#BD80E3', 1.309);
+	iview.ELEMENT['Sr'] = new Element('#00FF00', 2.112);
 
 /* Uncomment these lines to substitute PyMOL colors
 	iview.ELEMENT['H'].color = '#E6E6E6';
@@ -149,7 +148,7 @@ var iview = (function() {
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
-			var radius = specs.atoms_useVDWDiameters_3D ? iview.ELEMENT[this.label].vdWRadius * specs.atoms_vdwMultiplier_3D : specs.atoms_sphereDiameter_3D / 2;
+			var radius = specs.atoms_sphereRadius_3D;
 			mat4.scale(transform, [ radius, radius, radius ]);
 			gl.material.setDiffuseColor(iview.ELEMENT[this.label].color);
 			gl.setMatrixUniforms(transform);
@@ -521,7 +520,6 @@ var iview = (function() {
 			// attributes set when rendering objects
 			'attribute vec3 a_vertex_position;',
 			'attribute vec3 a_vertex_normal;',
-			// scene structs
 			'uniform Light u_light;',
 			'uniform Material u_material;',
 			// matrices set by gl.setMatrixUniforms
@@ -570,7 +568,6 @@ var iview = (function() {
 				'float shininess;',
 				'float alpha;',
 			'};',
-			// scene structs
 			'uniform Light u_light;',
 			'uniform Material u_material;',
 			// from the vertex shader
@@ -622,9 +619,7 @@ var iview = (function() {
 		this.atoms_font_bold_2D = false;
 		this.atoms_font_italic_2D = false;
 		this.atoms_resolution_3D = 60;
-		this.atoms_sphereDiameter_3D = .8;
-		this.atoms_useVDWDiameters_3D = false;
-		this.atoms_vdwMultiplier_3D = .8;
+		this.atoms_sphereRadius_3D = .4;
 		this.atoms_materialAmbientColor_3D = '#000000';
 		this.atoms_materialSpecularColor_3D = '#555555';
 		this.atoms_materialShininess_3D = 32;
@@ -866,47 +861,29 @@ iview.monitor = (function() {
 		this.gl.program = this.gl.createProgram();
 		this.gl.shader = new iview.Shader(this.gl);
 	};
-	iview.Canvas.prototype.readPDB = function(content) {
+	iview.Canvas.prototype.parseReceptor = function(content) {
 		var molecule = new iview.Molecule();
-		var resatoms = [];
-		var atomSerials = [];
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
-			if (iview.stringStartsWith(line, 'ATOM')) {
+			if (iview.stringStartsWith(line, 'ATOM') || iview.stringStartsWith(line, 'HETATM')) {
 				var a = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				a.hetatm = false;
 				a.resSeq = parseInt(line.substring(22, 26));
 				a.resName = $.trim(line.substring(17, 20));
-				resatoms.push(a);
-			} else if (iview.stringStartsWith(line, 'HETATM')) {
-				var symbol = $.trim(line.substring(76, 78));
-				if (symbol.length > 1) {
-					symbol = symbol.substring(0, 1) + symbol.substring(1).toLowerCase();
-				}
-				var het = new iview.Atom(symbol, parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				het.hetatm = true;
-				var residueName = $.trim(line.substring(17, 20));
-				molecule.atoms.push(het);
-				atomSerials[parseInt($.trim(line.substring(6, 11)))] = het;
+				molecule.atoms.push(a);
 			} else if (iview.stringStartsWith(line, 'TER')) {
 				// start a new chain.
-			} else if (iview.stringStartsWith(line, 'ENDMDL')) {
-				break;
 			}
 		}
-		if(molecule.bonds.length==0){
-			for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-				for ( var j = i + 1; j < ii; j++) {
-					var first = molecule.atoms[i];
-					var second = molecule.atoms[j];
-					if (first.distance3D(second) < iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) {
-						molecule.bonds.push(new iview.Bond(first, second, 1));
-					}
+		for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
+			for ( var j = i + 1; j < ii; j++) {
+				var first = molecule.atoms[i];
+				var second = molecule.atoms[j];
+				if (first.distance3D(second) < iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) {
+					molecule.bonds.push(new iview.Bond(first, second, 1));
 				}
 			}
 		}
-		molecule.atoms = molecule.atoms.concat(resatoms);
 		return molecule;
 	};
 	iview.Canvas.prototype.loadMolecule = function(molecule) {
