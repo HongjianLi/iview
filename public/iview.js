@@ -1138,7 +1138,7 @@ var iview = (function() {
 				}
 				for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 					var a = this.atoms[i];
-					if (a.hetatm && !a.isWater) {
+					if (a.hetatm) {
 						a.render(gl, specs);
 					}
 				}
