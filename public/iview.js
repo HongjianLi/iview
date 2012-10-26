@@ -1558,27 +1558,6 @@ var iview = (function() {
 		this.macro_displayBonds = true;
 		this.macro_atomToLigandDistance = -1;
 
-/*
-Ball and Stick
-		this.atoms_vdwMultiplier_3D = .3;
-		this.bonds_useJMOLColors = false;
-		this.bonds_cylinderDiameter_3D = .3;
-		this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
-van der Waals Spheres
-		this.bonds_display = false;
-		this.atoms_vdwMultiplier_3D = 1;
-Wireframe
-		this.atoms_useVDWDiameters_3D = false;
-		this.bonds_cylinderDiameter_3D = .05;
-		this.atoms_sphereDiameter_3D = .15;
-		this.bonds_materialAmbientColor_3D = c.default_atoms_materialAmbientColor_3D;
-Line
-		this.atoms_display = false;
-		this.bonds_renderAsLines_3D = true;
-		this.bonds_width_2D = 1;
-		this.bonds_cylinderDiameter_3D = .05;
-*/
-		
 		this.getFontString = function(size, families, bold, italic) {
 			var sb = [];
 			if (bold) {
