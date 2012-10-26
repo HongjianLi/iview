@@ -281,58 +281,6 @@ var iview = (function() {
 		E['I'].vdWRadius = 1.98;
 		E['Hg'].vdWRadius = 1.55;
 
-		E['H'].valency = 1;
-		E['C'].valency = 4;
-		E['N'].valency = 3;
-		E['O'].valency = 2;
-		E['F'].valency = 1;
-		E['Na'].valency = 1;
-		E['Mg'].valency = 0;
-		E['P'].valency = 3;
-		E['S'].valency = 2;
-		E['Cl'].valency = 1;
-		E['K'].valency = 0;
-		E['Ca'].valency = 0;
-		E['Mn'].valency = 3;
-		E['Fe'].valency = 2;
-		E['Co'].valency = 1;
-		E['Ni'].valency = 1;
-		E['Cu'].valency = 0;
-		E['Zn'].valency = 0;
-		E['As'].valency = 3;
-		E['Se'].valency = 2;
-		E['Br'].valency = 1;
-		E['Sr'].valency = 0;
-		E['Cd'].valency = 0;
-		E['I'].valency = 1;
-		E['Hg'].valency = 0;
-
-		E['H'].mass = 1;
-		E['C'].mass = 12;
-		E['N'].mass = 14;
-		E['O'].mass = 16;
-		E['F'].mass = 19;
-		E['Na'].mass = 23;
-		E['Mg'].mass = 24;
-		E['P'].mass = 31;
-		E['S'].mass = 32;
-		E['Cl'].mass = 35;
-		E['K'].mass = 39;
-		E['Ca'].mass = 40;
-		E['Mn'].mass = 55;
-		E['Fe'].mass = 56;
-		E['Co'].mass = 59;
-		E['Ni'].mass = 58;
-		E['Cu'].mass = 63;
-		E['Zn'].mass = 64;
-		E['As'].mass = 75;
-		E['Se'].mass = 80;
-		E['Br'].mass = 79;
-		E['Sr'].mass = 88;
-		E['Cd'].mass = 114;
-		E['I'].mass = 127;
-		E['Hg'].mass = 202;
-
 		return E;
 
 	})();
@@ -428,7 +376,6 @@ var iview = (function() {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.mass = -1;
 		this.coordinationNumber = 0;
 		this.bondNumber = 0;
 		this.angleOfLeastInterference = 0;
@@ -467,14 +414,6 @@ var iview = (function() {
 				w : symbolWidth,
 				h : specs.atoms_font_size_2D-2
 			});
-			if (this.mass != -1) {
-				var subFont = specs.getFontString(specs.atoms_font_size_2D * .7, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-				var fontSave = ctx.font;
-				ctx.font = subFont;
-				var massWidth = ctx.measureText(this.mass).width;
-				ctx.fillText(this.mass, this.x - massWidth - .5, this.y - specs.atoms_font_size_2D * .3);
-				ctx.font = fontSave;
-			}
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
