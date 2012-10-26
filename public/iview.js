@@ -1181,14 +1181,14 @@ var iview = (function() {
 		};
 	};
 
-	iview._Mesh = function() {
+	iview.Mesh = function() {
 	};
-	iview._Mesh.prototype.storeData = function(positionData, normalData, indexData) {
+	iview.Mesh.prototype.storeData = function(positionData, normalData, indexData) {
 		this.positionData = positionData;
 		this.normalData = normalData;
 		this.indexData = indexData;
 	};
-	iview._Mesh.prototype.setupBuffers = function(gl) {
+	iview.Mesh.prototype.setupBuffers = function(gl) {
 		this.vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
@@ -1219,7 +1219,7 @@ var iview = (function() {
 			}
 		}
 	};
-	iview._Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
+	iview.Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
 		var vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
@@ -1243,7 +1243,7 @@ var iview = (function() {
 		
 		return [vertexPositionBuffer, vertexNormalBuffer, vertexIndexBuffer];
 	};
-	iview._Mesh.prototype.bindBuffers = function(gl) {
+	iview.Mesh.prototype.bindBuffers = function(gl) {
 		if(!this.vertexPositionBuffer){
 			this.setupBuffers(gl);
 		}
@@ -1278,7 +1278,7 @@ var iview = (function() {
 
 		this.storeData(positionData, normalData);
 	};
-	iview.Cylinder.prototype = new iview._Mesh();
+	iview.Cylinder.prototype = new iview.Mesh();
 
 	iview.Sphere = function(radius, latitudeBands, longitudeBands) {
 		var positionData = [];
@@ -1321,7 +1321,7 @@ var iview = (function() {
 
 		this.storeData(positionData, normalData, indexData);
 	};
-	iview.Sphere.prototype = new iview._Mesh();
+	iview.Sphere.prototype = new iview.Mesh();
 
 	iview.Light = function(diffuseColor, specularColor, direction, gl) {
 		this.diffuseRGB = iview.getRGB(diffuseColor);
