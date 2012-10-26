@@ -428,7 +428,6 @@ var iview = (function() {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.numLonePair = 0;
 		this.mass = -1;
 		this.coordinationNumber = 0;
 		this.bondNumber = 0;
@@ -547,33 +546,6 @@ var iview = (function() {
 						h : specs.atoms_font_size_2D-2
 					});
 				}
-			}
-			if (this.numLonePair > 0) {
-				ctx.fillStyle = 'black';
-				if (this.bondNumber == 2 && Math.abs(this.largestAngle - Math.PI) < Math.PI / 60) {
-					this.drawLonePairs(ctx, specs, Math.floor(this.numLonePair / 2), this.angleOfLeastInterference, this.largestAngle);
-					this.drawLonePairs(ctx, specs, Math.floor(this.numLonePair / 2) + this.numLonePair % 2, this.angleOfLeastInterference + Math.PI, this.largestAngle);
-				} else {
-					this.drawLonePairs(ctx, specs, this.numLonePair, this.angleOfLeastInterference, this.largestAngle);
-				}
-			}
-		};
-		this.drawLonePairs = function(ctx, specs, num, angle, largest) {
-			var segment = largest / (num + (this.bondNumber == 0 ? 0 : 1));
-			var angleStart = angle - largest / 2 + segment;
-			for ( var i = 0; i < num; i++) {
-				var angle = angleStart + i * segment;
-				var p1x = this.x + Math.cos(angle) * specs.atoms_lonePairDistance_2D;
-				var p1y = this.y - Math.sin(angle) * specs.atoms_lonePairDistance_2D;
-				var perp = angle + Math.PI / 2;
-				var difx = Math.cos(perp) * specs.atoms_lonePairSpread_2D / 2;
-				var dify = -Math.sin(perp) * specs.atoms_lonePairSpread_2D / 2;
-				ctx.beginPath();
-				ctx.arc(p1x + difx, p1y + dify, specs.atoms_lonePairDiameter_2D, 0, Math.PI * 2, false);
-				ctx.fill();
-				ctx.beginPath();
-				ctx.arc(p1x - difx, p1y - dify, specs.atoms_lonePairDiameter_2D, 0, Math.PI * 2, false);
-				ctx.fill();
 			}
 		};
 		this.drawDecorations = function(ctx) {
