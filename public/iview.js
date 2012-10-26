@@ -788,23 +788,6 @@ var iview = (function() {
 			// calculate the translations for unsaturated bonds
 			var others = [ 0 ];
 			var saturatedCross = null;
-			if (specs.bonds_showBondOrders_3D) {
-				switch (this.bondOrder) {
-				case 2:
-					others = [ -specs.bonds_cylinderDiameter_3D, specs.bonds_cylinderDiameter_3D ];
-					break;
-				case 3:
-					others = [ -1.2 * specs.bonds_cylinderDiameter_3D, 0, 1.2 * specs.bonds_cylinderDiameter_3D ];
-					break;
-				}
-				if (others.length > 1) {
-					var z = [ 0, 0, 1 ];
-					var inverse = mat4.inverse(gl.rotationMatrix, []);
-					mat4.multiplyVec3(inverse, z);
-					saturatedCross = vec3.cross(a2b, z, []);
-					vec3.normalize(saturatedCross);
-				}
-			}
 			// calculate the rotation
 			var y = [ 0, 1, 0 ];
 			var ang = 0;
@@ -842,9 +825,7 @@ var iview = (function() {
 				// by PI, but PI will be negated
 				mat4.rotate(transformUse, ang + Math.PI, axis);
 				mat4.scale(transformUse, scaleVector);
-				// colors
 				gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
-				// render
 				gl.setMatrixUniforms(transformUse);				
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			}
@@ -1279,7 +1260,6 @@ var iview = (function() {
 		this.bonds_wedgeThickness_2D = .22;
 		this.bonds_hashWidth_2D = 1;
 		this.bonds_hashSpacing_2D = 2.5;
-		this.bonds_showBondOrders_3D = false;
 		this.bonds_resolution_3D = 60;
 		this.bonds_cylinderDiameter_3D = .8;
 		this.bonds_materialAmbientColor_3D = '#000000';
