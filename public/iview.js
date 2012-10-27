@@ -69,15 +69,6 @@ var iview = (function() {
 	iview.ELEMENT['S'].color = '#E6C640';
 */
 
-	iview.Point = function(x, y) {
-		this.x = x;
-		this.y = y;
-		this.sub = function(p) {
-			this.x -= p.x;
-			this.y -= p.y;
-		};
-	};
-
 	iview.Atom = function(label, x, y, z) {
 		this.label = label;
 		this.x = x;
@@ -115,9 +106,6 @@ var iview = (function() {
 	iview.Bond = function(a1, a2) {
 		this.a1 = a1;
 		this.a2 = a2;
-		this.getCenter = function() {
-			return new iview.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
-		};
 		this.getLength3D = function() {
 			return this.a1.distance3D(this.a2);
 		};
@@ -203,7 +191,7 @@ var iview = (function() {
 			}
 			return new iview.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
-		this.getCenter = function() {
+		this.getMaxDimension = function() {
 			var minX = minY = Infinity;
 			var maxX = maxY = -Infinity;
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
@@ -212,18 +200,7 @@ var iview = (function() {
 				maxX = Math.max(this.atoms[i].x, maxX);
 				maxY = Math.max(this.atoms[i].y, maxY);
 			}
-			return new iview.Point((maxX + minX) / 2, (maxY + minY) / 2);
-		};
-		this.getDimension = function() {
-			var minX = minY = Infinity;
-			var maxX = maxY = -Infinity;
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = Math.min(this.atoms[i].x, minX);
-				minY = Math.min(this.atoms[i].y, minY);
-				maxX = Math.max(this.atoms[i].x, maxX);
-				maxY = Math.max(this.atoms[i].y, maxY);
-			}
-			return new iview.Point(maxX - minX, maxY - minY);
+			return Math.max(maxX - minX, maxY - minY);
 		};
 	};
 
@@ -828,8 +805,7 @@ iview.monitor = (function() {
 		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
 			this.molecule.atoms[i].sub3D(p);
 		}
-		var d = this.molecule.getDimension();
-		this.maxDimension = Math.max(d.x, d.y);
+		this.maxDimension = this.molecule.getMaxDimension();
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		// clear the canvas
 		var cs = iview.getRGB(this.specs.backgroundColor);
@@ -862,7 +838,7 @@ iview.monitor = (function() {
 	iview.Canvas.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
-		e.p = new iview.Point(e.pageX - e.offset.left, e.pageY - e.offset.top);
+		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
 	};
 	iview.Canvas.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -878,15 +854,13 @@ iview.monitor = (function() {
 		this.lastPoint = e.p;
 	};
 	iview.Canvas.prototype.drag = function(e) {
+		var difx = e.p[0] - this.lastPoint[0];
+		var dify = e.p[1] - this.lastPoint[1];
 		if (iview.monitor.ALT) {
-			var t = new iview.Point(e.p.x, e.p.y);
-			t.sub(this.lastPoint);
-			mat4.translate(this.translationMatrix, [ t.x / 20, -t.y / 20, 0 ]);
+			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
 			this.lastPoint = e.p;
 			this.repaint();
 		} else {
-			var difx = e.p.x - this.lastPoint.x;
-			var dify = e.p.y - this.lastPoint.y;
 			var rotation = mat4.rotate(mat4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
 			mat4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
 			this.rotationMatrix = mat4.multiply(rotation, this.rotationMatrix);
