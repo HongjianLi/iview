@@ -146,9 +146,15 @@ var iview = (function() {
 		};
 	};
 
+	iview.Residue = function(id, offset) {
+		this.id = id;
+		this.offset = offset;
+	};
+
 	iview.Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
+		this.residues = [];
 		this.draw = function(ctx, specs) {
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				this.atoms[i].draw(ctx, specs);
@@ -551,47 +557,41 @@ var iview = (function() {
 		};
 	};
 
-	return iview;
-
-})();
-
-iview.monitor = (function() {
-
-	var m = {};
-	m.CANVAS_DRAGGING = null;
-	m.CANVAS_OVER = null;
-	m.ALT = false;
-	m.SHIFT = false;
-	m.META = false;
+	iview.monitor = {};
+	iview.monitor.CANVAS_DRAGGING = null;
+	iview.monitor.CANVAS_OVER = null;
+	iview.monitor.ALT = false;
+	iview.monitor.SHIFT = false;
+	iview.monitor.META = false;
 
 	var doc = $(document);
 	doc.ready(function() {
 		// handles dragging beyond the canvas bounds
 		doc.mousemove(function(e) {
-			if (m.CANVAS_DRAGGING != null) {
-				if (m.CANVAS_DRAGGING.drag) {
-					m.CANVAS_DRAGGING.prehandleEvent(e);
-					m.CANVAS_DRAGGING.drag(e);
+			if (iview.monitor.CANVAS_DRAGGING != null) {
+				if (iview.monitor.CANVAS_DRAGGING.drag) {
+					iview.monitor.CANVAS_DRAGGING.prehandleEvent(e);
+					iview.monitor.CANVAS_DRAGGING.drag(e);
 				}
 			}
 		});
 		doc.mouseup(function(e) {
-			if (m.CANVAS_DRAGGING != null && m.CANVAS_DRAGGING != m.CANVAS_OVER) {
-				if (m.CANVAS_DRAGGING.mouseup) {
-					m.CANVAS_DRAGGING.prehandleEvent(e);
-					m.CANVAS_DRAGGING.mouseup(e);
+			if (iview.monitor.CANVAS_DRAGGING != null && iview.monitor.CANVAS_DRAGGING != iview.monitor.CANVAS_OVER) {
+				if (iview.monitor.CANVAS_DRAGGING.mouseup) {
+					iview.monitor.CANVAS_DRAGGING.prehandleEvent(e);
+					iview.monitor.CANVAS_DRAGGING.mouseup(e);
 				}
 			}
-			m.CANVAS_DRAGGING = null;
+			iview.monitor.CANVAS_DRAGGING = null;
 		});
 		// handles modifier keys from a single keyboard
 		doc.keydown(function(e) {
-			m.SHIFT = e.shiftKey;
-			m.ALT = e.altKey;
-			m.META = e.metaKey;
-			var affecting = m.CANVAS_OVER;
-			if (m.CANVAS_DRAGGING != null) {
-				affecting = m.CANVAS_DRAGGING;
+			iview.monitor.SHIFT = e.shiftKey;
+			iview.monitor.ALT = e.altKey;
+			iview.monitor.META = e.metaKey;
+			var affecting = iview.monitor.CANVAS_OVER;
+			if (iview.monitor.CANVAS_DRAGGING != null) {
+				affecting = iview.monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keydown) {
@@ -601,9 +601,9 @@ iview.monitor = (function() {
 			}
 		});
 		doc.keypress(function(e) {
-			var affecting = m.CANVAS_OVER;
-			if (m.CANVAS_DRAGGING != null) {
-				affecting = m.CANVAS_DRAGGING;
+			var affecting = iview.monitor.CANVAS_OVER;
+			if (iview.monitor.CANVAS_DRAGGING != null) {
+				affecting = iview.monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keypress) {
@@ -613,12 +613,12 @@ iview.monitor = (function() {
 			}
 		});
 		doc.keyup(function(e) {
-			m.SHIFT = e.shiftKey;
-			m.ALT = e.altKey;
-			m.META = e.metaKey;
-			var affecting = m.CANVAS_OVER;
-			if (m.CANVAS_DRAGGING != null) {
-				affecting = m.CANVAS_DRAGGING;
+			iview.monitor.SHIFT = e.shiftKey;
+			iview.monitor.ALT = e.altKey;
+			iview.monitor.META = e.metaKey;
+			var affecting = iview.monitor.CANVAS_OVER;
+			if (iview.monitor.CANVAS_DRAGGING != null) {
+				affecting = iview.monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keyup) {
@@ -628,12 +628,6 @@ iview.monitor = (function() {
 			}
 		});
 	});
-
-	return m;
-
-})();
-
-(function(iview) {
 
 	iview.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
@@ -757,15 +751,15 @@ iview.monitor = (function() {
 	iview.Canvas.prototype.parseReceptor = function(content) {
 		var molecule = new iview.Molecule();
 		var residue = 'XXXX';
-		var residues = [];
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
 			if (iview.stringStartsWith(line, 'ATOM') || iview.stringStartsWith(line, 'HETATM')) {
 				var atom = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				atom.resSeq = parseInt(line.substring(22, 26));
-				atom.resName = $.trim(line.substring(17, 20));
+				atom.resName = line.substring(17, 20);
 				molecule.atoms.push(atom);
+				
 			} else if (iview.stringStartsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
@@ -851,4 +845,7 @@ iview.monitor = (function() {
 		this.repaint();
 	};
 
-})(iview);
+	return iview;
+
+})();
+
