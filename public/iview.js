@@ -24,50 +24,6 @@ var iview = (function() {
 		return str.match('^' + match) == match;
 	};
 
-	iview.vec3AngleFrom = function(v1, v2) {
-		var length1 = vec3.length(v1);
-		var length2 = vec3.length(v2);
-		var dot = vec3.dot(v1, v2);
-		var cosine = dot / length1 / length2;
-		return Math.acos(cosine);
-	};
-
-	iview.contextHashTo = function(ctx, xs, ys, xt, yt, width, spacing) {
-		var travelled = 0;
-		var space = false;
-		var lastX = xs;
-		var lastY = ys;
-		var difX = xt - xs;
-		var difY = yt - ys;
-		var dist = Math.sqrt(difX*difX+difY*difY);
-		while (travelled < dist) {
-			if (space) {
-				if (travelled + spacing > dist) {
-					ctx.moveTo(xt, yt);
-					break;
-				} else {
-					var percent = spacing / dist;
-					lastX += percent * difX;
-					lastY += percent * difY;
-					ctx.moveTo(lastX, lastY);
-					travelled += spacing;
-				}
-			} else {
-				if (travelled + width > dist) {
-					ctx.lineTo(xt, yt);
-					break;
-				} else {
-					var percent = width / dist;
-					lastX += percent * difX;
-					lastY += percent * difY;
-					ctx.lineTo(lastX, lastY);
-					travelled += width;
-				}
-			}
-			space = !space;
-		}
-	};
-
 	iview.getRGB = function(color) {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
@@ -156,10 +112,9 @@ var iview = (function() {
 		};
 	};
 
-	iview.Bond = function(a1, a2, bondOrder) {
+	iview.Bond = function(a1, a2) {
 		this.a1 = a1;
 		this.a2 = a2;
-		this.bondOrder = bondOrder ? bondOrder : 1;
 		this.getCenter = function() {
 			return new iview.Point((this.a1.x + this.a2.x) / 2, (this.a1.y + this.a2.y) / 2);
 		};
@@ -169,19 +124,13 @@ var iview = (function() {
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
 			var height = 1.001 * this.a1.distance3D(this.a2) / 2;
-			if (height == 0) {
-				// if there is no height, then no point in rendering this bond,
-				// just return
-				return false;
-			}
 			var scaleVector = [ specs.bonds_cylinderDiameter_3D / 2, height, specs.bonds_cylinderDiameter_3D / 2 ];
 			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
-			var transformOpposite = null;
 			// align bond
 			var a2b = [ this.a2.x - this.a1.x, this.a2.y - this.a1.y, this.a2.z - this.a1.z ];
 			vec3.scale(a2b, .5);
-			transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
+			var transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
 			// calculate the translations for unsaturated bonds
 			var others = [ 0 ];
 			var saturatedCross = null;
@@ -195,37 +144,26 @@ var iview = (function() {
 					ang = Math.PI;
 				}
 			} else {
-				ang = iview.vec3AngleFrom(y, a2b);
+				ang = Math.acos(vec3.dot(y, a2b) / vec3.length(y) / vec3.length(a2b));
 				axis = vec3.cross(y, a2b, []);
 			}
-			// render bonds
-			for ( var i = 0, ii = others.length; i < ii; i++) {
-				var transformUse = mat4.set(transform, []);
-				if (others[i] != 0) {
-					mat4.translate(transformUse, vec3.scale(saturatedCross, others[i], []));
-				}
-				if (ang != 0) {
-					mat4.rotate(transformUse, ang, axis);
-				}
-				mat4.scale(transformUse, scaleVector);
-				// colors
-				var color = iview.ELEMENT[this.a1.label].color;
-				gl.material.setDiffuseColor(color);
-				// render
-				gl.setMatrixUniforms(transformUse);
-				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-				mat4.set(transformOpposite, transformUse);
-				if (others[i] != 0) {
-					mat4.translate(transformUse, vec3.scale(saturatedCross, others[i], []));
-				}
-				// don't check for 0 here as that means it should be rotated
-				// by PI, but PI will be negated
-				mat4.rotate(transformUse, ang + Math.PI, axis);
-				mat4.scale(transformUse, scaleVector);
-				gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
-				gl.setMatrixUniforms(transformUse);				
-				gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
+			var transformUse = mat4.set(transform, []);
+			if (ang != 0) {
+				mat4.rotate(transformUse, ang, axis);
 			}
+			mat4.scale(transformUse, scaleVector);
+			var color = iview.ELEMENT[this.a1.label].color;
+			gl.material.setDiffuseColor(color);
+			gl.setMatrixUniforms(transformUse);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
+			mat4.set(transformOpposite, transformUse);
+			// don't check for 0 here as that means it should be rotated
+			// by PI, but PI will be negated
+			mat4.rotate(transformUse, ang + Math.PI, axis);
+			mat4.scale(transformUse, scaleVector);
+			gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
+			gl.setMatrixUniforms(transformUse);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
 
@@ -863,16 +801,18 @@ iview.monitor = (function() {
 	};
 	iview.Canvas.prototype.parseReceptor = function(content) {
 		var molecule = new iview.Molecule();
+		var residue = 'XXXX';
+		var residues = [];
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
 			if (iview.stringStartsWith(line, 'ATOM') || iview.stringStartsWith(line, 'HETATM')) {
-				var a = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				a.resSeq = parseInt(line.substring(22, 26));
-				a.resName = $.trim(line.substring(17, 20));
-				molecule.atoms.push(a);
+				var atom = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				atom.resSeq = parseInt(line.substring(22, 26));
+				atom.resName = $.trim(line.substring(17, 20));
+				molecule.atoms.push(atom);
 			} else if (iview.stringStartsWith(line, 'TER')) {
-				// start a new chain.
+				residue = 'XXXX';
 			}
 		}
 		for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
@@ -880,7 +820,7 @@ iview.monitor = (function() {
 				var first = molecule.atoms[i];
 				var second = molecule.atoms[j];
 				if (first.distance3D(second) < iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) {
-					molecule.bonds.push(new iview.Bond(first, second, 1));
+					molecule.bonds.push(new iview.Bond(first, second));
 				}
 			}
 		}
