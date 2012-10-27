@@ -74,7 +74,6 @@ var iview = (function() {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.bondNumber = 0;
 		this.sub3D = function(p) {
 			this.x -= p.x;
 			this.y -= p.y;
@@ -95,8 +94,7 @@ var iview = (function() {
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
-			var radius = specs.atoms_sphereRadius_3D;
-			mat4.scale(transform, [ radius, radius, radius ]);
+			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
 			gl.material.setDiffuseColor(iview.ELEMENT[this.label].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -106,9 +104,6 @@ var iview = (function() {
 	iview.Bond = function(a1, a2) {
 		this.a1 = a1;
 		this.a2 = a2;
-		this.getLength3D = function() {
-			return this.a1.distance3D(this.a2);
-		};
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
 			var scaleVector = [ specs.bonds_cylinderRadius_3D, 1.001 * this.a1.distance3D(this.a2) / 2, specs.bonds_cylinderRadius_3D ];
@@ -163,17 +158,13 @@ var iview = (function() {
 			}
 		};
 		this.render = function(gl, specs) {
-			if (this.bonds.length > 0) {
-				gl.cylinderBuffer.bindBuffers(gl);
-				gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
-			}
+			gl.cylinderBuffer.bindBuffers(gl);
+			gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
 				this.bonds[i].render(gl, specs);
 			}
-			if (this.atoms.length > 0) {
-				gl.sphereBuffer.bindBuffers(gl);
-				gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
-			}
+			gl.sphereBuffer.bindBuffers(gl);
+			gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				this.atoms[i].render(gl, specs);
 			}
@@ -232,7 +223,7 @@ var iview = (function() {
 			this.vertexIndexBuffer.numItems = this.indexData.length;
 		}
 		
-		if(this.partitions){
+		if (this.partitions) {
 			for(var i = 0, ii = this.partitions.length; i<ii; i++){
 				var p = this.partitions[i];
 				var buffers = this.generateBuffers(gl, p.positionData, p.normalData, p.indexData);
@@ -267,7 +258,7 @@ var iview = (function() {
 		return [vertexPositionBuffer, vertexNormalBuffer, vertexIndexBuffer];
 	};
 	iview.Mesh.prototype.bindBuffers = function(gl) {
-		if(!this.vertexPositionBuffer){
+		if (!this.vertexPositionBuffer) {
 			this.setupBuffers(gl);
 		}
 		// positions
@@ -379,22 +370,22 @@ var iview = (function() {
 		var snUL = gl.getUniformLocation(gl.program, prefix + 'shininess');
 		var alUL = gl.getUniformLocation(gl.program, prefix + 'alpha');
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
-			if(!this.aCache || this.aCache!=ambientColor){
+			if (!this.aCache || this.aCache!=ambientColor) {
 				this.aCache = ambientColor;
 				var cs = iview.getRGB(ambientColor);
 				gl.uniform3f(aUL, cs[0], cs[1], cs[2]);
 			}
-			if(diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)){
+			if (diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)) {
 				this.dCache = diffuseColor;
 				var cs = iview.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
-			if(!this.sCache || this.sCache!=specularColor){
+			if (!this.sCache || this.sCache!=specularColor) {
 				this.sCache = specularColor;
 				var cs = iview.getRGB(specularColor);
 				gl.uniform3f(sUL, cs[0], cs[1], cs[2]);
 			}
-			if(!this.snCache || this.snCache!=shininess){
+			if (!this.snCache || this.snCache!=shininess) {
 				this.snCache = shininess;
 				gl.uniform1f(snUL, shininess);
 			}
@@ -402,7 +393,7 @@ var iview = (function() {
 			gl.uniform1f(alUL, 1);
 		};
 		this.setDiffuseColor = function(diffuseColor) {
-			if(!this.dCache || this.dCache!=diffuseColor){
+			if (!this.dCache || this.dCache!=diffuseColor) {
 				this.dCache = diffuseColor;
 				var cs = iview.getRGB(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
@@ -647,33 +638,30 @@ iview.monitor = (function() {
 	iview.Canvas = function(id) {
 		this.rotationMatrix = mat4.identity([]);
 		this.translationMatrix = mat4.identity([]);
+		this.specs = new iview.VisualSpecifications();
 		this.id = id;
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
 		this.height = jqCapsule.attr('height');
-		this.specs = new iview.VisualSpecifications();
 		// setup input events
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
 		var me = this;
 		jqCapsule.click(function(e) {
 			switch (e.which) {
-			case 1:
-				// left mouse button pressed
+			case 1: // left button
 				if (me.click) {
 					me.prehandleEvent(e);
 					me.click(e);
 				}
 				break;
-			case 2:
-				// middle mouse button pressed
+			case 2: // middle button
 				if (me.middleclick) {
 					me.prehandleEvent(e);
 					me.middleclick(e);
 				}
 				break;
-			case 3:
-				// right mouse button pressed
+			case 3: // right button
 				if (me.rightclick) {
 					me.prehandleEvent(e);
 					me.rightclick(e);
@@ -689,23 +677,20 @@ iview.monitor = (function() {
 		});
 		jqCapsule.mousedown(function(e) {
 			switch (e.which) {
-			case 1:
-				// left mouse button pressed
+			case 1: // left button
 				iview.monitor.CANVAS_DRAGGING = me;
 				if (me.mousedown) {
 					me.prehandleEvent(e);
 					me.mousedown(e);
 				}
 				break;
-			case 2:
-				// middle mouse button pressed
+			case 2: // middle button
 				if (me.middlemousedown) {
 					me.prehandleEvent(e);
 					me.middlemousedown(e);
 				}
 				break;
-			case 3:
-				// right mouse button pressed
+			case 3: // right button
 				if (me.rightmousedown) {
 					me.prehandleEvent(e);
 					me.rightmousedown(e);
@@ -735,22 +720,19 @@ iview.monitor = (function() {
 		});
 		jqCapsule.mouseup(function(e) {
 			switch (e.which) {
-			case 1:
-				// left mouse button pressed
+			case 1: // left button
 				if (me.mouseup) {
 					me.prehandleEvent(e);
 					me.mouseup(e);
 				}
 				break;
-			case 2:
-				// middle mouse button pressed
+			case 2: // middle button
 				if (me.middlemouseup) {
 					me.prehandleEvent(e);
 					me.middlemouseup(e);
 				}
 				break;
-			case 3:
-				// right mouse button pressed
+			case 3: // right button
 				if (me.rightmouseup) {
 					me.prehandleEvent(e);
 					me.rightmouseup(e);
@@ -813,8 +795,6 @@ iview.monitor = (function() {
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		// here is the sphere buffer to be drawn, make it once, then scale
-		// and translate to draw atoms
 		this.gl.sphereBuffer = new iview.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
 		this.gl.cylinderBuffer = new iview.Cylinder(1, 1, this.specs.bonds_resolution_3D);
 		this.gl.lighting = new iview.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
@@ -856,21 +836,18 @@ iview.monitor = (function() {
 	iview.Canvas.prototype.drag = function(e) {
 		var difx = e.p[0] - this.lastPoint[0];
 		var dify = e.p[1] - this.lastPoint[1];
+		this.lastPoint = e.p;
 		if (iview.monitor.ALT) {
 			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
-			this.lastPoint = e.p;
-			this.repaint();
 		} else {
 			var rotation = mat4.rotate(mat4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
 			mat4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
 			this.rotationMatrix = mat4.multiply(rotation, this.rotationMatrix);
-			this.lastPoint = e.p;
-			this.repaint();
 		}
+		this.repaint();
 	};
 	iview.Canvas.prototype.mousewheel = function(e, delta) {
-		var dz = delta * this.maxDimension/8;
-		mat4.translate(this.translationMatrix, [ 0, 0, dz ]);
+		mat4.translate(this.translationMatrix, [ 0, 0, delta * this.maxDimension / 8 ]);
 		this.repaint();
 	};
 
