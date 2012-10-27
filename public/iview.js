@@ -123,17 +123,13 @@ var iview = (function() {
 		};
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
-			var height = 1.001 * this.a1.distance3D(this.a2) / 2;
-			var scaleVector = [ specs.bonds_cylinderDiameter_3D / 2, height, specs.bonds_cylinderDiameter_3D / 2 ];
+			var scaleVector = [ specs.bonds_cylinderRadius_3D, 1.001 * this.a1.distance3D(this.a2) / 2, specs.bonds_cylinderRadius_3D ];
 			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
 			// align bond
 			var a2b = [ this.a2.x - this.a1.x, this.a2.y - this.a1.y, this.a2.z - this.a1.z ];
 			vec3.scale(a2b, .5);
 			var transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
-			// calculate the translations for unsaturated bonds
-			var others = [ 0 ];
-			var saturatedCross = null;
 			// calculate the rotation
 			var y = [ 0, 1, 0 ];
 			var ang = 0;
@@ -562,7 +558,7 @@ var iview = (function() {
 		this.atoms_materialSpecularColor_3D = '#555555';
 		this.atoms_materialShininess_3D = 32;
 		this.bonds_resolution_3D = 60;
-		this.bonds_cylinderDiameter_3D = .8;
+		this.bonds_cylinderRadius_3D = .4;
 		this.bonds_materialAmbientColor_3D = '#000000';
 		this.bonds_materialSpecularColor_3D = '#555555';
 		this.bonds_materialShininess_3D = 32;
