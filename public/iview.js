@@ -18,13 +18,11 @@
 
 var iview = (function() {
 
-	var iview = {};
-
-	iview.stringStartsWith = function(str, match) {
+	startsWith = function(str, match) {
 		return str.match('^' + match) == match;
 	};
 
-	iview.getRGB = function(color) {
+	rgb = function(color) {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
 
@@ -33,43 +31,43 @@ var iview = (function() {
 		this.covalentRadius = covalentRadius;
 	}
 
-	iview.ELEMENT = [];
-	iview.ELEMENT['H' ] = new Element('#FFFFFF', 0.407);
-	iview.ELEMENT['C' ] = new Element('#909090', 0.847);
-	iview.ELEMENT['N' ] = new Element('#3050F8', 0.825);
-	iview.ELEMENT['O' ] = new Element('#FF0D0D', 0.803);
-	iview.ELEMENT['S' ] = new Element('#FFFF30', 1.122);
-	iview.ELEMENT['Se'] = new Element('#FFA100', 1.276);
-	iview.ELEMENT['P' ] = new Element('#FF8000', 1.166);
-	iview.ELEMENT['F' ] = new Element('#90E050', 0.781);
-	iview.ELEMENT['Cl'] = new Element('#1FF01F', 1.089);
-	iview.ELEMENT['Br'] = new Element('#A62929', 1.254);
-	iview.ELEMENT['I' ] = new Element('#940094', 1.463);
-	iview.ELEMENT['Zn'] = new Element('#7D80B0', 1.441);
-	iview.ELEMENT['Fe'] = new Element('#E06633', 1.375);
-	iview.ELEMENT['Mg'] = new Element('#8AFF00', 1.430);
-	iview.ELEMENT['Ca'] = new Element('#3DFF00', 1.914);
-	iview.ELEMENT['Mn'] = new Element('#9C7AC7', 1.529);
-	iview.ELEMENT['Cu'] = new Element('#C88033', 1.518);
-	iview.ELEMENT['Na'] = new Element('#AB5CF2', 1.694);
-	iview.ELEMENT['K' ] = new Element('#8F40D4', 2.156);
-	iview.ELEMENT['Hg'] = new Element('#B8B8D0', 1.639);
-	iview.ELEMENT['Ni'] = new Element('#50D050', 1.331);
-	iview.ELEMENT['Co'] = new Element('#F090A0', 1.386);
-	iview.ELEMENT['Cd'] = new Element('#FFD98F', 1.628);
-	iview.ELEMENT['As'] = new Element('#BD80E3', 1.309);
-	iview.ELEMENT['Sr'] = new Element('#00FF00', 2.112);
+	ELEMENT = [];
+	ELEMENT['H' ] = new Element('#FFFFFF', 0.407);
+	ELEMENT['C' ] = new Element('#909090', 0.847);
+	ELEMENT['N' ] = new Element('#3050F8', 0.825);
+	ELEMENT['O' ] = new Element('#FF0D0D', 0.803);
+	ELEMENT['S' ] = new Element('#FFFF30', 1.122);
+	ELEMENT['Se'] = new Element('#FFA100', 1.276);
+	ELEMENT['P' ] = new Element('#FF8000', 1.166);
+	ELEMENT['F' ] = new Element('#90E050', 0.781);
+	ELEMENT['Cl'] = new Element('#1FF01F', 1.089);
+	ELEMENT['Br'] = new Element('#A62929', 1.254);
+	ELEMENT['I' ] = new Element('#940094', 1.463);
+	ELEMENT['Zn'] = new Element('#7D80B0', 1.441);
+	ELEMENT['Fe'] = new Element('#E06633', 1.375);
+	ELEMENT['Mg'] = new Element('#8AFF00', 1.430);
+	ELEMENT['Ca'] = new Element('#3DFF00', 1.914);
+	ELEMENT['Mn'] = new Element('#9C7AC7', 1.529);
+	ELEMENT['Cu'] = new Element('#C88033', 1.518);
+	ELEMENT['Na'] = new Element('#AB5CF2', 1.694);
+	ELEMENT['K' ] = new Element('#8F40D4', 2.156);
+	ELEMENT['Hg'] = new Element('#B8B8D0', 1.639);
+	ELEMENT['Ni'] = new Element('#50D050', 1.331);
+	ELEMENT['Co'] = new Element('#F090A0', 1.386);
+	ELEMENT['Cd'] = new Element('#FFD98F', 1.628);
+	ELEMENT['As'] = new Element('#BD80E3', 1.309);
+	ELEMENT['Sr'] = new Element('#00FF00', 2.112);
 
 /* Uncomment these lines to substitute PyMOL colors
-	iview.ELEMENT['H'].color = '#E6E6E6';
-	iview.ELEMENT['C'].color = '#33FF33';
-	iview.ELEMENT['N'].color = '#3333FF';
-	iview.ELEMENT['O'].color = '#FF4D4D';
-	iview.ELEMENT['F'].color = '#B3FFFF';
-	iview.ELEMENT['S'].color = '#E6C640';
+	ELEMENT['H'].color = '#E6E6E6';
+	ELEMENT['C'].color = '#33FF33';
+	ELEMENT['N'].color = '#3333FF';
+	ELEMENT['O'].color = '#FF4D4D';
+	ELEMENT['F'].color = '#B3FFFF';
+	ELEMENT['S'].color = '#E6C640';
 */
 
-	iview.Atom = function(label, x, y, z) {
+	Atom = function(label, x, y, z) {
 		this.label = label;
 		this.x = x;
 		this.y = y;
@@ -87,7 +85,7 @@ var iview = (function() {
 		};
 		this.draw = function(ctx, specs) {
 			ctx.font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-			ctx.fillStyle = iview.ELEMENT[this.label].color;
+			ctx.fillStyle = ELEMENT[this.label].color;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.fillText(this.label, this.x, this.y);
@@ -95,13 +93,13 @@ var iview = (function() {
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
-			gl.material.setDiffuseColor(iview.ELEMENT[this.label].color);
+			gl.material.setDiffuseColor(ELEMENT[this.label].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 	};
 
-	iview.Bond = function(a1, a2) {
+	Bond = function(a1, a2) {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.render = function(gl, specs) {
@@ -131,7 +129,7 @@ var iview = (function() {
 				mat4.rotate(transformUse, ang, axis);
 			}
 			mat4.scale(transformUse, scaleVector);
-			var color = iview.ELEMENT[this.a1.label].color;
+			var color = ELEMENT[this.a1.label].color;
 			gl.material.setDiffuseColor(color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
@@ -140,18 +138,18 @@ var iview = (function() {
 			// by PI, but PI will be negated
 			mat4.rotate(transformUse, ang + Math.PI, axis);
 			mat4.scale(transformUse, scaleVector);
-			gl.material.setDiffuseColor(iview.ELEMENT[this.a2.label].color);
+			gl.material.setDiffuseColor(ELEMENT[this.a2.label].color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
 
-	iview.Residue = function(id, offset) {
+	Residue = function(id, offset) {
 		this.id = id;
 		this.offset = offset;
 	};
 
-	iview.Molecule = function() {
+	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
 		this.residues = [];
@@ -186,7 +184,7 @@ var iview = (function() {
 				maxY = Math.max(this.atoms[i].y, maxY);
 				maxZ = Math.max(this.atoms[i].z, maxZ);
 			}
-			return new iview.Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
+			return new Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
 		this.getMaxDimension = function() {
 			var minX = minY = Infinity;
@@ -201,14 +199,14 @@ var iview = (function() {
 		};
 	};
 
-	iview.Mesh = function() {
+	Mesh = function() {
 	};
-	iview.Mesh.prototype.storeData = function(positionData, normalData, indexData) {
+	Mesh.prototype.storeData = function(positionData, normalData, indexData) {
 		this.positionData = positionData;
 		this.normalData = normalData;
 		this.indexData = indexData;
 	};
-	iview.Mesh.prototype.setupBuffers = function(gl) {
+	Mesh.prototype.setupBuffers = function(gl) {
 		this.vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
@@ -239,7 +237,7 @@ var iview = (function() {
 			}
 		}
 	};
-	iview.Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
+	Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
 		var vertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
@@ -263,7 +261,7 @@ var iview = (function() {
 		
 		return [vertexPositionBuffer, vertexNormalBuffer, vertexIndexBuffer];
 	};
-	iview.Mesh.prototype.bindBuffers = function(gl) {
+	Mesh.prototype.bindBuffers = function(gl) {
 		if (!this.vertexPositionBuffer) {
 			this.setupBuffers(gl);
 		}
@@ -279,7 +277,7 @@ var iview = (function() {
 		}
 	};
 
-	iview.Cylinder = function(radius, height, bands) {
+	Cylinder = function(radius, height, bands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var i = 0; i < bands; i++) {
@@ -298,9 +296,9 @@ var iview = (function() {
 
 		this.storeData(positionData, normalData);
 	};
-	iview.Cylinder.prototype = new iview.Mesh();
+	Cylinder.prototype = new Mesh();
 
-	iview.Sphere = function(radius, latitudeBands, longitudeBands) {
+	Sphere = function(radius, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
 		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
@@ -341,11 +339,11 @@ var iview = (function() {
 
 		this.storeData(positionData, normalData, indexData);
 	};
-	iview.Sphere.prototype = new iview.Mesh();
+	Sphere.prototype = new Mesh();
 
-	iview.Light = function(diffuseColor, specularColor, direction, gl) {
-		this.diffuseRGB = iview.getRGB(diffuseColor);
-		this.specularRGB = iview.getRGB(specularColor);
+	Light = function(diffuseColor, specularColor, direction, gl) {
+		this.diffuseRGB = rgb(diffuseColor);
+		this.specularRGB = rgb(specularColor);
 		this.direction = direction;
 		var prefix = 'u_light.';
 		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
@@ -368,7 +366,7 @@ var iview = (function() {
 		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
 	};
 
-	iview.Material = function(gl) {
+	Material = function(gl) {
 		var prefix = 'u_material.';
 		var aUL = gl.getUniformLocation(gl.program, prefix + 'ambient_color');
 		var dUL = gl.getUniformLocation(gl.program, prefix + 'diffuse_color');
@@ -378,17 +376,17 @@ var iview = (function() {
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
 			if (!this.aCache || this.aCache!=ambientColor) {
 				this.aCache = ambientColor;
-				var cs = iview.getRGB(ambientColor);
+				var cs = rgb(ambientColor);
 				gl.uniform3f(aUL, cs[0], cs[1], cs[2]);
 			}
 			if (diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)) {
 				this.dCache = diffuseColor;
-				var cs = iview.getRGB(diffuseColor);
+				var cs = rgb(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 			if (!this.sCache || this.sCache!=specularColor) {
 				this.sCache = specularColor;
-				var cs = iview.getRGB(specularColor);
+				var cs = rgb(specularColor);
 				gl.uniform3f(sUL, cs[0], cs[1], cs[2]);
 			}
 			if (!this.snCache || this.snCache!=shininess) {
@@ -401,13 +399,13 @@ var iview = (function() {
 		this.setDiffuseColor = function(diffuseColor) {
 			if (!this.dCache || this.dCache!=diffuseColor) {
 				this.dCache = diffuseColor;
-				var cs = iview.getRGB(diffuseColor);
+				var cs = rgb(diffuseColor);
 				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
 			}
 		};
 	};
 
-	iview.Shader = function(gl) {
+	Shader = function(gl) {
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertexShader, [	// phong shader
 			'struct Light',
@@ -519,7 +517,7 @@ var iview = (function() {
 		gl.enableVertexAttribArray(this.vertexNormalAttribute);
 	};
 
-	iview.VisualSpecifications = function() {
+	VisualSpecifications = function() {
 
 		this.backgroundColor = '#FFFFFF';
 		this.atoms_font_size_2D = 12;
@@ -557,41 +555,41 @@ var iview = (function() {
 		};
 	};
 
-	iview.monitor = {};
-	iview.monitor.CANVAS_DRAGGING = null;
-	iview.monitor.CANVAS_OVER = null;
-	iview.monitor.ALT = false;
-	iview.monitor.SHIFT = false;
-	iview.monitor.META = false;
+	monitor = {};
+	monitor.CANVAS_DRAGGING = null;
+	monitor.CANVAS_OVER = null;
+	monitor.ALT = false;
+	monitor.SHIFT = false;
+	monitor.META = false;
 
 	var doc = $(document);
 	doc.ready(function() {
 		// handles dragging beyond the canvas bounds
 		doc.mousemove(function(e) {
-			if (iview.monitor.CANVAS_DRAGGING != null) {
-				if (iview.monitor.CANVAS_DRAGGING.drag) {
-					iview.monitor.CANVAS_DRAGGING.prehandleEvent(e);
-					iview.monitor.CANVAS_DRAGGING.drag(e);
+			if (monitor.CANVAS_DRAGGING != null) {
+				if (monitor.CANVAS_DRAGGING.drag) {
+					monitor.CANVAS_DRAGGING.prehandleEvent(e);
+					monitor.CANVAS_DRAGGING.drag(e);
 				}
 			}
 		});
 		doc.mouseup(function(e) {
-			if (iview.monitor.CANVAS_DRAGGING != null && iview.monitor.CANVAS_DRAGGING != iview.monitor.CANVAS_OVER) {
-				if (iview.monitor.CANVAS_DRAGGING.mouseup) {
-					iview.monitor.CANVAS_DRAGGING.prehandleEvent(e);
-					iview.monitor.CANVAS_DRAGGING.mouseup(e);
+			if (monitor.CANVAS_DRAGGING != null && monitor.CANVAS_DRAGGING != monitor.CANVAS_OVER) {
+				if (monitor.CANVAS_DRAGGING.mouseup) {
+					monitor.CANVAS_DRAGGING.prehandleEvent(e);
+					monitor.CANVAS_DRAGGING.mouseup(e);
 				}
 			}
-			iview.monitor.CANVAS_DRAGGING = null;
+			monitor.CANVAS_DRAGGING = null;
 		});
 		// handles modifier keys from a single keyboard
 		doc.keydown(function(e) {
-			iview.monitor.SHIFT = e.shiftKey;
-			iview.monitor.ALT = e.altKey;
-			iview.monitor.META = e.metaKey;
-			var affecting = iview.monitor.CANVAS_OVER;
-			if (iview.monitor.CANVAS_DRAGGING != null) {
-				affecting = iview.monitor.CANVAS_DRAGGING;
+			monitor.SHIFT = e.shiftKey;
+			monitor.ALT = e.altKey;
+			monitor.META = e.metaKey;
+			var affecting = monitor.CANVAS_OVER;
+			if (monitor.CANVAS_DRAGGING != null) {
+				affecting = monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keydown) {
@@ -601,9 +599,9 @@ var iview = (function() {
 			}
 		});
 		doc.keypress(function(e) {
-			var affecting = iview.monitor.CANVAS_OVER;
-			if (iview.monitor.CANVAS_DRAGGING != null) {
-				affecting = iview.monitor.CANVAS_DRAGGING;
+			var affecting = monitor.CANVAS_OVER;
+			if (monitor.CANVAS_DRAGGING != null) {
+				affecting = monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keypress) {
@@ -613,12 +611,12 @@ var iview = (function() {
 			}
 		});
 		doc.keyup(function(e) {
-			iview.monitor.SHIFT = e.shiftKey;
-			iview.monitor.ALT = e.altKey;
-			iview.monitor.META = e.metaKey;
-			var affecting = iview.monitor.CANVAS_OVER;
-			if (iview.monitor.CANVAS_DRAGGING != null) {
-				affecting = iview.monitor.CANVAS_DRAGGING;
+			monitor.SHIFT = e.shiftKey;
+			monitor.ALT = e.altKey;
+			monitor.META = e.metaKey;
+			var affecting = monitor.CANVAS_OVER;
+			if (monitor.CANVAS_DRAGGING != null) {
+				affecting = monitor.CANVAS_DRAGGING;
 			}
 			if (affecting != null) {
 				if (affecting.keyup) {
@@ -629,10 +627,10 @@ var iview = (function() {
 		});
 	});
 
-	iview.Canvas = function(id) {
+	var iview = function(id) {
 		this.rotationMatrix = mat4.identity([]);
 		this.translationMatrix = mat4.identity([]);
-		this.specs = new iview.VisualSpecifications();
+		this.specs = new VisualSpecifications();
 		this.id = id;
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
@@ -672,7 +670,7 @@ var iview = (function() {
 		jqCapsule.mousedown(function(e) {
 			switch (e.which) {
 			case 1: // left button
-				iview.monitor.CANVAS_DRAGGING = me;
+				monitor.CANVAS_DRAGGING = me;
 				if (me.mousedown) {
 					me.prehandleEvent(e);
 					me.mousedown(e);
@@ -693,20 +691,20 @@ var iview = (function() {
 			}
 		});
 		jqCapsule.mousemove(function(e) {
-			if (iview.monitor.CANVAS_DRAGGING == null && me.mousemove) {
+			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
 				me.prehandleEvent(e);
 				me.mousemove(e);
 			}
 		});
 		jqCapsule.mouseout(function(e) {
-			iview.monitor.CANVAS_OVER = null;
+			monitor.CANVAS_OVER = null;
 			if (me.mouseout) {
 				me.prehandleEvent(e);
 				me.mouseout(e);
 			}
 		});
 		jqCapsule.mouseover(function(e) {
-			iview.monitor.CANVAS_OVER = me;
+			monitor.CANVAS_OVER = me;
 			if (me.mouseover) {
 				me.prehandleEvent(e);
 				me.mouseover(e);
@@ -746,21 +744,21 @@ var iview = (function() {
 			this.gl = canvas.getContext('experimental-webgl');
 		}
 		this.gl.program = this.gl.createProgram();
-		this.gl.shader = new iview.Shader(this.gl);
+		this.gl.shader = new Shader(this.gl);
 	};
-	iview.Canvas.prototype.parseReceptor = function(content) {
-		var molecule = new iview.Molecule();
+	iview.prototype.parseReceptor = function(content) {
+		var molecule = new Molecule();
 		var residue = 'XXXX';
 		var lines = content.split('\n');
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
-			if (iview.stringStartsWith(line, 'ATOM') || iview.stringStartsWith(line, 'HETATM')) {
-				var atom = new iview.Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
+				var atom = new Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				atom.resSeq = parseInt(line.substring(22, 26));
 				atom.resName = line.substring(17, 20);
 				molecule.atoms.push(atom);
 				
-			} else if (iview.stringStartsWith(line, 'TER')) {
+			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
@@ -768,14 +766,14 @@ var iview = (function() {
 			for ( var j = i + 1; j < ii; j++) {
 				var first = molecule.atoms[i];
 				var second = molecule.atoms[j];
-				if (first.distance3D(second) < iview.ELEMENT[first.label].covalentRadius + iview.ELEMENT[second.label].covalentRadius) {
-					molecule.bonds.push(new iview.Bond(first, second));
+				if (first.distance3D(second) < ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) {
+					molecule.bonds.push(new Bond(first, second));
 				}
 			}
 		}
 		return molecule;
 	};
-	iview.Canvas.prototype.loadMolecule = function(molecule) {
+	iview.prototype.loadMolecule = function(molecule) {
 		this.molecule = molecule;
 		var p = this.molecule.getCenter3D();
 		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
@@ -784,15 +782,15 @@ var iview = (function() {
 		this.maxDimension = this.molecule.getMaxDimension();
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
 		// clear the canvas
-		var cs = iview.getRGB(this.specs.backgroundColor);
+		var cs = rgb(this.specs.backgroundColor);
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.sphereBuffer = new iview.Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
-		this.gl.cylinderBuffer = new iview.Cylinder(1, 1, this.specs.bonds_resolution_3D);
-		this.gl.lighting = new iview.Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
-		this.gl.material = new iview.Material(this.gl);
+		this.gl.sphereBuffer = new Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
+		this.gl.cylinderBuffer = new Cylinder(1, 1, this.specs.bonds_resolution_3D);
+		this.gl.lighting = new Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
+		this.gl.material = new Material(this.gl);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
 		// push the projection matrix to the graphics card
 		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
@@ -809,29 +807,29 @@ var iview = (function() {
 		};
 		this.repaint();
 	};
-	iview.Canvas.prototype.prehandleEvent = function(e) {
+	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
 		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
 	};
-	iview.Canvas.prototype.repaint = function() {
+	iview.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.molecule.render(this.gl, this.specs);
 		this.gl.flush();
 	};
-	iview.Canvas.prototype.mousedown = function(e) {
+	iview.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	iview.Canvas.prototype.rightmousedown = function(e) {
+	iview.prototype.rightmousedown = function(e) {
 		this.lastPoint = e.p;
 	};
-	iview.Canvas.prototype.drag = function(e) {
+	iview.prototype.drag = function(e) {
 		var difx = e.p[0] - this.lastPoint[0];
 		var dify = e.p[1] - this.lastPoint[1];
 		this.lastPoint = e.p;
-		if (iview.monitor.ALT) {
+		if (monitor.ALT) {
 			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
 		} else {
 			var rotation = mat4.rotate(mat4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
@@ -840,7 +838,7 @@ var iview = (function() {
 		}
 		this.repaint();
 	};
-	iview.Canvas.prototype.mousewheel = function(e, delta) {
+	iview.prototype.mousewheel = function(e, delta) {
 		mat4.translate(this.translationMatrix, [ 0, 0, delta * this.maxDimension / 8 ]);
 		this.repaint();
 	};

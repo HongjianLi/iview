@@ -5,7 +5,7 @@ $(function() {
 //	window.open(canvas.toDataURL('image/png'));
 
 	$.get('2ZD1.pdb', function(complex) {
-		var c = new iview.Canvas('iview');
+		var c = new iview('iview');
 		c.loadMolecule(c.parseReceptor(complex));
 	});
 });
