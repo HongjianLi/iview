@@ -67,8 +67,8 @@ var iview = (function() {
 	ELEMENT['S'].color = '#E6C640';
 */
 
-	Atom = function(label, x, y, z) {
-		this.label = label;
+	Atom = function(type, x, y, z) {
+		this.type = type;
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -83,17 +83,20 @@ var iview = (function() {
 			var dz = p.z - this.z;
 			return Math.sqrt(dx * dx + dy * dy + dz * dz);
 		};
+		this.isNeighbor = function(b) {
+			return this.distance3D(b) < ELEMENT[this.type].covalentRadius + ELEMENT[b.type].covalentRadius;
+		}
 		this.draw = function(ctx, specs) {
 			ctx.font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-			ctx.fillStyle = ELEMENT[this.label].color;
+			ctx.fillStyle = ELEMENT[this.type].color;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText(this.label, this.x, this.y);
+			ctx.fillText(this.type, this.x, this.y);
 		};
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
-			gl.material.setDiffuseColor(ELEMENT[this.label].color);
+			gl.material.setDiffuseColor(ELEMENT[this.type].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
@@ -129,7 +132,7 @@ var iview = (function() {
 				mat4.rotate(transformUse, ang, axis);
 			}
 			mat4.scale(transformUse, scaleVector);
-			var color = ELEMENT[this.a1.label].color;
+			var color = ELEMENT[this.a1.type].color;
 			gl.material.setDiffuseColor(color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
@@ -138,7 +141,7 @@ var iview = (function() {
 			// by PI, but PI will be negated
 			mat4.rotate(transformUse, ang + Math.PI, axis);
 			mat4.scale(transformUse, scaleVector);
-			gl.material.setDiffuseColor(ELEMENT[this.a2.label].color);
+			gl.material.setDiffuseColor(ELEMENT[this.a2.type].color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
@@ -753,21 +756,42 @@ var iview = (function() {
 		for ( var i = 0, ii = lines.length; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				var atom = new Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				atom.resSeq = parseInt(line.substring(22, 26));
-				atom.resName = line.substring(17, 20);
-				molecule.atoms.push(atom);
-				
+				var a = new Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
+				if (a.type === 'HD') {
+/*
+					var residue_start = molecule.residues[molecule.residues.length - 1];
+					for (var j = molecule.atoms.length; j > residue_start;)
+					{
+						var atom b = molecule.atoms[--j];
+						if (!b.is_hetero()) continue; // Only a hetero atom can be a hydrogen bond donor.
+						if (a.isNeighbor(b))
+						{
+							b.donorize();
+							break;
+						}
+					}
+*/
+				} else if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
+					residue = line.substring(22, 26);
+					molecule.residues.push(new Residue(line.substring(17, 20) + parseInt(residue), molecule.atoms.length));
+				}
+				molecule.atoms.push(a);
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
-		for ( var i = 0, ii = molecule.atoms.length; i < ii; i++) {
-			for ( var j = i + 1; j < ii; j++) {
-				var first = molecule.atoms[i];
-				var second = molecule.atoms[j];
-				if (first.distance3D(second) < ELEMENT[first.label].covalentRadius + ELEMENT[second.label].covalentRadius) {
-					molecule.bonds.push(new Bond(first, second));
+		var nResidues = molecule.residues.length;
+		molecule.residues.push(new Residue(null, molecule.atoms.length)); // Append a dummy residue.
+		for ( var r = 0; r < nResidues; r++) {
+			var begin = molecule.residues[r].offset;
+			var end = molecule.residues[r + 1].offset;
+			for ( var i = begin; i < end; i++ ) {
+				for ( var j = i + 1; j < end; j++) {
+					var a1 = molecule.atoms[i];
+					var a2 = molecule.atoms[j];
+					if (a1.isNeighbor(a2)) {
+						molecule.bonds.push(new Bond(a1, a2));
+					}
 				}
 			}
 		}
