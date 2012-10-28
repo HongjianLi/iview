@@ -80,9 +80,9 @@ var iview = (function() {
 			ctx.textBaseline = 'middle';
 			ctx.fillText(this.type, this[0], this[1]);
 		};
-		this.render = function(gl, specs) {
+		this.render = function(gl) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this[0], this[1], this[2] ], []);
-			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
+			mat4.scale(transform, [ .4, .4, .4 ]);
 			gl.material.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -92,9 +92,9 @@ var iview = (function() {
 	Bond = function(a1, a2) {
 		this.a1 = a1;
 		this.a2 = a2;
-		this.render = function(gl, specs) {
+		this.render = function(gl) {
 			// this is the elongation vector for the cylinder
-			var scaleVector = [ specs.bonds_cylinderRadius_3D, 1.001 * vec3.dist(this.a1, this.a2) / 2, specs.bonds_cylinderRadius_3D ];
+			var scaleVector = [ .4, 1.001 * vec3.dist(this.a1, this.a2) / 2, .4 ];
 			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1[0], this.a1[1], this.a1[2] ], []);
 			// align bond
@@ -137,24 +137,24 @@ var iview = (function() {
 	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
-		this.draw = function(ctx, specs) {
+		this.draw = function(ctx) {
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				this.atoms[i].draw(ctx, specs);
+				this.atoms[i].draw(ctx);
 			}
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				this.bonds[i].draw(ctx, specs);
+				this.bonds[i].draw(ctx);
 			}
 		};
-		this.render = function(gl, specs) {
+		this.render = function(gl) {
 			gl.cylinderBuffer.bindBuffers(gl);
-			gl.material.setTempColors(specs.bonds_materialAmbientColor_3D, null, specs.bonds_materialSpecularColor_3D, specs.bonds_materialShininess_3D);
+			gl.material.setTempColors('#000000', null, '#555555', 32);
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				this.bonds[i].render(gl, specs);
+				this.bonds[i].render(gl);
 			}
 			gl.sphereBuffer.bindBuffers(gl);
-			gl.material.setTempColors(specs.atoms_materialAmbientColor_3D, null, specs.atoms_materialSpecularColor_3D, specs.atoms_materialShininess_3D);
+			gl.material.setTempColors('#000000', null, '#555555', 32);
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				this.atoms[i].render(gl, specs);
+				this.atoms[i].render(gl);
 			}
 		};
 		this.getMaxDimension = function() {
@@ -488,21 +488,6 @@ var iview = (function() {
 		gl.enableVertexAttribArray(this.vertexNormalAttribute);
 	};
 
-	VisualSpecifications = function() {
-
-		this.backgroundColor = '#FFFFFF';
-		this.atoms_resolution_3D = 60;
-		this.atoms_sphereRadius_3D = .4;
-		this.atoms_materialAmbientColor_3D = '#000000';
-		this.atoms_materialSpecularColor_3D = '#555555';
-		this.atoms_materialShininess_3D = 32;
-		this.bonds_resolution_3D = 60;
-		this.bonds_cylinderRadius_3D = .4;
-		this.bonds_materialAmbientColor_3D = '#000000';
-		this.bonds_materialSpecularColor_3D = '#555555';
-		this.bonds_materialShininess_3D = 32;
-	};
-
 	monitor = {};
 	monitor.CANVAS_DRAGGING = null;
 	monitor.CANVAS_OVER = null;
@@ -578,7 +563,6 @@ var iview = (function() {
 	var iview = function(id) {
 		this.rotationMatrix = mat4.identity([]);
 		this.translationMatrix = mat4.identity([]);
-		this.specs = new VisualSpecifications();
 		this.id = id;
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
@@ -712,7 +696,7 @@ var iview = (function() {
 		residues.push(molecule.atoms.length);
 		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
 			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
-				for ( var j = i + 1; j < end; j++) {
+				for ( var j = i + 1; j < ii; j++) {
 					var a1 = molecule.atoms[i];
 					var a2 = molecule.atoms[j];
 					if (a1.isNeighbor(a2)) {
@@ -731,13 +715,13 @@ var iview = (function() {
 		this.maxDimension = this.receptor.getMaxDimension();
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension + 30 ]);
 		// clear the canvas
-		var cs = rgb(this.specs.backgroundColor);
+		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.sphereBuffer = new Sphere(1, this.specs.atoms_resolution_3D, this.specs.atoms_resolution_3D);
-		this.gl.cylinderBuffer = new Cylinder(1, 1, this.specs.bonds_resolution_3D);
+		this.gl.sphereBuffer = new Sphere(1, 60, 60);
+		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
 		this.gl.lighting = new Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
 		this.gl.material = new Material(this.gl);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
@@ -768,7 +752,7 @@ var iview = (function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
-		this.receptor.render(this.gl, this.specs);
+		this.receptor.render(this.gl);
 		this.gl.flush();
 	};
 	iview.prototype.mousedown = function(e) {
