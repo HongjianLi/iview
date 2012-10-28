@@ -67,34 +67,21 @@ var iview = (function() {
 	E['S'].color = '#E6C640';
 */
 
-	Atom = function(type, x, y, z) {
+	Atom = function(coord, type) {
+		vec3.set(coord, this);
 		this.type = type;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.sub3D = function(p) {
-			this.x -= p[0];
-			this.y -= p[1];
-			this.z -= p[2];
-		};
-		this.distance3D = function(p) {
-			var dx = p.x - this.x;
-			var dy = p.y - this.y;
-			var dz = p.z - this.z;
-			return Math.sqrt(dx * dx + dy * dy + dz * dz);
-		};
 		this.isNeighbor = function(b) {
-			return this.distance3D(b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
+			return vec3.dist(this, b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
 		}
 		this.draw = function(ctx) {
 			ctx.font = 'bold 12px Helvetica,Arial,Dialog';
 			ctx.fillStyle = E[this.type].color;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText(this.type, this.x, this.y);
+			ctx.fillText(this.type, this[0], this[1]);
 		};
 		this.render = function(gl, specs) {
-			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, [ this[0], this[1], this[2] ], []);
 			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
 			gl.material.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(transform);
@@ -107,20 +94,20 @@ var iview = (function() {
 		this.a2 = a2;
 		this.render = function(gl, specs) {
 			// this is the elongation vector for the cylinder
-			var scaleVector = [ specs.bonds_cylinderRadius_3D, 1.001 * this.a1.distance3D(this.a2) / 2, specs.bonds_cylinderRadius_3D ];
+			var scaleVector = [ specs.bonds_cylinderRadius_3D, 1.001 * vec3.dist(this.a1, this.a2) / 2, specs.bonds_cylinderRadius_3D ];
 			// transform to the atom as well as the opposite atom
-			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1.x, this.a1.y, this.a1.z ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1[0], this.a1[1], this.a1[2] ], []);
 			// align bond
-			var a2b = [ this.a2.x - this.a1.x, this.a2.y - this.a1.y, this.a2.z - this.a1.z ];
+			var a2b = [ this.a2[0] - this.a1[0], this.a2[1] - this.a1[1], this.a2[2] - this.a1[2] ];
 			vec3.scale(a2b, .5);
-			var transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2.x, this.a2.y, this.a2.z ], []);
+			var transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2[0], this.a2[1], this.a2[2] ], []);
 			// calculate the rotation
 			var y = [ 0, 1, 0 ];
 			var ang = 0;
 			var axis = null;
-			if (this.a1.x == this.a2.x && this.a1.z == this.a2.z) {
+			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
 				axis = [ 0, 0, 1 ];
-				if (this.a2.y < this.a1.y) {
+				if (this.a2[1] < this.a1[1]) {
 					ang = Math.PI;
 				}
 			} else {
@@ -174,10 +161,10 @@ var iview = (function() {
 			var minX = minY = Infinity;
 			var maxX = maxY = -Infinity;
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = Math.min(this.atoms[i].x, minX);
-				minY = Math.min(this.atoms[i].y, minY);
-				maxX = Math.max(this.atoms[i].x, maxX);
-				maxY = Math.max(this.atoms[i].y, maxY);
+				minX = Math.min(this.atoms[i][0], minX);
+				minY = Math.min(this.atoms[i][1], minY);
+				maxX = Math.max(this.atoms[i][0], maxX);
+				maxY = Math.max(this.atoms[i][1], maxY);
 			}
 			return Math.max(maxX - minX, maxY - minY);
 		};
@@ -713,21 +700,18 @@ var iview = (function() {
 		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				var a = new Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
 				if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
 					residue = line.substring(22, 26);
 					residues.push(molecule.atoms.length);
 				}
-				molecule.atoms.push(a);
+				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
 		residues.push(molecule.atoms.length);
 		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
-			var begin = residues[r];
-			var end = residues[r + 1];
-			for ( var i = begin; i < end; i++ ) {
+			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
 				for ( var j = i + 1; j < end; j++) {
 					var a1 = molecule.atoms[i];
 					var a2 = molecule.atoms[j];
@@ -742,7 +726,7 @@ var iview = (function() {
 	iview.prototype.setReceptor = function(molecule) {
 		this.receptor = molecule;
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
-			this.receptor.atoms[i].sub3D(this.center);
+			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
 		this.maxDimension = this.receptor.getMaxDimension();
 		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension + 30 ]);
