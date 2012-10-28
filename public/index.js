@@ -4,8 +4,9 @@ $(function() {
 //	if (canvas.getContext('experimental-webgl'));
 //	window.open(canvas.toDataURL('image/png'));
 
-	$.get('2ZD1.pdb', function(complex) {
+	$.get('receptor.pdb', function(complex) {
 		var c = new iview('iview');
-		c.loadMolecule(c.parseReceptor(complex));
+		c.setCenter([49.712, -28.923, 36.824]);
+		c.setReceptor(c.parseReceptor(complex));
 	});
 });

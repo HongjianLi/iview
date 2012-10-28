@@ -31,40 +31,40 @@ var iview = (function() {
 		this.covalentRadius = covalentRadius;
 	}
 
-	ELEMENT = [];
-	ELEMENT['H' ] = new Element('#FFFFFF', 0.407);
-	ELEMENT['C' ] = new Element('#909090', 0.847);
-	ELEMENT['N' ] = new Element('#3050F8', 0.825);
-	ELEMENT['O' ] = new Element('#FF0D0D', 0.803);
-	ELEMENT['S' ] = new Element('#FFFF30', 1.122);
-	ELEMENT['Se'] = new Element('#FFA100', 1.276);
-	ELEMENT['P' ] = new Element('#FF8000', 1.166);
-	ELEMENT['F' ] = new Element('#90E050', 0.781);
-	ELEMENT['Cl'] = new Element('#1FF01F', 1.089);
-	ELEMENT['Br'] = new Element('#A62929', 1.254);
-	ELEMENT['I' ] = new Element('#940094', 1.463);
-	ELEMENT['Zn'] = new Element('#7D80B0', 1.441);
-	ELEMENT['Fe'] = new Element('#E06633', 1.375);
-	ELEMENT['Mg'] = new Element('#8AFF00', 1.430);
-	ELEMENT['Ca'] = new Element('#3DFF00', 1.914);
-	ELEMENT['Mn'] = new Element('#9C7AC7', 1.529);
-	ELEMENT['Cu'] = new Element('#C88033', 1.518);
-	ELEMENT['Na'] = new Element('#AB5CF2', 1.694);
-	ELEMENT['K' ] = new Element('#8F40D4', 2.156);
-	ELEMENT['Hg'] = new Element('#B8B8D0', 1.639);
-	ELEMENT['Ni'] = new Element('#50D050', 1.331);
-	ELEMENT['Co'] = new Element('#F090A0', 1.386);
-	ELEMENT['Cd'] = new Element('#FFD98F', 1.628);
-	ELEMENT['As'] = new Element('#BD80E3', 1.309);
-	ELEMENT['Sr'] = new Element('#00FF00', 2.112);
+	E = [];
+	E['H' ] = new Element('#FFFFFF', 0.407);
+	E['C' ] = new Element('#909090', 0.847);
+	E['N' ] = new Element('#3050F8', 0.825);
+	E['O' ] = new Element('#FF0D0D', 0.803);
+	E['S' ] = new Element('#FFFF30', 1.122);
+	E['Se'] = new Element('#FFA100', 1.276);
+	E['P' ] = new Element('#FF8000', 1.166);
+	E['F' ] = new Element('#90E050', 0.781);
+	E['Cl'] = new Element('#1FF01F', 1.089);
+	E['Br'] = new Element('#A62929', 1.254);
+	E['I' ] = new Element('#940094', 1.463);
+	E['Zn'] = new Element('#7D80B0', 1.441);
+	E['Fe'] = new Element('#E06633', 1.375);
+	E['Mg'] = new Element('#8AFF00', 1.430);
+	E['Ca'] = new Element('#3DFF00', 1.914);
+	E['Mn'] = new Element('#9C7AC7', 1.529);
+	E['Cu'] = new Element('#C88033', 1.518);
+	E['Na'] = new Element('#AB5CF2', 1.694);
+	E['K' ] = new Element('#8F40D4', 2.156);
+	E['Hg'] = new Element('#B8B8D0', 1.639);
+	E['Ni'] = new Element('#50D050', 1.331);
+	E['Co'] = new Element('#F090A0', 1.386);
+	E['Cd'] = new Element('#FFD98F', 1.628);
+	E['As'] = new Element('#BD80E3', 1.309);
+	E['Sr'] = new Element('#00FF00', 2.112);
 
 /* Uncomment these lines to substitute PyMOL colors
-	ELEMENT['H'].color = '#E6E6E6';
-	ELEMENT['C'].color = '#33FF33';
-	ELEMENT['N'].color = '#3333FF';
-	ELEMENT['O'].color = '#FF4D4D';
-	ELEMENT['F'].color = '#B3FFFF';
-	ELEMENT['S'].color = '#E6C640';
+	E['H'].color = '#E6E6E6';
+	E['C'].color = '#33FF33';
+	E['N'].color = '#3333FF';
+	E['O'].color = '#FF4D4D';
+	E['F'].color = '#B3FFFF';
+	E['S'].color = '#E6C640';
 */
 
 	Atom = function(type, x, y, z) {
@@ -73,9 +73,9 @@ var iview = (function() {
 		this.y = y;
 		this.z = z;
 		this.sub3D = function(p) {
-			this.x -= p.x;
-			this.y -= p.y;
-			this.z -= p.z;
+			this.x -= p[0];
+			this.y -= p[1];
+			this.z -= p[2];
 		};
 		this.distance3D = function(p) {
 			var dx = p.x - this.x;
@@ -84,11 +84,11 @@ var iview = (function() {
 			return Math.sqrt(dx * dx + dy * dy + dz * dz);
 		};
 		this.isNeighbor = function(b) {
-			return this.distance3D(b) < ELEMENT[this.type].covalentRadius + ELEMENT[b.type].covalentRadius;
+			return this.distance3D(b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
 		}
-		this.draw = function(ctx, specs) {
-			ctx.font = specs.getFontString(specs.atoms_font_size_2D, specs.atoms_font_families_2D, specs.atoms_font_bold_2D, specs.atoms_font_italic_2D);
-			ctx.fillStyle = ELEMENT[this.type].color;
+		this.draw = function(ctx) {
+			ctx.font = 'bold 12px Helvetica,Arial,Dialog';
+			ctx.fillStyle = E[this.type].color;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.fillText(this.type, this.x, this.y);
@@ -96,7 +96,7 @@ var iview = (function() {
 		this.render = function(gl, specs) {
 			var transform = mat4.translate(gl.modelViewMatrix, [ this.x, this.y, this.z ], []);
 			mat4.scale(transform, [ specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D, specs.atoms_sphereRadius_3D ]);
-			gl.material.setDiffuseColor(ELEMENT[this.type].color);
+			gl.material.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
@@ -132,7 +132,7 @@ var iview = (function() {
 				mat4.rotate(transformUse, ang, axis);
 			}
 			mat4.scale(transformUse, scaleVector);
-			var color = ELEMENT[this.a1.type].color;
+			var color = E[this.a1.type].color;
 			gl.material.setDiffuseColor(color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
@@ -141,21 +141,15 @@ var iview = (function() {
 			// by PI, but PI will be negated
 			mat4.rotate(transformUse, ang + Math.PI, axis);
 			mat4.scale(transformUse, scaleVector);
-			gl.material.setDiffuseColor(ELEMENT[this.a2.type].color);
+			gl.material.setDiffuseColor(E[this.a2.type].color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
 
-	Residue = function(id, offset) {
-		this.id = id;
-		this.offset = offset;
-	};
-
 	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
-		this.residues = [];
 		this.draw = function(ctx, specs) {
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				this.atoms[i].draw(ctx, specs);
@@ -175,19 +169,6 @@ var iview = (function() {
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				this.atoms[i].render(gl, specs);
 			}
-		};
-		this.getCenter3D = function() {
-			var minX = minY = minZ = Infinity;
-			var maxX = maxY = maxZ = -Infinity;
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = Math.min(this.atoms[i].x, minX);
-				minY = Math.min(this.atoms[i].y, minY);
-				minZ = Math.min(this.atoms[i].z, minZ);
-				maxX = Math.max(this.atoms[i].x, maxX);
-				maxY = Math.max(this.atoms[i].y, maxY);
-				maxZ = Math.max(this.atoms[i].z, maxZ);
-			}
-			return new Atom('C', (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
 		};
 		this.getMaxDimension = function() {
 			var minX = minY = Infinity;
@@ -523,10 +504,6 @@ var iview = (function() {
 	VisualSpecifications = function() {
 
 		this.backgroundColor = '#FFFFFF';
-		this.atoms_font_size_2D = 12;
-		this.atoms_font_families_2D = [ 'Helvetica', 'Arial', 'Dialog' ];
-		this.atoms_font_bold_2D = false;
-		this.atoms_font_italic_2D = false;
 		this.atoms_resolution_3D = 60;
 		this.atoms_sphereRadius_3D = .4;
 		this.atoms_materialAmbientColor_3D = '#000000';
@@ -537,25 +514,6 @@ var iview = (function() {
 		this.bonds_materialAmbientColor_3D = '#000000';
 		this.bonds_materialSpecularColor_3D = '#555555';
 		this.bonds_materialShininess_3D = 32;
-
-		this.getFontString = function(size, families, bold, italic) {
-			var sb = [];
-			if (bold) {
-				sb.push('bold ');
-			}
-			if (italic) {
-				sb.push('italic ');
-			}
-			sb.push(size + 'px ');
-			for ( var i = 0, ii = families.length; i < ii; i++) {
-				var use = families[i];
-				if (use.indexOf(' ') != -1) {
-					use = '"' + use + '"';
-				}
-				sb.push((i != 0 ? ',' : '') + use);
-			}
-			return sb.join('');
-		};
 	};
 
 	monitor = {};
@@ -751,40 +709,24 @@ var iview = (function() {
 	};
 	iview.prototype.parseReceptor = function(content) {
 		var molecule = new Molecule();
-		var residue = 'XXXX';
-		var lines = content.split('\n');
-		for ( var i = 0, ii = lines.length; i < ii; i++) {
+		var residues = [];
+		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
 				var a = new Atom($.trim(line.substring(76, 78)), parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54)));
-				if (a.type === 'HD') {
-/*
-					var residue_start = molecule.residues[molecule.residues.length - 1];
-					for (var j = molecule.atoms.length; j > residue_start;)
-					{
-						var atom b = molecule.atoms[--j];
-						if (!b.is_hetero()) continue; // Only a hetero atom can be a hydrogen bond donor.
-						if (a.isNeighbor(b))
-						{
-							b.donorize();
-							break;
-						}
-					}
-*/
-				} else if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
+				if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
 					residue = line.substring(22, 26);
-					molecule.residues.push(new Residue(line.substring(17, 20) + parseInt(residue), molecule.atoms.length));
+					residues.push(molecule.atoms.length);
 				}
 				molecule.atoms.push(a);
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
-		var nResidues = molecule.residues.length;
-		molecule.residues.push(new Residue(null, molecule.atoms.length)); // Append a dummy residue.
-		for ( var r = 0; r < nResidues; r++) {
-			var begin = molecule.residues[r].offset;
-			var end = molecule.residues[r + 1].offset;
+		residues.push(molecule.atoms.length);
+		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
+			var begin = residues[r];
+			var end = residues[r + 1];
 			for ( var i = begin; i < end; i++ ) {
 				for ( var j = i + 1; j < end; j++) {
 					var a1 = molecule.atoms[i];
@@ -797,14 +739,13 @@ var iview = (function() {
 		}
 		return molecule;
 	};
-	iview.prototype.loadMolecule = function(molecule) {
-		this.molecule = molecule;
-		var p = this.molecule.getCenter3D();
-		for ( var i = 0, ii = this.molecule.atoms.length; i < ii; i++) {
-			this.molecule.atoms[i].sub3D(p);
+	iview.prototype.setReceptor = function(molecule) {
+		this.receptor = molecule;
+		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+			this.receptor.atoms[i].sub3D(this.center);
 		}
-		this.maxDimension = this.molecule.getMaxDimension();
-		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension - 10 ]);
+		this.maxDimension = this.receptor.getMaxDimension();
+		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension + 30 ]);
 		// clear the canvas
 		var cs = rgb(this.specs.backgroundColor);
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
@@ -831,6 +772,9 @@ var iview = (function() {
 		};
 		this.repaint();
 	};
+	iview.prototype.setCenter = function(center) {
+		this.center = center;
+	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
@@ -840,7 +784,7 @@ var iview = (function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
-		this.molecule.render(this.gl, this.specs);
+		this.receptor.render(this.gl, this.specs);
 		this.gl.flush();
 	};
 	iview.prototype.mousedown = function(e) {
