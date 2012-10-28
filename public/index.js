@@ -6,7 +6,7 @@ $(function() {
 
 	$.get('receptor.pdb', function(complex) {
 		var c = new iview('iview');
-		c.setCenter([49.712, -28.923, 36.824]);
+		c.setBox([49.712, -28.923, 36.824], [18, 18, 20]);
 		c.setReceptor(c.parseReceptor(complex));
 	});
 });

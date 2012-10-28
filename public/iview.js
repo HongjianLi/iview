@@ -679,26 +679,36 @@ var iview = (function() {
 		this.gl.shader = new Shader(this.gl);
 	};
 	iview.prototype.parseReceptor = function(content) {
-		var molecule = new Molecule();
-		var residues = [];
+		var residues = [], atoms = [];
 		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
 				if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
 					residue = line.substring(22, 26);
-					residues.push(molecule.atoms.length);
+					residues.push(atoms.length);
 				}
-				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
+				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
-		residues.push(molecule.atoms.length);
+		residues.push(atoms.length);
+		var molecule = new Molecule();
 		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
+			var inside = false;
 			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
+				var a = atoms[i];
+				if ((this.corner1[0] <= a[0]) && (a[0] < this.corner2[0]) && (this.corner1[1] <= a[1]) && (a[1] < this.corner2[1]) && (this.corner1[2] <= a[2]) && (a[2] < this.corner2[2])) {
+					inside = true;
+					break;
+				}
+			}
+			if (!inside) continue;
+			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
+				var a1 = atoms[i];
+				molecule.atoms.push(a1);
 				for ( var j = i + 1; j < ii; j++) {
-					var a1 = molecule.atoms[i];
-					var a2 = molecule.atoms[j];
+					var a2 = atoms[j];
 					if (a1.isNeighbor(a2)) {
 						molecule.bonds.push(new Bond(a1, a2));
 					}
@@ -713,8 +723,7 @@ var iview = (function() {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
 		this.maxDimension = this.receptor.getMaxDimension();
-		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension + 30 ]);
-		// clear the canvas
+		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension ]);
 		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
@@ -740,8 +749,14 @@ var iview = (function() {
 		};
 		this.repaint();
 	};
-	iview.prototype.setCenter = function(center) {
+	iview.prototype.setBox = function(center, size) {
 		this.center = center;
+		this.size = size;
+		var half = vec3.scale(size, .5);
+		this.corner1 = vec3.create(center);
+		vec3.subtract(this.corner1, half);
+		this.corner2 = vec3.create(center);
+		vec3.add(this.corner2, half);
 	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
