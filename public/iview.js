@@ -33,10 +33,14 @@ var iview = (function() {
 
 	E = [];
 	E['H' ] = new Element('#FFFFFF', 0.407);
+	E['HD'] = new Element('#FFFFFF', 0.407);
 	E['C' ] = new Element('#909090', 0.847);
+	E['A' ] = new Element('#909090', 0.847);
 	E['N' ] = new Element('#3050F8', 0.825);
-	E['O' ] = new Element('#FF0D0D', 0.803);
+	E['NA'] = new Element('#3050F8', 0.825);
+	E['OA'] = new Element('#FF0D0D', 0.803);
 	E['S' ] = new Element('#FFFF30', 1.122);
+	E['SA'] = new Element('#FFFF30', 1.122);
 	E['Se'] = new Element('#FFA100', 1.276);
 	E['P' ] = new Element('#FF8000', 1.166);
 	E['F' ] = new Element('#90E050', 0.781);
@@ -687,7 +691,7 @@ var iview = (function() {
 					residue = line.substring(22, 26);
 					residues.push(atoms.length);
 				}
-				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
+				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
@@ -723,7 +727,7 @@ var iview = (function() {
 		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
+				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
 			} else if (startsWith(line, 'BRANCH')) {
 				frames.push(molecule.atoms.length);
 				rotorXes.push(parseInt(line.substring( 6, 10)));
