@@ -642,7 +642,43 @@ var iview = (function() {
 		}
 		this.gl.program = this.gl.createProgram();
 		this.gl.shader = new Shader(this.gl);
+		var cs = rgb('#FFFFFF');
+		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
+		this.gl.clearDepth(1.0);
+		this.gl.enable(this.gl.DEPTH_TEST);
+		this.gl.depthFunc(this.gl.LEQUAL);
+		this.gl.sphereBuffer = new Sphere(1, 60, 60);
+		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
+		this.gl.material = new Material(this.gl);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
+		var direction = vec3.normalize([ .1, .1, 1 ]);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), direction[0], direction[1], direction[2]);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), direction[0], direction[1], direction[2]);
+		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
+		// push the projection matrix to the graphics card
+		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
+		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
+		// matrix setup functions
+		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
+		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
+		this.gl.setMatrixUniforms = function(mvMatrix) {
+			// push the model-view matrix to the graphics card
+			this.uniformMatrix4fv(mvUL, false, mvMatrix);
+			// create the normal matrix and push it to the graphics card
+			var normalMatrix = mat3.transpose(mat4.toInverseMat3(mvMatrix, []));
+			this.uniformMatrix3fv(nUL, false, normalMatrix);
+		};
 	};
+	iview.prototype.setBox = function(center, size) {
+		this.center = center;
+		this.size = size;
+		var half = vec3.scale(vec3.create(size), .5);
+		this.corner1 = vec3.subtract(vec3.create(center), half);
+		this.corner2 = vec3.add(vec3.create(center), half);
+		this.maxDimension = Math.max(size[0], size[1]);
+		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
+	}
 	iview.prototype.parseReceptor = function(content) {
 		var residues = [], atoms = [];
 		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
@@ -684,12 +720,33 @@ var iview = (function() {
 	};
 	iview.prototype.parseLigand = function(content) {
 		var molecule = new Molecule();
+		var frames = [0], rotorXes = [], rotorYes = [], serials = [];
 		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
+				var a = new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78)));
+				molecule.atoms.push(a);
+				serials[line.substring(6, 11)] = a;
 			} else if (startsWith(line, 'BRANCH')) {
+				frames.push(molecule.atoms.length);
+				rotorXes.push(line.substring( 6, 10));
+				rotorYes.push(line.substring(10, 14));
 			}
+		}
+		frames.push(molecule.atoms.length);
+		for (var f = 0, ff = frames.length - 1; f < ff; f++) {
+			for ( var i = frames[f], ii = frames[f + 1]; i < ii; i++ ) {
+				var a1 = molecule.atoms[i];
+				for ( var j = i + 1; j < ii; j++) {
+					var a2 = molecule.atoms[j];
+					if (a1.isNeighbor(a2)) {
+						molecule.bonds.push(new Bond(a1, a2));
+					}
+				}
+			}
+		}
+		for (var i = 0, ii = rotorXes.length; i < ii; i++) {
+			molecule.bonds.push(new Bond(serials[rotorXes[i]], serials[rotorYes[i]]));
 		}
 		return molecule;
 	}
@@ -698,50 +755,13 @@ var iview = (function() {
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
-		this.maxDimension = Math.max(this.size[0], this.size[1]);
-		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
 	}
 	iview.prototype.setLigand = function(molecule) {
 		this.ligand = molecule;
 		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
 			vec3.subtract(this.ligand.atoms[i], this.center);
 		}
-		var cs = rgb('#FFFFFF');
-		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
-		this.gl.clearDepth(1.0);
-		this.gl.enable(this.gl.DEPTH_TEST);
-		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.sphereBuffer = new Sphere(1, 60, 60);
-		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
-		this.gl.material = new Material(this.gl);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
-		var direction = vec3.normalize([ .1, .1, 1 ]);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), direction[0], direction[1], direction[2]);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), direction[0], direction[1], direction[2]);
-		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
-		// push the projection matrix to the graphics card
-		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
-		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
-		// matrix setup functions
-		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
-		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
-		this.gl.setMatrixUniforms = function(mvMatrix) {
-			// push the model-view matrix to the graphics card
-			this.uniformMatrix4fv(mvUL, false, mvMatrix);
-			// create the normal matrix and push it to the graphics card
-			var normalMatrix = mat3.transpose(mat4.toInverseMat3(mvMatrix, []));
-			this.uniformMatrix3fv(nUL, false, normalMatrix);
-		};
-		this.repaint();
 	};
-	iview.prototype.setBox = function(center, size) {
-		this.center = center;
-		this.size = size;
-		var half = vec3.scale(vec3.create(size), .5);
-		this.corner1 = vec3.subtract(vec3.create(center), half);
-		this.corner2 = vec3.add(vec3.create(center), half);
-	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();

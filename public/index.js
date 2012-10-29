@@ -10,6 +10,7 @@ $(function() {
 		c.setReceptor(c.parseReceptor(receptor));
 		$.get('ligand.pdb', function(ligand) {
 			c.setLigand(c.parseLigand(ligand));
+			c.repaint();
 		});
 	});
 });
