@@ -119,8 +119,7 @@ var iview = (function() {
 				mat4.rotate(transformUse, ang, axis);
 			}
 			mat4.scale(transformUse, scaleVector);
-			var color = E[this.a1.type].color;
-			gl.material.setDiffuseColor(color);
+			gl.material.setDiffuseColor(E[this.a1.type].color);
 			gl.setMatrixUniforms(transformUse);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			mat4.set(transformOpposite, transformUse);
@@ -240,8 +239,9 @@ var iview = (function() {
 	Cylinder = function(radius, height, bands) {
 		var positionData = [];
 		var normalData = [];
+		var angle = 2 * Math.PI / bands;
 		for ( var i = 0; i < bands; i++) {
-			var theta = i * 2 * Math.PI / bands;
+			var theta = i * angle;
 			var cosTheta = Math.cos(theta);
 			var sinTheta = Math.sin(theta);
 			normalData.push(cosTheta, 0, sinTheta);
@@ -304,12 +304,11 @@ var iview = (function() {
 	Sphere.prototype = new Mesh();
 
 	Material = function(gl) {
-		var prefix = 'u_material.';
-		var aUL = gl.getUniformLocation(gl.program, prefix + 'ambient_color');
-		var dUL = gl.getUniformLocation(gl.program, prefix + 'diffuse_color');
-		var sUL = gl.getUniformLocation(gl.program, prefix + 'specular_color');
-		var snUL = gl.getUniformLocation(gl.program, prefix + 'shininess');
-		var alUL = gl.getUniformLocation(gl.program, prefix + 'alpha');
+		var aUL = gl.getUniformLocation(gl.program, 'u_material.ambient_color');
+		var dUL = gl.getUniformLocation(gl.program, 'u_material.diffuse_color');
+		var sUL = gl.getUniformLocation(gl.program, 'u_material.specular_color');
+		var snUL = gl.getUniformLocation(gl.program, 'u_material.shininess');
+		var alUL = gl.getUniformLocation(gl.program, 'u_material.alpha');
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
 			if (!this.aCache || this.aCache!=ambientColor) {
 				this.aCache = ambientColor;
