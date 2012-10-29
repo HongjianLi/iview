@@ -98,7 +98,7 @@ var iview = (function() {
 			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
 			// align bond
-			var a2b = [ this.a2[0] - this.a1[0], this.a2[1] - this.a1[1], this.a2[2] - this.a1[2] ];
+			var a2b = vec3.subtract(vec3.create(this.a2), this.a1);
 			vec3.scale(a2b, .5);
 			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
 			// calculate the rotation
@@ -146,12 +146,10 @@ var iview = (function() {
 		};
 		this.render = function(gl) {
 			gl.cylinderBuffer.bindBuffers(gl);
-			gl.material.setTempColors('#000000', null, '#555555', 32);
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
 				this.bonds[i].render(gl);
 			}
 			gl.sphereBuffer.bindBuffers(gl);
-			gl.material.setTempColors('#000000', null, '#555555', 32);
 			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
 				this.atoms[i].render(gl);
 			}
@@ -650,6 +648,7 @@ var iview = (function() {
 		this.gl.sphereBuffer = new Sphere(1, 60, 60);
 		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
 		this.gl.material = new Material(this.gl);
+		this.gl.material.setTempColors('#000000', null, '#555555', 32);
 		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
 		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
 		var direction = vec3.normalize([ .1, .1, 1 ]);
@@ -724,13 +723,11 @@ var iview = (function() {
 		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				var a = new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78)));
-				molecule.atoms.push(a);
-				serials[line.substring(6, 11)] = a;
+				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
 			} else if (startsWith(line, 'BRANCH')) {
 				frames.push(molecule.atoms.length);
-				rotorXes.push(line.substring( 6, 10));
-				rotorYes.push(line.substring(10, 14));
+				rotorXes.push(parseInt(line.substring( 6, 10)));
+				rotorYes.push(parseInt(line.substring(10, 14)));
 			}
 		}
 		frames.push(molecule.atoms.length);
@@ -746,7 +743,7 @@ var iview = (function() {
 			}
 		}
 		for (var i = 0, ii = rotorXes.length; i < ii; i++) {
-			molecule.bonds.push(new Bond(serials[rotorXes[i]], serials[rotorYes[i]]));
+			molecule.bonds.push(new Bond(molecule.atoms[rotorXes[i] - 1], molecule.atoms[rotorYes[i] - 1]));
 		}
 		return molecule;
 	}
