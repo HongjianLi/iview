@@ -157,17 +157,6 @@ var iview = (function() {
 				this.atoms[i].render(gl);
 			}
 		};
-		this.getMaxDimension = function() {
-			var minX = minY = Infinity;
-			var maxX = maxY = -Infinity;
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				minX = Math.min(this.atoms[i][0], minX);
-				minY = Math.min(this.atoms[i][1], minY);
-				maxX = Math.max(this.atoms[i][0], maxX);
-				maxY = Math.max(this.atoms[i][1], maxY);
-			}
-			return Math.max(maxX - minX, maxY - minY);
-		};
 	};
 
 	Mesh = function() {
@@ -722,8 +711,7 @@ var iview = (function() {
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
-		this.maxDimension = this.receptor.getMaxDimension();
-		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -this.maxDimension ]);
+		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -Math.max(this.size[0], this.size[1]) - 20 ]);
 		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
