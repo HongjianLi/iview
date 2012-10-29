@@ -682,6 +682,17 @@ var iview = (function() {
 		}
 		return molecule;
 	};
+	iview.prototype.parseLigand = function(content) {
+		var molecule = new Molecule();
+		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
+			var line = lines[i];
+			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
+				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(76, 78))));
+			} else if (startsWith(line, 'BRANCH')) {
+			}
+		}
+		return molecule;
+	}
 	iview.prototype.setReceptor = function(molecule) {
 		this.receptor = molecule;
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
@@ -689,6 +700,12 @@ var iview = (function() {
 		}
 		this.maxDimension = Math.max(this.size[0], this.size[1]);
 		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
+	}
+	iview.prototype.setLigand = function(molecule) {
+		this.ligand = molecule;
+		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
+			vec3.subtract(this.ligand.atoms[i], this.center);
+		}
 		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
@@ -735,6 +752,7 @@ var iview = (function() {
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.receptor.render(this.gl);
+		this.ligand.render(this.gl);
 		this.gl.flush();
 	};
 	iview.prototype.mousedown = function(e) {
