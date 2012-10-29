@@ -96,11 +96,11 @@ var iview = (function() {
 			// this is the elongation vector for the cylinder
 			var scaleVector = [ .4, 1.001 * vec3.dist(this.a1, this.a2) / 2, .4 ];
 			// transform to the atom as well as the opposite atom
-			var transform = mat4.translate(gl.modelViewMatrix, [ this.a1[0], this.a1[1], this.a1[2] ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
 			// align bond
 			var a2b = [ this.a2[0] - this.a1[0], this.a2[1] - this.a1[1], this.a2[2] - this.a1[2] ];
 			vec3.scale(a2b, .5);
-			var transformOpposite = mat4.translate(gl.modelViewMatrix, [ this.a2[0], this.a2[1], this.a2[2] ], []);
+			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
 			// calculate the rotation
 			var y = [ 0, 1, 0 ];
 			var ang = 0;
@@ -261,13 +261,15 @@ var iview = (function() {
 	Sphere = function(radius, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
+		var latitudeAngle = Math.PI / latitudeBands;
+		var longitudeAngle = 2 * Math.PI / longitudeBands;
 		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-			var theta = latNumber * Math.PI / latitudeBands;
+			var theta = latNumber * latitudeAngle;
 			var sinTheta = Math.sin(theta);
 			var cosTheta = Math.cos(theta);
 
 			for ( var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-				var phi = longNumber * 2 * Math.PI / longitudeBands;
+				var phi = longNumber * longitudeAngle;
 				var sinPhi = Math.sin(phi);
 				var cosPhi = Math.cos(phi);
 
