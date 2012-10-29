@@ -550,8 +550,8 @@ var iview = (function() {
 	});
 
 	var iview = function(id) {
-		this.rotationMatrix = mat4.identity([]);
-		this.translationMatrix = mat4.identity([]);
+		this.rotationMatrix = mat4.identity();
+		this.translationMatrix = mat4.identity();
 		this.id = id;
 		var jqCapsule = $('#' + id);
 		this.width = jqCapsule.attr('width');
@@ -711,7 +711,7 @@ var iview = (function() {
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
-		this.translationMatrix = mat4.translate(mat4.identity([]), [ 0, 0, -Math.max(this.size[0], this.size[1]) - 20 ]);
+		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -Math.max(this.size[0], this.size[1]) - 20 ]);
 		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
@@ -771,7 +771,7 @@ var iview = (function() {
 		if (monitor.ALT) {
 			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
 		} else {
-			var rotation = mat4.rotate(mat4.identity([]), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
+			var rotation = mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
 			mat4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
 			this.rotationMatrix = mat4.multiply(rotation, this.rotationMatrix);
 		}
