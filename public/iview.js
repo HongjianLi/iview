@@ -81,7 +81,7 @@ var iview = (function() {
 			ctx.fillText(this.type, this[0], this[1]);
 		};
 		this.render = function(gl) {
-			var transform = mat4.translate(gl.modelViewMatrix, [ this[0], this[1], this[2] ], []);
+			var transform = mat4.translate(gl.modelViewMatrix, this, []);
 			mat4.scale(transform, [ .4, .4, .4 ]);
 			gl.material.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(transform);
@@ -302,31 +302,6 @@ var iview = (function() {
 		this.storeData(positionData, normalData, indexData);
 	};
 	Sphere.prototype = new Mesh();
-
-	Light = function(diffuseColor, specularColor, direction, gl) {
-		this.diffuseRGB = rgb(diffuseColor);
-		this.specularRGB = rgb(specularColor);
-		this.direction = direction;
-		var prefix = 'u_light.';
-		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'diffuse_color'), this.diffuseRGB[0], this.diffuseRGB[1], this.diffuseRGB[2]);
-		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'specular_color'), this.specularRGB[0], this.specularRGB[1], this.specularRGB[2]);
-
-		var lightingDirection = vec3.create(this.direction);
-		vec3.normalize(lightingDirection);
-		vec3.negate(lightingDirection);
-		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'direction'), lightingDirection[0], lightingDirection[1], lightingDirection[2]);
-
-		// compute the half vector
-		var eyeVector = [ 0, 0, 0 ];
-		var halfVector = [ eyeVector[0] + lightingDirection[0], eyeVector[1] + lightingDirection[1], eyeVector[2] + lightingDirection[2] ];
-		var length = vec3.length(halfVector);
-		if (length == 0)
-			halfVector = [ 0, 0, 1 ];
-		else {
-			vec3.scale(1 / length);
-		}
-		gl.uniform3f(gl.getUniformLocation(gl.program, prefix + 'half_vector'), halfVector[0], halfVector[1], halfVector[2]);
-	};
 
 	Material = function(gl) {
 		var prefix = 'u_material.';
@@ -722,8 +697,12 @@ var iview = (function() {
 		this.gl.depthFunc(this.gl.LEQUAL);
 		this.gl.sphereBuffer = new Sphere(1, 60, 60);
 		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
-		this.gl.lighting = new Light('#FFFFFF', '#FFFFFF', [ -.1, -.1, -1 ], this.gl);
 		this.gl.material = new Material(this.gl);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
+		var direction = vec3.normalize([ .1, .1, 1 ]);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), direction[0], direction[1], direction[2]);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), direction[0], direction[1], direction[2]);
 		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
 		// push the projection matrix to the graphics card
 		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
