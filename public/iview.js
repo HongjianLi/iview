@@ -711,7 +711,8 @@ var iview = (function() {
 		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
-		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -Math.max(this.size[0], this.size[1]) - 20 ]);
+		this.maxDimension = Math.max(this.size[0], this.size[1]);
+		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
 		var cs = rgb('#FFFFFF');
 		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
 		this.gl.clearDepth(1.0);
@@ -740,11 +741,9 @@ var iview = (function() {
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
 		this.size = size;
-		var half = vec3.scale(size, .5);
-		this.corner1 = vec3.create(center);
-		vec3.subtract(this.corner1, half);
-		this.corner2 = vec3.create(center);
-		vec3.add(this.corner2, half);
+		var half = vec3.scale(vec3.create(size), .5);
+		this.corner1 = vec3.subtract(vec3.create(center), half);
+		this.corner2 = vec3.add(vec3.create(center), half);
 	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
