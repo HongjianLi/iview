@@ -691,13 +691,14 @@ var iview = (function() {
 					residue = line.substring(22, 26);
 					residues.push(atoms.length);
 				}
+				// Hide nonpolar hydrogens
 				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
 			} else if (startsWith(line, 'TER')) {
 				residue = 'XXXX';
 			}
 		}
 		residues.push(atoms.length);
-		var molecule = new Molecule();
+		this.receptor = new Molecule();
 		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
 			var inside = false;
 			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
@@ -710,59 +711,52 @@ var iview = (function() {
 			if (!inside) continue;
 			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
 				var a1 = atoms[i];
-				molecule.atoms.push(a1);
+				this.receptor.atoms.push(a1);
 				for ( var j = i + 1; j < ii; j++) {
 					var a2 = atoms[j];
 					if (a1.isNeighbor(a2)) {
-						molecule.bonds.push(new Bond(a1, a2));
+						this.receptor.bonds.push(new Bond(a1, a2));
 					}
 				}
 			}
 		}
-		return molecule;
+		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+			vec3.subtract(this.receptor.atoms[i], this.center);
+		}
 	};
 	iview.prototype.parseLigand = function(content) {
-		var molecule = new Molecule();
+		this.ligand = new Molecule();
 		var frames = [0], rotorXes = [], rotorYes = [], serials = [];
 		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
 			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
-				molecule.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
+				// Hide nonpolar hydrogens
+				this.ligand.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
 			} else if (startsWith(line, 'BRANCH')) {
-				frames.push(molecule.atoms.length);
+				frames.push(this.ligand.atoms.length);
 				rotorXes.push(parseInt(line.substring( 6, 10)));
 				rotorYes.push(parseInt(line.substring(10, 14)));
 			}
 		}
-		frames.push(molecule.atoms.length);
+		frames.push(this.ligand.atoms.length);
 		for (var f = 0, ff = frames.length - 1; f < ff; f++) {
 			for ( var i = frames[f], ii = frames[f + 1]; i < ii; i++ ) {
-				var a1 = molecule.atoms[i];
+				var a1 = this.ligand.atoms[i];
 				for ( var j = i + 1; j < ii; j++) {
-					var a2 = molecule.atoms[j];
+					var a2 = this.ligand.atoms[j];
 					if (a1.isNeighbor(a2)) {
-						molecule.bonds.push(new Bond(a1, a2));
+						this.ligand.bonds.push(new Bond(a1, a2));
 					}
 				}
 			}
 		}
 		for (var i = 0, ii = rotorXes.length; i < ii; i++) {
-			molecule.bonds.push(new Bond(molecule.atoms[rotorXes[i] - 1], molecule.atoms[rotorYes[i] - 1]));
+			this.ligand.bonds.push(new Bond(this.ligand.atoms[rotorXes[i] - 1], this.ligand.atoms[rotorYes[i] - 1]));
 		}
-		return molecule;
-	}
-	iview.prototype.setReceptor = function(molecule) {
-		this.receptor = molecule;
-		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
-			vec3.subtract(this.receptor.atoms[i], this.center);
-		}
-	}
-	iview.prototype.setLigand = function(molecule) {
-		this.ligand = molecule;
 		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
 			vec3.subtract(this.ligand.atoms[i], this.center);
 		}
-	};
+	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
 		e.offset = $('#' + this.id).offset();
