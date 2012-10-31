@@ -151,9 +151,9 @@ var iview = (function() {
 	};
 	Mesh.prototype.bindBuffers = function(gl) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-		gl.vertexAttribPointer(gl.shader.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(gl.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-		gl.vertexAttribPointer(gl.shader.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(gl.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		if (this.vertexIndexBuffer) {
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 		}
@@ -241,118 +241,6 @@ var iview = (function() {
 		};
 	};
 
-	Shader = function(gl) {
-		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(vertexShader, [	// phong shader
-			'struct Light',
-			'{',
-				'vec3 diffuse_color;',
-				'vec3 specular_color;',
-				'vec3 direction;',
-				'vec3 half_vector;',
-			'};',
-			'struct Material',
-			'{',
-				'vec3 ambient_color;',
-				'vec3 diffuse_color;',
-				'vec3 specular_color;',
-				'float shininess;',
-				'float alpha;',
-			'};',
-			// attributes set when rendering objects
-			'attribute vec3 a_vertex_position;',
-			'attribute vec3 a_vertex_normal;',
-			'uniform Light u_light;',
-			'uniform Material u_material;',
-			// matrices set by gl.setMatrixUniforms
-			'uniform mat4 u_model_view_matrix;',
-			'uniform mat4 u_projection_matrix;',
-			'uniform mat3 u_normal_matrix;',
-			// sent to the fragment shader
-			'varying vec4 v_diffuse;',
-			'varying vec4 v_ambient;',
-			'varying vec3 v_normal;',
-			'varying vec3 v_light_direction;',
-			'void main(void)',
-			'{',
-				'if (length(a_vertex_normal) == 0.0)',
-				'{',
-					'v_normal = a_vertex_normal;',
-				'}',
-				'else',
-				'{',
-					'v_normal = normalize(u_normal_matrix * a_vertex_normal);',
-				'}',
-				'vec4 diffuse = vec4(u_light.diffuse_color, 1.0);',
-				'v_light_direction = u_light.direction;',
-				'v_ambient = vec4(u_material.ambient_color, 1.0);',
-				'v_diffuse = vec4(u_material.diffuse_color, 1.0) * diffuse;',
-				'gl_Position = u_projection_matrix * u_model_view_matrix * vec4(a_vertex_position, 1.0);',
-			'}'
-		].join(''));
-		gl.compileShader(vertexShader);
-
-		var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(fragmentShader, [
-			'precision mediump float;',
-			'struct Light',
-			'{',
-				'vec3 diffuse_color;',
-				'vec3 specular_color;',
-				'vec3 direction;',
-				'vec3 half_vector;',
-			'};',
-			'struct Material',
-			'{',
-				'vec3 ambient_color;',
-				'vec3 diffuse_color;',
-				'vec3 specular_color;',
-				'float shininess;',
-				'float alpha;',
-			'};',
-			'uniform Light u_light;',
-			'uniform Material u_material;',
-			// from the vertex shader
-			'varying vec4 v_diffuse;',
-			'varying vec4 v_ambient;',
-			'varying vec3 v_normal;',
-			'varying vec3 v_light_direction;',
-			'void main(void)',
-			'{',
-				'if (length(v_normal)==0.0)',
-				'{',
-					'gl_FragColor = vec4(v_diffuse.rgba);',
-				'}',
-				'else',
-				'{',
-					'float nDotL = max(dot(v_normal, v_light_direction), 0.0);',
-					'vec4 color = vec4(v_diffuse.rgb*nDotL, v_diffuse.a);',
-					'float nDotHV = max(dot(v_normal, u_light.half_vector), 0.0);',
-					'vec4 specular = vec4(u_material.specular_color * u_light.specular_color, 1.0);',
-					'color += vec4(specular.rgb * pow(nDotHV, u_material.shininess), specular.a);',
-					// fogging
-					//'float z = gl_FragCoord.z / gl_FragCoord.w;',
-					//'float fog = z*z/20000.0;',
-					//'color -= vec4(fog, fog, fog, 0);',
-					// set the color
-					'gl_FragColor = color + v_ambient;',
-					'gl_FragColor.a *= u_material.alpha;',
-				'}',
-			'}'
-		].join(''));
-		gl.compileShader(fragmentShader);
-
-		gl.attachShader(gl.program, vertexShader);
-		gl.attachShader(gl.program, fragmentShader);
-		gl.linkProgram(gl.program);
-		gl.useProgram(gl.program);
-
-		this.vertexPositionAttribute = gl.getAttribLocation(gl.program, 'a_vertex_position');
-		gl.enableVertexAttribArray(this.vertexPositionAttribute);
-		this.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
-		gl.enableVertexAttribArray(this.vertexNormalAttribute);
-	};
-
 	monitor = {};
 	monitor.CANVAS_DRAGGING = null;
 	monitor.CANVAS_OVER = null;
@@ -426,10 +314,10 @@ var iview = (function() {
 	});
 
 	var iview = function(id) {
-		this.canvas = $('#' + id);
 		// setup input events
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
+		this.canvas = $('#' + id);
 		var me = this;
 		this.canvas.click(function(e) {
 			switch (e.which) {
@@ -530,6 +418,7 @@ var iview = (function() {
 				me.mousewheel(e, delta);
 			}
 		});
+		// Setup WebGL
 		var domCanvas = this.canvas.get(0);
 		var gl = domCanvas.getContext('webgl');
 		if (!gl) {
@@ -540,7 +429,112 @@ var iview = (function() {
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
 		gl.program = gl.createProgram();
-		gl.shader = new Shader(gl);
+		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertexShader, [	// phong shader
+			'struct Light',
+			'{',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'vec3 direction;',
+				'vec3 half_vector;',
+			'};',
+			'struct Material',
+			'{',
+				'vec3 ambient_color;',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'float shininess;',
+				'float alpha;',
+			'};',
+			// attributes set when rendering objects
+			'attribute vec3 a_vertex_position;',
+			'attribute vec3 a_vertex_normal;',
+			'uniform Light u_light;',
+			'uniform Material u_material;',
+			// matrices set by gl.setMatrixUniforms
+			'uniform mat4 u_model_view_matrix;',
+			'uniform mat4 u_projection_matrix;',
+			'uniform mat3 u_normal_matrix;',
+			// sent to the fragment shader
+			'varying vec4 v_diffuse;',
+			'varying vec4 v_ambient;',
+			'varying vec3 v_normal;',
+			'varying vec3 v_light_direction;',
+			'void main(void)',
+			'{',
+				'if (length(a_vertex_normal) == 0.0)',
+				'{',
+					'v_normal = a_vertex_normal;',
+				'}',
+				'else',
+				'{',
+					'v_normal = normalize(u_normal_matrix * a_vertex_normal);',
+				'}',
+				'vec4 diffuse = vec4(u_light.diffuse_color, 1.0);',
+				'v_light_direction = u_light.direction;',
+				'v_ambient = vec4(u_material.ambient_color, 1.0);',
+				'v_diffuse = vec4(u_material.diffuse_color, 1.0) * diffuse;',
+				'gl_Position = u_projection_matrix * u_model_view_matrix * vec4(a_vertex_position, 1.0);',
+			'}'
+		].join(''));
+		gl.compileShader(vertexShader);
+		var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragmentShader, [
+			'precision mediump float;',
+			'struct Light',
+			'{',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'vec3 direction;',
+				'vec3 half_vector;',
+			'};',
+			'struct Material',
+			'{',
+				'vec3 ambient_color;',
+				'vec3 diffuse_color;',
+				'vec3 specular_color;',
+				'float shininess;',
+				'float alpha;',
+			'};',
+			'uniform Light u_light;',
+			'uniform Material u_material;',
+			// from the vertex shader
+			'varying vec4 v_diffuse;',
+			'varying vec4 v_ambient;',
+			'varying vec3 v_normal;',
+			'varying vec3 v_light_direction;',
+			'void main(void)',
+			'{',
+				'if (length(v_normal)==0.0)',
+				'{',
+					'gl_FragColor = vec4(v_diffuse.rgba);',
+				'}',
+				'else',
+				'{',
+					'float nDotL = max(dot(v_normal, v_light_direction), 0.0);',
+					'vec4 color = vec4(v_diffuse.rgb*nDotL, v_diffuse.a);',
+					'float nDotHV = max(dot(v_normal, u_light.half_vector), 0.0);',
+					'vec4 specular = vec4(u_material.specular_color * u_light.specular_color, 1.0);',
+					'color += vec4(specular.rgb * pow(nDotHV, u_material.shininess), specular.a);',
+					// fogging
+					//'float z = gl_FragCoord.z / gl_FragCoord.w;',
+					//'float fog = z*z/20000.0;',
+					//'color -= vec4(fog, fog, fog, 0);',
+					// set the color
+					'gl_FragColor = color + v_ambient;',
+					'gl_FragColor.a *= u_material.alpha;',
+				'}',
+			'}'
+		].join(''));
+		gl.compileShader(fragmentShader);
+		gl.attachShader(gl.program, vertexShader);
+		gl.attachShader(gl.program, fragmentShader);
+		gl.linkProgram(gl.program);
+		gl.useProgram(gl.program);
+		gl.vertexPositionAttribute = gl.getAttribLocation(gl.program, 'a_vertex_position');
+		gl.enableVertexAttribArray(gl.vertexPositionAttribute);
+		gl.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
+		gl.enableVertexAttribArray(gl.vertexNormalAttribute);
 		gl.sphereBuffer = new Sphere(gl, 60, 60);
 		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
 		gl.material = new Material(gl);
