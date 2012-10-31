@@ -62,15 +62,6 @@ var iview = (function() {
 	E['As'] = new Element('#BD80E3', 1.309);
 	E['Sr'] = new Element('#00FF00', 2.112);
 
-/* Uncomment these lines to substitute PyMOL colors
-	E['H'].color = '#E6E6E6';
-	E['C'].color = '#33FF33';
-	E['N'].color = '#3333FF';
-	E['O'].color = '#FF4D4D';
-	E['F'].color = '#B3FFFF';
-	E['S'].color = '#E6C640';
-*/
-
 	Atom = function(coord, type) {
 		vec3.set(coord, this);
 		this.type = type;
