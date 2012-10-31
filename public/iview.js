@@ -74,6 +74,12 @@ var iview = (function() {
 	Atom = function(coord, type) {
 		vec3.set(coord, this);
 		this.type = type;
+		this.isHBD = function() {
+			return this.type == 'HD';
+		}
+		this.isHBA = function() {
+			return this.type == 'NA' || this.type == 'OA' || this.type == 'SA'; // Consider ions
+		}
 		this.isNeighbor = function(b) {
 			return vec3.dist(this, b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
 		}
@@ -86,7 +92,7 @@ var iview = (function() {
 		};
 		this.render = function(gl) {
 			var transform = mat4.translate(gl.modelViewMatrix, this, []);
-			mat4.scale(transform, [ .4, .4, .4 ]);
+			mat4.scale(transform, [ .3, .3, .3 ]);
 			gl.material.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(transform);
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -98,11 +104,55 @@ var iview = (function() {
 		this.a2 = a2;
 		this.render = function(gl) {
 			// this is the elongation vector for the cylinder
-			var scaleVector = [ .4, 1.001 * vec3.dist(this.a1, this.a2) / 2, .4 ];
+			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) / 2, .3 ];
 			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
 			// align bond
-			var a2b = vec3.subtract(vec3.create(this.a2), this.a1);
+			var a2b = vec3.subtract(this.a2, this.a1, []);
+			vec3.scale(a2b, .5);
+			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
+			// calculate the rotation
+			var y = [ 0, 1, 0 ];
+			var ang = 0;
+			var axis = null;
+			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
+				axis = [ 0, 0, 1 ];
+				if (this.a2[1] < this.a1[1]) {
+					ang = Math.PI;
+				}
+			} else {
+				ang = Math.acos(vec3.dot(y, a2b) / vec3.length(y) / vec3.length(a2b));
+				axis = vec3.cross(y, a2b, []);
+			}
+			var transformUse = mat4.set(transform, []);
+			if (ang != 0) {
+				mat4.rotate(transformUse, ang, axis);
+			}
+			mat4.scale(transformUse, scaleVector);
+			gl.material.setDiffuseColor(E[this.a1.type].color);
+			gl.setMatrixUniforms(transformUse);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
+			mat4.set(transformOpposite, transformUse);
+			// don't check for 0 here as that means it should be rotated
+			// by PI, but PI will be negated
+			mat4.rotate(transformUse, ang + Math.PI, axis);
+			mat4.scale(transformUse, scaleVector);
+			gl.material.setDiffuseColor(E[this.a2.type].color);
+			gl.setMatrixUniforms(transformUse);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
+		};
+	};
+
+	HBond = function(a1, a2) {
+		this.a1 = a1;
+		this.a2 = a2;
+		this.render = function(gl) {
+			// this is the elongation vector for the cylinder
+			var scaleVector = [ .1, vec3.dist(this.a1, this.a2) / 2, .1 ];
+			// transform to the atom as well as the opposite atom
+			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
+			// align bond
+			var a2b = vec3.subtract(this.a2, this.a1, []);
 			vec3.scale(a2b, .5);
 			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
 			// calculate the rotation
@@ -676,9 +726,9 @@ var iview = (function() {
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
 		this.size = size;
-		var half = vec3.scale(vec3.create(size), .5);
-		this.corner1 = vec3.subtract(vec3.create(center), half);
-		this.corner2 = vec3.add(vec3.create(center), half);
+		var half = vec3.scale(size, .5, []);
+		this.corner1 = vec3.subtract(center, half, []);
+		this.corner2 = vec3.add(center, half, []);
 		this.maxDimension = Math.max(size[0], size[1]);
 		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
 	}
@@ -756,6 +806,14 @@ var iview = (function() {
 		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
 			vec3.subtract(this.ligand.atoms[i], this.center);
 		}
+		this.hbonds = [];
+		for (var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+			for (var j = 0, jj = this.ligand.atoms.length; j < jj; j++) {
+				if ((this.receptor.atoms[i].isHBD() && this.ligand.atoms[j].isHBA()) || (this.receptor.atoms[i].isHBA() && this.ligand.atoms[j].isHBD())) { // Consider distance
+					this.hbonds.push(new HBond(this.receptor.atoms[i], this.ligand.atoms[j]));
+				}
+			}
+		}
 	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
@@ -768,6 +826,10 @@ var iview = (function() {
 		this.gl.rotationMatrix = this.rotationMatrix;
 		this.receptor.render(this.gl);
 		this.ligand.render(this.gl);
+		this.gl.cylinderBuffer.bindBuffers(this.gl);
+		for ( var i = 0, ii = this.hbonds.length; i < ii; i++) {
+			this.hbonds[i].render(this.gl);
+		}
 		this.gl.flush();
 	};
 	iview.prototype.mousedown = function(e) {
