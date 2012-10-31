@@ -147,16 +147,7 @@ var iview = (function() {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.render = function(gl) {
-			// this is the elongation vector for the cylinder
-			var scaleVector = [ .1, vec3.dist(this.a1, this.a2) / 2, .1 ];
-			// transform to the atom as well as the opposite atom
 			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
-			// align bond
-			var a2b = vec3.subtract(this.a2, this.a1, []);
-			vec3.scale(a2b, .5);
-			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
-			// calculate the rotation
-			var y = [ 0, 1, 0 ];
 			var ang = 0;
 			var axis = null;
 			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
@@ -165,24 +156,17 @@ var iview = (function() {
 					ang = Math.PI;
 				}
 			} else {
+				var y = [ 0, 1, 0 ];
+				var a2b = vec3.subtract(this.a2, this.a1, []);
 				ang = Math.acos(vec3.dot(y, a2b) / vec3.length(y) / vec3.length(a2b));
 				axis = vec3.cross(y, a2b, []);
 			}
-			var transformUse = mat4.set(transform, []);
 			if (ang != 0) {
-				mat4.rotate(transformUse, ang, axis);
+				mat4.rotate(transform, ang, axis);
 			}
-			mat4.scale(transformUse, scaleVector);
-			gl.material.setDiffuseColor(E[this.a1.type].color);
-			gl.setMatrixUniforms(transformUse);
-			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-			mat4.set(transformOpposite, transformUse);
-			// don't check for 0 here as that means it should be rotated
-			// by PI, but PI will be negated
-			mat4.rotate(transformUse, ang + Math.PI, axis);
-			mat4.scale(transformUse, scaleVector);
-			gl.material.setDiffuseColor(E[this.a2.type].color);
-			gl.setMatrixUniforms(transformUse);
+			mat4.scale(transform, [ .05, vec3.dist(this.a1, this.a2), .05 ]);
+			gl.setMatrixUniforms(transform);
+			gl.material.setDiffuseColor('#33FF33');
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
@@ -809,7 +793,7 @@ var iview = (function() {
 		this.hbonds = [];
 		for (var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
 			for (var j = 0, jj = this.ligand.atoms.length; j < jj; j++) {
-				if ((this.receptor.atoms[i].isHBD() && this.ligand.atoms[j].isHBA()) || (this.receptor.atoms[i].isHBA() && this.ligand.atoms[j].isHBD())) { // Consider distance
+				if (((this.receptor.atoms[i].isHBD() && this.ligand.atoms[j].isHBA()) || (this.receptor.atoms[i].isHBA() && this.ligand.atoms[j].isHBD())) && (vec3.dist(this.receptor.atoms[i], this.ligand.atoms[j]) < 3.5)) { // Consider distance
 					this.hbonds.push(new HBond(this.receptor.atoms[i], this.ligand.atoms[j]));
 				}
 			}
