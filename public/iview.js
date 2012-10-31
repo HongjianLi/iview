@@ -18,14 +18,6 @@
 
 var iview = (function() {
 
-	startsWith = function(str, match) {
-		return str.match('^' + match) == match;
-	};
-
-	rgb = function(color) {
-		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
-	};
-
 	function Element(ad, color, covalentRadius) {
 		this.ad = ad;
 		this.color = color;
@@ -136,68 +128,38 @@ var iview = (function() {
 
 	Mesh = function() {
 	};
-	Mesh.prototype.storeData = function(positionData, normalData, indexData) {
-		this.positionData = positionData;
-		this.normalData = normalData;
-		this.indexData = indexData;
+	Mesh.prototype.createBuffers = function(gl, positionData, normalData, indexData) {
+		this.vertexPositionBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
+		this.vertexPositionBuffer.itemSize = 3;
+		this.vertexPositionBuffer.numItems = positionData.length / 3;
+
+		this.vertexNormalBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalData), gl.STATIC_DRAW);
+		this.vertexNormalBuffer.itemSize = 3;
+		this.vertexNormalBuffer.numItems = normalData.length / 3;
+			
+		if (indexData) {
+			this.vertexIndexBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);
+			this.vertexIndexBuffer.itemSize = 1;
+			this.vertexIndexBuffer.numItems = indexData.length;
+		}
 	};
 	Mesh.prototype.bindBuffers = function(gl) {
-		if (!this.vertexPositionBuffer) {
-			this.vertexPositionBuffer = gl.createBuffer();
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
-			this.vertexPositionBuffer.itemSize = 3;
-			this.vertexPositionBuffer.numItems = this.positionData.length / 3;
-
-			this.vertexNormalBuffer = gl.createBuffer();
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normalData), gl.STATIC_DRAW);
-			this.vertexNormalBuffer.itemSize = 3;
-			this.vertexNormalBuffer.numItems = this.normalData.length / 3;
-			
-			if (this.indexData) {
-				this.vertexIndexBuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
-				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indexData), gl.STATIC_DRAW);
-				this.vertexIndexBuffer.itemSize = 1;
-				this.vertexIndexBuffer.numItems = this.indexData.length;
-			}
-		}
-		// positions
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
 		gl.vertexAttribPointer(gl.shader.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		// normals
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
 		gl.vertexAttribPointer(gl.shader.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		if (this.vertexIndexBuffer) {
-			// indexes
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 		}
 	};
 
-	Cylinder = function(radius, height, bands) {
-		var positionData = [];
-		var normalData = [];
-		var angle = 2 * Math.PI / bands;
-		for ( var i = 0; i < bands; i++) {
-			var theta = i * angle;
-			var cosTheta = Math.cos(theta);
-			var sinTheta = Math.sin(theta);
-			normalData.push(cosTheta, 0, sinTheta);
-			positionData.push(radius * cosTheta, 0, radius * sinTheta);
-			normalData.push(cosTheta, 0, sinTheta);
-			positionData.push(radius * cosTheta, height, radius * sinTheta);
-		}
-		normalData.push(1, 0, 0);
-		positionData.push(radius, 0, 0);
-		normalData.push(1, 0, 0);
-		positionData.push(radius, height, 0);
-
-		this.storeData(positionData, normalData);
-	};
-	Cylinder.prototype = new Mesh();
-
-	Sphere = function(radius, latitudeBands, longitudeBands) {
+	Sphere = function(gl, radius, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
 		var latitudeAngle = Math.PI / latitudeBands;
@@ -238,9 +200,31 @@ var iview = (function() {
 			}
 		}
 
-		this.storeData(positionData, normalData, indexData);
+		this.createBuffers(gl, positionData, normalData, indexData);
 	};
 	Sphere.prototype = new Mesh();
+
+	Cylinder = function(gl, radius, height, bands) {
+		var positionData = [];
+		var normalData = [];
+		var angle = 2 * Math.PI / bands;
+		for ( var i = 0; i < bands; i++) {
+			var theta = i * angle;
+			var cosTheta = Math.cos(theta);
+			var sinTheta = Math.sin(theta);
+			normalData.push(cosTheta, 0, sinTheta);
+			positionData.push(radius * cosTheta, 0, radius * sinTheta);
+			normalData.push(cosTheta, 0, sinTheta);
+			positionData.push(radius * cosTheta, height, radius * sinTheta);
+		}
+		normalData.push(1, 0, 0);
+		positionData.push(radius, 0, 0);
+		normalData.push(1, 0, 0);
+		positionData.push(radius, height, 0);
+
+		this.createBuffers(gl, positionData, normalData);
+	};
+	Cylinder.prototype = new Mesh();
 
 	Material = function(gl) {
 		var aUL = gl.getUniformLocation(gl.program, 'u_material.ambient_color');
@@ -251,18 +235,15 @@ var iview = (function() {
 		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
 			if (!this.aCache || this.aCache!=ambientColor) {
 				this.aCache = ambientColor;
-				var cs = rgb(ambientColor);
-				gl.uniform3f(aUL, cs[0], cs[1], cs[2]);
+				gl.uniform3f(aUL, parseInt(ambientColor.substring(1, 3), 16) / 255.0, parseInt(ambientColor.substring(3, 5), 16) / 255.0, parseInt(ambientColor.substring(5, 7), 16) / 255.0);
 			}
 			if (diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)) {
 				this.dCache = diffuseColor;
-				var cs = rgb(diffuseColor);
-				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
+				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
 			}
 			if (!this.sCache || this.sCache!=specularColor) {
 				this.sCache = specularColor;
-				var cs = rgb(specularColor);
-				gl.uniform3f(sUL, cs[0], cs[1], cs[2]);
+				gl.uniform3f(sUL, parseInt(specularColor.substring(1, 3), 16) / 255.0, parseInt(specularColor.substring(3, 5), 16) / 255.0, parseInt(specularColor.substring(5, 7), 16) / 255.0);
 			}
 			if (!this.snCache || this.snCache!=shininess) {
 				this.snCache = shininess;
@@ -274,8 +255,7 @@ var iview = (function() {
 		this.setDiffuseColor = function(diffuseColor) {
 			if (!this.dCache || this.dCache!=diffuseColor) {
 				this.dCache = diffuseColor;
-				var cs = rgb(diffuseColor);
-				gl.uniform3f(dUL, cs[0], cs[1], cs[2]);
+				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
 			}
 		};
 	};
@@ -581,13 +561,12 @@ var iview = (function() {
 		}
 		this.gl.program = this.gl.createProgram();
 		this.gl.shader = new Shader(this.gl);
-		var cs = rgb('#FFFFFF');
-		this.gl.clearColor(cs[0], cs[1], cs[2], 1.0);
+		this.gl.clearColor(1, 1, 1, 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.sphereBuffer = new Sphere(1, 60, 60);
-		this.gl.cylinderBuffer = new Cylinder(1, 1, 60);
+		this.gl.sphereBuffer = new Sphere(this.gl, 1, 60, 60);
+		this.gl.cylinderBuffer = new Cylinder(this.gl, 1, 1, 60);
 		this.gl.material = new Material(this.gl);
 		this.gl.material.setTempColors('#000000', null, '#555555', 32);
 		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
@@ -603,11 +582,9 @@ var iview = (function() {
 		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
 		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
 		this.gl.setMatrixUniforms = function(mvMatrix) {
-			// push the model-view matrix to the graphics card
+			// push the model-view matrix and normal matrix to the graphics card
 			this.uniformMatrix4fv(mvUL, false, mvMatrix);
-			// create the normal matrix and push it to the graphics card
-			var normalMatrix = mat3.transpose(mat4.toInverseMat3(mvMatrix, []));
-			this.uniformMatrix3fv(nUL, false, normalMatrix);
+			this.uniformMatrix3fv(nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
 	};
 	iview.prototype.setBox = function(center, size) {
@@ -623,14 +600,14 @@ var iview = (function() {
 		var residues = [], atoms = [];
 		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
-			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
+			if (line.match('^ATOM|HETATM')) {
 				if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
 					residue = line.substring(22, 26);
 					residues.push(atoms.length);
 				}
 				// Hide nonpolar hydrogens
 				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
-			} else if (startsWith(line, 'TER')) {
+			} else if (line.match('^TER')) {
 				residue = 'XXXX';
 			}
 		}
@@ -666,10 +643,10 @@ var iview = (function() {
 		var frames = [0], rotorXes = [], rotorYes = [], serials = [];
 		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
 			var line = lines[i];
-			if (startsWith(line, 'ATOM') || startsWith(line, 'HETATM')) {
+			if (line.match('^ATOM|HETATM')) {
 				// Hide nonpolar hydrogens
 				this.ligand.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
-			} else if (startsWith(line, 'BRANCH')) {
+			} else if (line.match('^BRANCH')) {
 				frames.push(this.ligand.atoms.length);
 				rotorXes.push(parseInt(line.substring( 6, 10)));
 				rotorYes.push(parseInt(line.substring(10, 14)));
