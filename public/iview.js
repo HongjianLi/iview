@@ -141,64 +141,27 @@ var iview = (function() {
 		this.normalData = normalData;
 		this.indexData = indexData;
 	};
-	Mesh.prototype.setupBuffers = function(gl) {
-		this.vertexPositionBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
-		this.vertexPositionBuffer.itemSize = 3;
-		this.vertexPositionBuffer.numItems = this.positionData.length / 3;
-
-		this.vertexNormalBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normalData), gl.STATIC_DRAW);
-		this.vertexNormalBuffer.itemSize = 3;
-		this.vertexNormalBuffer.numItems = this.normalData.length / 3;
-		
-		if (this.indexData) {
-			this.vertexIndexBuffer = gl.createBuffer();
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indexData), gl.STATIC_DRAW);
-			this.vertexIndexBuffer.itemSize = 1;
-			this.vertexIndexBuffer.numItems = this.indexData.length;
-		}
-		
-		if (this.partitions) {
-			for(var i = 0, ii = this.partitions.length; i<ii; i++){
-				var p = this.partitions[i];
-				var buffers = this.generateBuffers(gl, p.positionData, p.normalData, p.indexData);
-				p.vertexPositionBuffer = buffers[0];
-				p.vertexNormalBuffer = buffers[1];
-				p.vertexIndexBuffer = buffers[2];
-			}
-		}
-	};
-	Mesh.prototype.generateBuffers = function(gl, positionData, normalData, indexData) {
-		var vertexPositionBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
-		vertexPositionBuffer.itemSize = 3;
-		vertexPositionBuffer.numItems = positionData.length / 3;
-
-		var vertexNormalBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalData), gl.STATIC_DRAW);
-		vertexNormalBuffer.itemSize = 3;
-		vertexNormalBuffer.numItems = normalData.length / 3;
-		
-		var vertexIndexBuffer = null;
-		if (indexData) {
-			vertexIndexBuffer = gl.createBuffer();
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndexBuffer);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);
-			vertexIndexBuffer.itemSize = 1;
-			vertexIndexBuffer.numItems = indexData.length;
-		}
-		
-		return [vertexPositionBuffer, vertexNormalBuffer, vertexIndexBuffer];
-	};
 	Mesh.prototype.bindBuffers = function(gl) {
 		if (!this.vertexPositionBuffer) {
-			this.setupBuffers(gl);
+			this.vertexPositionBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positionData), gl.STATIC_DRAW);
+			this.vertexPositionBuffer.itemSize = 3;
+			this.vertexPositionBuffer.numItems = this.positionData.length / 3;
+
+			this.vertexNormalBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normalData), gl.STATIC_DRAW);
+			this.vertexNormalBuffer.itemSize = 3;
+			this.vertexNormalBuffer.numItems = this.normalData.length / 3;
+			
+			if (this.indexData) {
+				this.vertexIndexBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indexData), gl.STATIC_DRAW);
+				this.vertexIndexBuffer.itemSize = 1;
+				this.vertexIndexBuffer.numItems = this.indexData.length;
+			}
 		}
 		// positions
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
