@@ -159,35 +159,29 @@ var iview = (function() {
 		}
 	};
 
-	Sphere = function(gl, radius, latitudeBands, longitudeBands) {
+	Sphere = function(gl, latitudeBands, longitudeBands) {
 		var positionData = [];
 		var normalData = [];
 		var latitudeAngle = Math.PI / latitudeBands;
 		var longitudeAngle = 2 * Math.PI / longitudeBands;
-		for ( var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-			var theta = latNumber * latitudeAngle;
+		for (var latNumber = 0; latNumber <= latitudeBands; ++latNumber) {
+			var theta = latitudeAngle * latNumber;
 			var sinTheta = Math.sin(theta);
-			var cosTheta = Math.cos(theta);
-
-			for ( var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-				var phi = longNumber * longitudeAngle;
-				var sinPhi = Math.sin(phi);
-				var cosPhi = Math.cos(phi);
-
-				var x = cosPhi * sinTheta;
-				var y = cosTheta;
-				var z = sinPhi * sinTheta;
-
+			var y = Math.cos(theta);
+			for (var longNumber = 0; longNumber <= longitudeBands; ++longNumber) {
+				var phi = longitudeAngle * longNumber;
+				var x = Math.cos(phi) * sinTheta;
+				var z = Math.sin(phi) * sinTheta;
 				normalData.push(x, y, z);
-				positionData.push(radius * x, radius * y, radius * z);
+				positionData.push(x, y, z);
 			}
 		}
 
 		var indexData = [];
 		longitudeBands += 1;
-		for ( var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-			for ( var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-				var first = (latNumber * longitudeBands) + (longNumber % longitudeBands);
+		for (var latNumber = 0; latNumber < latitudeBands; ++latNumber) {
+			for (var longNumber = 0; longNumber < longitudeBands; ++longNumber) {
+				var first = (latNumber * longitudeBands) + longNumber;
 				var second = first + longitudeBands;
 				indexData.push(first);
 				indexData.push(second);
@@ -204,23 +198,23 @@ var iview = (function() {
 	};
 	Sphere.prototype = new Mesh();
 
-	Cylinder = function(gl, radius, height, bands) {
+	Cylinder = function(gl, height, bands) {
 		var positionData = [];
 		var normalData = [];
 		var angle = 2 * Math.PI / bands;
-		for ( var i = 0; i < bands; i++) {
-			var theta = i * angle;
+		for (var i = 0; i < bands; ++i) {
+			var theta = angle * i;
 			var cosTheta = Math.cos(theta);
 			var sinTheta = Math.sin(theta);
 			normalData.push(cosTheta, 0, sinTheta);
-			positionData.push(radius * cosTheta, 0, radius * sinTheta);
+			positionData.push(cosTheta, 0, sinTheta);
 			normalData.push(cosTheta, 0, sinTheta);
-			positionData.push(radius * cosTheta, height, radius * sinTheta);
+			positionData.push(cosTheta, height, sinTheta);
 		}
 		normalData.push(1, 0, 0);
-		positionData.push(radius, 0, 0);
+		positionData.push(1, 0, 0);
 		normalData.push(1, 0, 0);
-		positionData.push(radius, height, 0);
+		positionData.push(1, height, 0);
 
 		this.createBuffers(gl, positionData, normalData);
 	};
@@ -232,28 +226,15 @@ var iview = (function() {
 		var sUL = gl.getUniformLocation(gl.program, 'u_material.specular_color');
 		var snUL = gl.getUniformLocation(gl.program, 'u_material.shininess');
 		var alUL = gl.getUniformLocation(gl.program, 'u_material.alpha');
-		this.setTempColors = function(ambientColor, diffuseColor, specularColor, shininess) {
-			if (!this.aCache || this.aCache!=ambientColor) {
-				this.aCache = ambientColor;
-				gl.uniform3f(aUL, parseInt(ambientColor.substring(1, 3), 16) / 255.0, parseInt(ambientColor.substring(3, 5), 16) / 255.0, parseInt(ambientColor.substring(5, 7), 16) / 255.0);
-			}
-			if (diffuseColor!=null && (!this.dCache || this.dCache!=diffuseColor)) {
-				this.dCache = diffuseColor;
-				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
-			}
-			if (!this.sCache || this.sCache!=specularColor) {
-				this.sCache = specularColor;
-				gl.uniform3f(sUL, parseInt(specularColor.substring(1, 3), 16) / 255.0, parseInt(specularColor.substring(3, 5), 16) / 255.0, parseInt(specularColor.substring(5, 7), 16) / 255.0);
-			}
-			if (!this.snCache || this.snCache!=shininess) {
-				this.snCache = shininess;
-				gl.uniform1f(snUL, shininess);
-			}
-			this.alCache = 1;
-			gl.uniform1f(alUL, 1);
-		};
+		var ambientColor = '#000000';
+		gl.uniform3f(aUL, parseInt(ambientColor.substring(1, 3), 16) / 255.0, parseInt(ambientColor.substring(3, 5), 16) / 255.0, parseInt(ambientColor.substring(5, 7), 16) / 255.0);
+		var specularColor = '#555555';
+		gl.uniform3f(sUL, parseInt(specularColor.substring(1, 3), 16) / 255.0, parseInt(specularColor.substring(3, 5), 16) / 255.0, parseInt(specularColor.substring(5, 7), 16) / 255.0);
+		gl.uniform1f(snUL, 32);
+		gl.uniform1f(alUL, 1);
+		this.dCache = null;
 		this.setDiffuseColor = function(diffuseColor) {
-			if (!this.dCache || this.dCache!=diffuseColor) {
+			if (this.dCache != diffuseColor) {
 				this.dCache = diffuseColor;
 				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
 			}
@@ -559,30 +540,23 @@ var iview = (function() {
 		if (!this.gl) {
 			this.gl = canvas.getContext('experimental-webgl');
 		}
-		this.gl.program = this.gl.createProgram();
-		this.gl.shader = new Shader(this.gl);
 		this.gl.clearColor(1, 1, 1, 1.0);
 		this.gl.clearDepth(1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.sphereBuffer = new Sphere(this.gl, 1, 60, 60);
-		this.gl.cylinderBuffer = new Cylinder(this.gl, 1, 1, 60);
+		this.gl.program = this.gl.createProgram();
+		this.gl.shader = new Shader(this.gl);
+		this.gl.sphereBuffer = new Sphere(this.gl, 60, 60);
+		this.gl.cylinderBuffer = new Cylinder(this.gl, 1, 60);
 		this.gl.material = new Material(this.gl);
-		this.gl.material.setTempColors('#000000', null, '#555555', 32);
 		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
 		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
-		var direction = vec3.normalize([ .1, .1, 1 ]);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), direction[0], direction[1], direction[2]);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), direction[0], direction[1], direction[2]);
-		this.gl.projectionMatrix = mat4.perspective(45, this.width / this.height, .1, 10000);
-		// push the projection matrix to the graphics card
-		var pUniform = this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix');
-		this.gl.uniformMatrix4fv(pUniform, false, this.gl.projectionMatrix);
-		// matrix setup functions
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), .1, .1, 1);
+		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), .1, .1, 1);
+		this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.width / this.height, .1, 10000));
 		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
 		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
 		this.gl.setMatrixUniforms = function(mvMatrix) {
-			// push the model-view matrix and normal matrix to the graphics card
 			this.uniformMatrix4fv(mvUL, false, mvMatrix);
 			this.uniformMatrix3fv(nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
