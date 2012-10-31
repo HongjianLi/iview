@@ -26,59 +26,55 @@ var iview = (function() {
 		return [ parseInt(color.substring(1, 3), 16) / 255.0, parseInt(color.substring(3, 5), 16) / 255.0, parseInt(color.substring(5, 7), 16) / 255.0 ];
 	};
 
-	function Element(color, covalentRadius) {
+	function Element(ad, color, covalentRadius) {
+		this.ad = ad;
 		this.color = color;
 		this.covalentRadius = covalentRadius;
 	}
 
 	E = [];
-	E['H' ] = new Element('#FFFFFF', 0.407);
-	E['HD'] = new Element('#FFFFFF', 0.407);
-	E['C' ] = new Element('#909090', 0.847);
-	E['A' ] = new Element('#909090', 0.847);
-	E['N' ] = new Element('#3050F8', 0.825);
-	E['NA'] = new Element('#3050F8', 0.825);
-	E['OA'] = new Element('#FF0D0D', 0.803);
-	E['S' ] = new Element('#FFFF30', 1.122);
-	E['SA'] = new Element('#FFFF30', 1.122);
-	E['Se'] = new Element('#FFA100', 1.276);
-	E['P' ] = new Element('#FF8000', 1.166);
-	E['F' ] = new Element('#90E050', 0.781);
-	E['Cl'] = new Element('#1FF01F', 1.089);
-	E['Br'] = new Element('#A62929', 1.254);
-	E['I' ] = new Element('#940094', 1.463);
-	E['Zn'] = new Element('#7D80B0', 1.441);
-	E['Fe'] = new Element('#E06633', 1.375);
-	E['Mg'] = new Element('#8AFF00', 1.430);
-	E['Ca'] = new Element('#3DFF00', 1.914);
-	E['Mn'] = new Element('#9C7AC7', 1.529);
-	E['Cu'] = new Element('#C88033', 1.518);
-	E['Na'] = new Element('#AB5CF2', 1.694);
-	E['K' ] = new Element('#8F40D4', 2.156);
-	E['Hg'] = new Element('#B8B8D0', 1.639);
-	E['Ni'] = new Element('#50D050', 1.331);
-	E['Co'] = new Element('#F090A0', 1.386);
-	E['Cd'] = new Element('#FFD98F', 1.628);
-	E['As'] = new Element('#BD80E3', 1.309);
-	E['Sr'] = new Element('#00FF00', 2.112);
+	E['H' ] = new Element( 0, '#FFFFFF', 0.407);
+	E['HD'] = new Element( 1, '#FFFFFF', 0.407);
+	E['C' ] = new Element( 2, '#909090', 0.847);
+	E['A' ] = new Element( 3, '#909090', 0.847);
+	E['N' ] = new Element( 4, '#3050F8', 0.825);
+	E['NA'] = new Element( 5, '#3050F8', 0.825);
+	E['OA'] = new Element( 6, '#FF0D0D', 0.803);
+	E['S' ] = new Element( 7, '#FFFF30', 1.122);
+	E['SA'] = new Element( 8, '#FFFF30', 1.122);
+	E['Se'] = new Element( 9, '#FFA100', 1.276);
+	E['P' ] = new Element(10, '#FF8000', 1.166);
+	E['F' ] = new Element(11, '#90E050', 0.781);
+	E['Cl'] = new Element(12, '#1FF01F', 1.089);
+	E['Br'] = new Element(13, '#A62929', 1.254);
+	E['I' ] = new Element(14, '#940094', 1.463);
+	E['Zn'] = new Element(15, '#7D80B0', 1.441);
+	E['Fe'] = new Element(16, '#E06633', 1.375);
+	E['Mg'] = new Element(17, '#8AFF00', 1.430);
+	E['Ca'] = new Element(18, '#3DFF00', 1.914);
+	E['Mn'] = new Element(19, '#9C7AC7', 1.529);
+	E['Cu'] = new Element(20, '#C88033', 1.518);
+	E['Na'] = new Element(21, '#AB5CF2', 1.694);
+	E['K' ] = new Element(22, '#8F40D4', 2.156);
+	E['Hg'] = new Element(23, '#B8B8D0', 1.639);
+	E['Ni'] = new Element(24, '#50D050', 1.331);
+	E['Co'] = new Element(25, '#F090A0', 1.386);
+	E['Cd'] = new Element(26, '#FFD98F', 1.628);
+	E['As'] = new Element(27, '#BD80E3', 1.309);
+	E['Sr'] = new Element(28, '#00FF00', 2.112);
 
 	Atom = function(coord, type) {
 		vec3.set(coord, this);
 		this.type = type;
 		this.isHBD = function() {
-			return this.type == 'HD';
+			return (this.type == 'HD') || (this.ad >= 15);
 		}
 		this.isHBA = function() {
-			return this.type == 'NA' || this.type == 'OA' || this.type == 'SA'; // Consider ions
-		}
-		this.isNeighbor = function(b) {
-			return vec3.dist(this, b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
+			return (this.type == 'NA') || (this.type == 'OA') || (this.type == 'SA');
 		}
 		this.render = function(gl) {
-			var transform = mat4.translate(gl.modelViewMatrix, this, []);
-			mat4.scale(transform, [ .3, .3, .3 ]);
 			gl.material.setDiffuseColor(E[this.type].color);
-			gl.setMatrixUniforms(transform);
+			gl.setMatrixUniforms(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ .3, .3, .3 ], []));
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 	};
@@ -87,42 +83,26 @@ var iview = (function() {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.render = function(gl) {
-			// this is the elongation vector for the cylinder
-			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) / 2, .3 ];
-			// transform to the atom as well as the opposite atom
-			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
-			// align bond
-			var a2b = vec3.subtract(this.a2, this.a1, []);
-			vec3.scale(a2b, .5);
-			var transformOpposite = mat4.translate(gl.modelViewMatrix, this.a2, []);
-			// calculate the rotation
-			var y = [ 0, 1, 0 ];
 			var ang = 0;
-			var axis = null;
+			var axis = [ 0, 0, 1 ];
 			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
-				axis = [ 0, 0, 1 ];
 				if (this.a2[1] < this.a1[1]) {
 					ang = Math.PI;
 				}
 			} else {
-				ang = Math.acos(vec3.dot(y, a2b) / vec3.length(y) / vec3.length(a2b));
-				axis = vec3.cross(y, a2b, []);
+				var y = [ 0, 1, 0 ];
+				var a1m = vec3.scale(vec3.subtract(this.a2, this.a1, []), .5, []);
+				ang = Math.acos(vec3.dot(y, a1m) / vec3.length(a1m));
+				axis = vec3.cross(y, a1m, []);
 			}
-			var transformUse = mat4.set(transform, []);
-			if (ang != 0) {
-				mat4.rotate(transformUse, ang, axis);
-			}
-			mat4.scale(transformUse, scaleVector);
+			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) * .5, .3 ];
+			// Draw one half.
 			gl.material.setDiffuseColor(E[this.a1.type].color);
-			gl.setMatrixUniforms(transformUse);
+			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
-			mat4.set(transformOpposite, transformUse);
-			// don't check for 0 here as that means it should be rotated
-			// by PI, but PI will be negated
-			mat4.rotate(transformUse, ang + Math.PI, axis);
-			mat4.scale(transformUse, scaleVector);
+			// Draw the other half.
 			gl.material.setDiffuseColor(E[this.a2.type].color);
-			gl.setMatrixUniforms(transformUse);
+			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
@@ -131,25 +111,19 @@ var iview = (function() {
 		this.a1 = a1;
 		this.a2 = a2;
 		this.render = function(gl) {
-			var transform = mat4.translate(gl.modelViewMatrix, this.a1, []);
 			var ang = 0;
-			var axis = null;
+			var axis = [ 0, 0, 1 ];
 			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
-				axis = [ 0, 0, 1 ];
 				if (this.a2[1] < this.a1[1]) {
 					ang = Math.PI;
 				}
 			} else {
 				var y = [ 0, 1, 0 ];
-				var a2b = vec3.subtract(this.a2, this.a1, []);
-				ang = Math.acos(vec3.dot(y, a2b) / vec3.length(y) / vec3.length(a2b));
-				axis = vec3.cross(y, a2b, []);
+				var a1a2 = vec3.subtract(this.a2, this.a1, []);
+				ang = Math.acos(vec3.dot(y, a1a2) / vec3.length(a1a2));
+				axis = vec3.cross(y, a1a2, []);
 			}
-			if (ang != 0) {
-				mat4.rotate(transform, ang, axis);
-			}
-			mat4.scale(transform, [ .05, vec3.dist(this.a1, this.a2), .05 ]);
-			gl.setMatrixUniforms(transform);
+			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ .05, vec3.dist(this.a1, this.a2), .05 ], []));
 			gl.material.setDiffuseColor('#33FF33');
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
@@ -158,16 +132,6 @@ var iview = (function() {
 	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
-		this.render = function(gl) {
-			gl.cylinderBuffer.bindBuffers(gl);
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				this.bonds[i].render(gl);
-			}
-			gl.sphereBuffer.bindBuffers(gl);
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				this.atoms[i].render(gl);
-			}
-		};
 	};
 
 	Mesh = function() {
@@ -724,7 +688,7 @@ var iview = (function() {
 				this.receptor.atoms.push(a1);
 				for ( var j = i + 1; j < ii; j++) {
 					var a2 = atoms[j];
-					if (a1.isNeighbor(a2)) {
+					if (vec3.dist(a1, a2) < E[a1.type].covalentRadius + E[a2.type].covalentRadius) {
 						this.receptor.bonds.push(new Bond(a1, a2));
 					}
 				}
@@ -754,7 +718,7 @@ var iview = (function() {
 				var a1 = this.ligand.atoms[i];
 				for ( var j = i + 1; j < ii; j++) {
 					var a2 = this.ligand.atoms[j];
-					if (a1.isNeighbor(a2)) {
+					if (vec3.dist(a1, a2) < E[a1.type].covalentRadius + E[a2.type].covalentRadius) {
 						this.ligand.bonds.push(new Bond(a1, a2));
 					}
 				}
@@ -784,9 +748,22 @@ var iview = (function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		this.gl.rotationMatrix = this.rotationMatrix;
-		this.receptor.render(this.gl);
-		this.ligand.render(this.gl);
+		// Draw atoms.
+		this.gl.sphereBuffer.bindBuffers(this.gl);
+		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+			this.receptor.atoms[i].render(this.gl);
+		}
+		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
+			this.ligand.atoms[i].render(this.gl);
+		}
+		// Draw bonds.
 		this.gl.cylinderBuffer.bindBuffers(this.gl);
+		for ( var i = 0, ii = this.receptor.bonds.length; i < ii; i++) {
+			this.receptor.bonds[i].render(this.gl);
+		}
+		for ( var i = 0, ii = this.ligand.bonds.length; i < ii; i++) {
+			this.ligand.bonds[i].render(this.gl);
+		}
 		for ( var i = 0, ii = this.hbonds.length; i < ii; i++) {
 			this.hbonds[i].render(this.gl);
 		}
