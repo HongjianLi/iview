@@ -74,13 +74,6 @@ var iview = (function() {
 		this.isNeighbor = function(b) {
 			return vec3.dist(this, b) < E[this.type].covalentRadius + E[b.type].covalentRadius;
 		}
-		this.draw = function(ctx) {
-			ctx.font = 'bold 12px Helvetica,Arial,Dialog';
-			ctx.fillStyle = E[this.type].color;
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			ctx.fillText(this.type, this[0], this[1]);
-		};
 		this.render = function(gl) {
 			var transform = mat4.translate(gl.modelViewMatrix, this, []);
 			mat4.scale(transform, [ .3, .3, .3 ]);
@@ -165,14 +158,6 @@ var iview = (function() {
 	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
-		this.draw = function(ctx) {
-			for ( var i = 0, ii = this.atoms.length; i < ii; i++) {
-				this.atoms[i].draw(ctx);
-			}
-			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
-				this.bonds[i].draw(ctx);
-			}
-		};
 		this.render = function(gl) {
 			gl.cylinderBuffer.bindBuffers(gl);
 			for ( var i = 0, ii = this.bonds.length; i < ii; i++) {
