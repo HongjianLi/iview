@@ -426,17 +426,12 @@ var iview = (function() {
 	});
 
 	var iview = function(id) {
-		this.rotationMatrix = mat4.identity();
-		this.translationMatrix = mat4.identity();
-		this.id = id;
-		var jqCapsule = $('#' + id);
-		this.width = jqCapsule.attr('width');
-		this.height = jqCapsule.attr('height');
+		this.canvas = $('#' + id);
 		// setup input events
 		// make sure prehandle events are only in if statements if handled, so
 		// as not to block browser events
 		var me = this;
-		jqCapsule.click(function(e) {
+		this.canvas.click(function(e) {
 			switch (e.which) {
 			case 1: // left button
 				if (me.click) {
@@ -458,13 +453,13 @@ var iview = (function() {
 				break;
 			}
 		});
-		jqCapsule.dblclick(function(e) {
+		this.canvas.dblclick(function(e) {
 			if (me.dblclick) {
 				me.prehandleEvent(e);
 				me.dblclick(e);
 			}
 		});
-		jqCapsule.mousedown(function(e) {
+		this.canvas.mousedown(function(e) {
 			switch (e.which) {
 			case 1: // left button
 				monitor.CANVAS_DRAGGING = me;
@@ -487,27 +482,27 @@ var iview = (function() {
 				break;
 			}
 		});
-		jqCapsule.mousemove(function(e) {
+		this.canvas.mousemove(function(e) {
 			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
 				me.prehandleEvent(e);
 				me.mousemove(e);
 			}
 		});
-		jqCapsule.mouseout(function(e) {
+		this.canvas.mouseout(function(e) {
 			monitor.CANVAS_OVER = null;
 			if (me.mouseout) {
 				me.prehandleEvent(e);
 				me.mouseout(e);
 			}
 		});
-		jqCapsule.mouseover(function(e) {
+		this.canvas.mouseover(function(e) {
 			monitor.CANVAS_OVER = me;
 			if (me.mouseover) {
 				me.prehandleEvent(e);
 				me.mouseover(e);
 			}
 		});
-		jqCapsule.mouseup(function(e) {
+		this.canvas.mouseup(function(e) {
 			switch (e.which) {
 			case 1: // left button
 				if (me.mouseup) {
@@ -529,37 +524,40 @@ var iview = (function() {
 				break;
 			}
 		});
-		jqCapsule.mousewheel(function(e, delta) {
+		this.canvas.mousewheel(function(e, delta) {
 			if (me.mousewheel) {
 				me.prehandleEvent(e);
 				me.mousewheel(e, delta);
 			}
 		});
-		var canvas = document.getElementById(this.id);
-		this.gl = canvas.getContext('webgl');
-		if (!this.gl) {
-			this.gl = canvas.getContext('experimental-webgl');
+		var domCanvas = this.canvas.get(0);
+		var gl = domCanvas.getContext('webgl');
+		if (!gl) {
+			gl = domCanvas.getContext('experimental-webgl');
 		}
-		this.gl.clearColor(1, 1, 1, 1.0);
-		this.gl.clearDepth(1.0);
-		this.gl.enable(this.gl.DEPTH_TEST);
-		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.program = this.gl.createProgram();
-		this.gl.shader = new Shader(this.gl);
-		this.gl.sphereBuffer = new Sphere(this.gl, 60, 60);
-		this.gl.cylinderBuffer = new Cylinder(this.gl, 1, 60);
-		this.gl.material = new Material(this.gl);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.diffuse_color'), 1, 1, 1);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.specular_color'), 1, 1, 1);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.direction'), .1, .1, 1);
-		this.gl.uniform3f(this.gl.getUniformLocation(this.gl.program, 'u_light.half_vector'), .1, .1, 1);
-		this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.width / this.height, .1, 10000));
-		var mvUL = this.gl.getUniformLocation(this.gl.program, 'u_model_view_matrix');
-		var nUL = this.gl.getUniformLocation(this.gl.program, 'u_normal_matrix');
-		this.gl.setMatrixUniforms = function(mvMatrix) {
+		gl.clearColor(1, 1, 1, 1.0);
+		gl.clearDepth(1.0);
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+		gl.program = gl.createProgram();
+		gl.shader = new Shader(gl);
+		gl.sphereBuffer = new Sphere(gl, 60, 60);
+		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
+		gl.material = new Material(gl);
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.diffuse_color'), 1, 1, 1);
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.specular_color'), 1, 1, 1);
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.direction'), .1, .1, 1);
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.half_vector'), .1, .1, 1);
+		gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), .1, 10000));
+		this.rotationMatrix = mat4.identity();
+		this.translationMatrix = mat4.identity();
+		var mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
+		var nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
+		gl.setMatrixUniforms = function(mvMatrix) {
 			this.uniformMatrix4fv(mvUL, false, mvMatrix);
 			this.uniformMatrix3fv(nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
+		this.gl = gl;
 	};
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
@@ -655,7 +653,7 @@ var iview = (function() {
 	}
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
-		e.offset = $('#' + this.id).offset();
+		e.offset = this.canvas.offset();
 		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
 	};
 	iview.prototype.repaint = function() {
