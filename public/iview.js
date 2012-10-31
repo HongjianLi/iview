@@ -645,11 +645,6 @@ var iview = (function() {
 			}
 		}
 	}
-	iview.prototype.prehandleEvent = function(e) {
-		e.preventDefault();
-		e.offset = this.canvas.offset();
-		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
-	};
 	iview.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
@@ -675,6 +670,11 @@ var iview = (function() {
 		}
 		this.gl.flush();
 	};
+	iview.prototype.prehandleEvent = function(e) {
+		e.preventDefault();
+		e.offset = this.canvas.offset();
+		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
+	};
 	iview.prototype.mousedown = function(e) {
 		this.lastPoint = e.p;
 	};
@@ -688,9 +688,7 @@ var iview = (function() {
 		if (monitor.ALT) {
 			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
 		} else {
-			var rotation = mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]);
-			mat4.rotate(rotation, dify * Math.PI / 180.0, [ 1, 0, 0 ]);
-			this.rotationMatrix = mat4.multiply(rotation, this.rotationMatrix);
+			mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
 		}
 		this.repaint();
 	};
