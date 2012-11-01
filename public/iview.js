@@ -461,8 +461,6 @@ var iview = (function() {
 			this.uniformMatrix3fv(this.nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
 		this.gl = gl;
-		this.rotationMatrix = mat4.identity();
-		this.translationMatrix = mat4.identity();
 	};
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
@@ -472,6 +470,7 @@ var iview = (function() {
 		this.corner2 = vec3.add(center, half, []);
 		this.maxDimension = Math.max(size[0], size[1]);
 		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
+		this.rotationMatrix = mat4.identity();
 	}
 	iview.prototype.parseReceptor = function(content) {
 		var residues = [], atoms = [];
@@ -580,7 +579,6 @@ var iview = (function() {
 	iview.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
-		this.gl.rotationMatrix = this.rotationMatrix;
 		// Draw atoms.
 		this.gl.sphereBuffer.bindBuffers(this.gl);
 		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
@@ -618,10 +616,24 @@ var iview = (function() {
 		var difx = e.p[0] - this.lastPoint[0];
 		var dify = e.p[1] - this.lastPoint[1];
 		this.lastPoint = e.p;
-		if (monitor.ALT) {
-			mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
+		if (monitor.SHIFT) {
+			if (monitor.ALT) {
+				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ difx / 20, -dify / 20, 0 ], []);
+				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
+					vec3.add(this.ligand.atoms[i], translation);
+				}
+			} else {
+				var rotation = mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []);
+				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
+					mat4.multiplyVec3(rotation, this.ligand.atoms[i]);
+				}
+			}
 		} else {
-			mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
+			if (monitor.ALT) {
+				mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
+			} else {
+				mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
+			}
 		}
 		this.repaint();
 	};
