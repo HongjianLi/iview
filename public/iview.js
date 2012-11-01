@@ -482,8 +482,9 @@ var iview = (function() {
 					residue = line.substring(22, 26);
 					residues.push(atoms.length);
 				}
-				// Hide nonpolar hydrogens
-				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
+				var type = $.trim(line.substring(77, 79));
+				if (type === 'H') continue;
+				atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], type));
 			} else if (line.match('^TER')) {
 				residue = 'XXXX';
 			}
@@ -524,8 +525,11 @@ var iview = (function() {
 		for (var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; ++i) {
 			var line = lines[i];
 			if (line.match('^ATOM|HETATM')) {
-				// Hide nonpolar hydrogens
-				this.ligand.atoms.push(new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], $.trim(line.substring(77, 79))));
+				var type = $.trim(line.substring(77, 79));
+				if (type === 'H') continue;
+				var a = new Atom([parseFloat(line.substring(30, 38)), parseFloat(line.substring(38, 46)), parseFloat(line.substring(46, 54))], type);
+				this.ligand.atoms.push(a);
+				serials[parseInt(line.substring(6, 11))] = a;
 			} else if (line.match('^BRANCH')) {
 				frames.push(this.ligand.atoms.length);
 				rotorXes.push(parseInt(line.substring( 6, 10)));
@@ -545,7 +549,7 @@ var iview = (function() {
 			}
 		}
 		for (var i = 0, ii = rotorXes.length; i < ii; ++i) {
-			this.ligand.bonds.push(new Bond(this.ligand.atoms[rotorXes[i] - 1], this.ligand.atoms[rotorYes[i] - 1]));
+			this.ligand.bonds.push(new Bond(serials[rotorXes[i]], serials[rotorYes[i]]));
 		}
 		for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 			var a = this.ligand.atoms[i];
