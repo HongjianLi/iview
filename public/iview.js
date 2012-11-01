@@ -1,7 +1,7 @@
 /*
 	Copyright (c) 2012, The Chinese University of Hong Kong
 
-	This program is free software: you can redistribute it and/or modify
+	This program is free software: you can redistribute it and/or mody
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
@@ -231,7 +231,6 @@ var iview = (function() {
 		doc.mousemove(function(e) {
 			if (monitor.CANVAS_DRAGGING != null) {
 				if (monitor.CANVAS_DRAGGING.drag) {
-					monitor.CANVAS_DRAGGING.prehandleEvent(e);
 					monitor.CANVAS_DRAGGING.drag(e);
 				}
 			}
@@ -239,7 +238,6 @@ var iview = (function() {
 		doc.mouseup(function(e) {
 			if (monitor.CANVAS_DRAGGING != null && monitor.CANVAS_DRAGGING != monitor.CANVAS_OVER) {
 				if (monitor.CANVAS_DRAGGING.mouseup) {
-					monitor.CANVAS_DRAGGING.prehandleEvent(e);
 					monitor.CANVAS_DRAGGING.mouseup(e);
 				}
 			}
@@ -256,7 +254,6 @@ var iview = (function() {
 			}
 			if (affecting != null) {
 				if (affecting.keydown) {
-					affecting.prehandleEvent(e);
 					affecting.keydown(e);
 				}
 			}
@@ -268,7 +265,6 @@ var iview = (function() {
 			}
 			if (affecting != null) {
 				if (affecting.keypress) {
-					affecting.prehandleEvent(e);
 					affecting.keypress(e);
 				}
 			}
@@ -283,7 +279,6 @@ var iview = (function() {
 			}
 			if (affecting != null) {
 				if (affecting.keyup) {
-					affecting.prehandleEvent(e);
 					affecting.keyup(e);
 				}
 			}
@@ -298,19 +293,16 @@ var iview = (function() {
 			switch (e.which) {
 			case 1: // left button
 				if (me.click) {
-					me.prehandleEvent(e);
 					me.click(e);
 				}
 				break;
 			case 2: // middle button
 				if (me.middleclick) {
-					me.prehandleEvent(e);
 					me.middleclick(e);
 				}
 				break;
 			case 3: // right button
 				if (me.rightclick) {
-					me.prehandleEvent(e);
 					me.rightclick(e);
 				}
 				break;
@@ -318,7 +310,6 @@ var iview = (function() {
 		});
 		this.canvas.dblclick(function(e) {
 			if (me.dblclick) {
-				me.prehandleEvent(e);
 				me.dblclick(e);
 			}
 		});
@@ -327,19 +318,16 @@ var iview = (function() {
 			case 1: // left button
 				monitor.CANVAS_DRAGGING = me;
 				if (me.mousedown) {
-					me.prehandleEvent(e);
 					me.mousedown(e);
 				}
 				break;
 			case 2: // middle button
 				if (me.middlemousedown) {
-					me.prehandleEvent(e);
 					me.middlemousedown(e);
 				}
 				break;
 			case 3: // right button
 				if (me.rightmousedown) {
-					me.prehandleEvent(e);
 					me.rightmousedown(e);
 				}
 				break;
@@ -347,21 +335,18 @@ var iview = (function() {
 		});
 		this.canvas.mousemove(function(e) {
 			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
-				me.prehandleEvent(e);
 				me.mousemove(e);
 			}
 		});
 		this.canvas.mouseout(function(e) {
 			monitor.CANVAS_OVER = null;
 			if (me.mouseout) {
-				me.prehandleEvent(e);
 				me.mouseout(e);
 			}
 		});
 		this.canvas.mouseover(function(e) {
 			monitor.CANVAS_OVER = me;
 			if (me.mouseover) {
-				me.prehandleEvent(e);
 				me.mouseover(e);
 			}
 		});
@@ -369,19 +354,16 @@ var iview = (function() {
 			switch (e.which) {
 			case 1: // left button
 				if (me.mouseup) {
-					me.prehandleEvent(e);
 					me.mouseup(e);
 				}
 				break;
 			case 2: // middle button
 				if (me.middlemouseup) {
-					me.prehandleEvent(e);
 					me.middlemouseup(e);
 				}
 				break;
 			case 3: // right button
 				if (me.rightmouseup) {
-					me.prehandleEvent(e);
 					me.rightmouseup(e);
 				}
 				break;
@@ -389,7 +371,6 @@ var iview = (function() {
 		});
 		this.canvas.mousewheel(function(e, delta) {
 			if (me.mousewheel) {
-				me.prehandleEvent(e);
 				me.mousewheel(e, delta);
 			}
 		});
@@ -601,43 +582,42 @@ var iview = (function() {
 			this.hbonds[i].render(this.gl);
 		}
 	};
-	iview.prototype.prehandleEvent = function(e) {
-		e.preventDefault();
-		e.offset = this.canvas.offset();
-		e.p = [ e.pageX - e.offset.left, e.pageY - e.offset.top ];
-	};
 	iview.prototype.mousedown = function(e) {
-		this.lastPoint = e.p;
+		this.pageX = e.pageX;
+		this.pageY = e.pageY;
 	};
 	iview.prototype.rightmousedown = function(e) {
-		this.lastPoint = e.p;
+		this.pageX = e.pageX;
+		this.pageY = e.pageY;
 	};
 	iview.prototype.drag = function(e) {
-		var difx = e.p[0] - this.lastPoint[0];
-		var dify = e.p[1] - this.lastPoint[1];
-		this.lastPoint = e.p;
+		var dx = e.pageX - this.pageX;
+		var dy = e.pageY - this.pageY;
+		this.pageX = e.pageX;
+		this.pageY = e.pageY;
 		if (monitor.SHIFT) {
 			if (monitor.ALT) {
-				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ difx / 20, -dify / 20, 0 ], []);
+				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ dx / 20, -dy / 20, 0 ], []);
 				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 					vec3.add(this.ligand.atoms[i], translation);
 				}
 			} else {
-				var rotation = mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []);
+				var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * Math.PI / 180.0, [ 0, 1, 0 ]), dy * Math.PI / 180.0, [ 1, 0, 0 ], []);
 				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 					mat4.multiplyVec3(rotation, this.ligand.atoms[i]);
 				}
 			}
 		} else {
 			if (monitor.ALT) {
-				mat4.translate(this.translationMatrix, [ difx / 20, -dify / 20, 0 ]);
+				mat4.translate(this.translationMatrix, [ dx / 20, -dy / 20, 0 ]);
 			} else {
-				mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), difx * Math.PI / 180.0, [ 0, 1, 0 ]), dify * Math.PI / 180.0, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
+				mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * Math.PI / 180.0, [ 0, 1, 0 ]), dy * Math.PI / 180.0, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
 			}
 		}
 		this.repaint();
 	};
 	iview.prototype.mousewheel = function(e, delta) {
+		e.preventDefault();
 		mat4.translate(this.translationMatrix, [ 0, 0, delta * this.maxDimension / 8 ]);
 		this.repaint();
 	};
