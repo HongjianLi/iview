@@ -123,6 +123,8 @@ var iview = (function() {
 	Molecule = function() {
 		this.atoms = [];
 		this.bonds = [];
+		this.hbds = [];
+		this.hbas = [];
 	};
 
 	Mesh = function() {
@@ -510,7 +512,10 @@ var iview = (function() {
 			}
 		}
 		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
-			vec3.subtract(this.receptor.atoms[i], this.center);
+			var a = this.receptor.atoms[i];
+			vec3.subtract(a, this.center);
+			if (a.isHBD()) this.receptor.hbds.push(a);
+			else if (a.isHBA()) this.receptor.hbas.push(a);
 		}
 	};
 	iview.prototype.parseLigand = function(content) {
@@ -543,25 +548,27 @@ var iview = (function() {
 			this.ligand.bonds.push(new Bond(this.ligand.atoms[rotorXes[i] - 1], this.ligand.atoms[rotorYes[i] - 1]));
 		}
 		for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
-			vec3.subtract(this.ligand.atoms[i], this.center);
+			var a = this.ligand.atoms[i];
+			vec3.subtract(a, this.center);
+			if (a.isHBD()) this.ligand.hbds.push(a);
+			else if (a.isHBA()) this.ligand.hbas.push(a);
 		}
 		this.hbonds = [];
-		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
-			var r = this.receptor.atoms[i];
-			if (r.isHBD()) {
-				for (var j = 0, jj = this.ligand.atoms.length; j < jj; ++j) {
-					var l = this.ligand.atoms[j];
-					if (l.isHBA() && vec3.dist(r, l) < 3.5) {
-						this.hbonds.push(new HBond(r, l));
-					}
+		for (var i = 0, ii = this.receptor.hbds.length; i < ii; ++i) {
+			var r = this.receptor.hbds[i];
+			for (var j = 0, jj = this.ligand.hbas.length; j < jj; ++j) {
+				var l = this.ligand.hbas[j];
+				if (vec3.dist(r, l) < 3.5) {
+					this.hbonds.push(new HBond(r, l));
 				}
 			}
-			if (r.isHBA()) {
-				for (var j = 0, jj = this.ligand.atoms.length; j < jj; ++j) {
-					var l = this.ligand.atoms[j];
-					if (l.isHBD() && vec3.dist(r, l) < 3.5) {
-						this.hbonds.push(new HBond(r, l));
-					}
+		}
+		for (var i = 0, ii = this.receptor.hbas.length; i < ii; ++i) {
+			var r = this.receptor.hbas[i];
+			for (var j = 0, jj = this.ligand.hbds.length; j < jj; ++j) {
+				var l = this.ligand.hbds[j];
+				if (vec3.dist(r, l) < 3.5) {
+					this.hbonds.push(new HBond(r, l));
 				}
 			}
 		}
