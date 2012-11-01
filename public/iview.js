@@ -66,7 +66,7 @@ var iview = (function() {
 		}
 		this.render = function(gl) {
 			gl.setDiffuseColor(E[this.type].color);
-			gl.setMatrixUniforms(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ .3, .3, .3 ], []));
+			gl.setModelViewMatrix(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ .3, .3, .3 ], []));
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
 	};
@@ -90,11 +90,11 @@ var iview = (function() {
 			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) * .5, .3 ];
 			// Draw one half.
 			gl.setDiffuseColor(E[this.a1.type].color);
-			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
+			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			// Draw the other half.
 			gl.setDiffuseColor(E[this.a2.type].color);
-			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
+			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
@@ -115,7 +115,7 @@ var iview = (function() {
 				ang = Math.acos(vec3.dot(y, a1a2) / vec3.length(a1a2));
 				axis = vec3.cross(y, a1a2, []);
 			}
-			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ .05, vec3.dist(this.a1, this.a2), .05 ], []));
+			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ .05, vec3.dist(this.a1, this.a2), .05 ], []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
@@ -292,9 +292,7 @@ var iview = (function() {
 	});
 
 	var iview = function(id) {
-		// setup input events
-		// make sure prehandle events are only in if statements if handled, so
-		// as not to block browser events
+		// Make sure prehandle events are only in if statements if handled, so as not to block browser events
 		this.canvas = $('#' + id);
 		var me = this;
 		this.canvas.click(function(e) {
@@ -396,7 +394,7 @@ var iview = (function() {
 				me.mousewheel(e, delta);
 			}
 		});
-		// Setup WebGL
+		// Set up WebGL
 		var domCanvas = this.canvas.get(0);
 		var gl = domCanvas.getContext('webgl');
 		if (!gl) {
@@ -429,7 +427,7 @@ var iview = (function() {
 			'attribute vec3 a_vertex_normal;',
 			'uniform Light u_light;',
 			'uniform Material u_material;',
-			// matrices set by gl.setMatrixUniforms
+			// matrices set by gl.setModelViewMatrix
 			'uniform mat4 u_model_view_matrix;',
 			'uniform mat4 u_projection_matrix;',
 			'uniform mat3 u_normal_matrix;',
@@ -526,19 +524,17 @@ var iview = (function() {
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.direction'), .1, .1, 1);
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.half_vector'), .1, .1, 1);
 		gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), .1, 10000));
-		gl.dCache = null;
-		var dUL = gl.getUniformLocation(gl.program, 'u_material.diffuse_color');
+		// Set up setDiffuseColor
+		gl.dUL = gl.getUniformLocation(gl.program, 'u_material.diffuse_color');
 		gl.setDiffuseColor = function(diffuseColor) {
-			if (this.dCache != diffuseColor) {
-				this.dCache = diffuseColor;
-				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
-			}
+			this.uniform3f(this.dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
 		};
-		var mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
-		var nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
-		gl.setMatrixUniforms = function(mvMatrix) {
-			this.uniformMatrix4fv(mvUL, false, mvMatrix);
-			this.uniformMatrix3fv(nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
+		// Set up setModelViewMatrix
+		gl.mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
+		gl.nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
+		gl.setModelViewMatrix = function(mvMatrix) {
+			this.uniformMatrix4fv(this.mvUL, false, mvMatrix);
+			this.uniformMatrix3fv(this.nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
 		this.gl = gl;
 		this.rotationMatrix = mat4.identity();
