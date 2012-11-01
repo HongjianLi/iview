@@ -65,7 +65,7 @@ var iview = (function() {
 			return (this.type == 'NA') || (this.type == 'OA') || (this.type == 'SA');
 		}
 		this.render = function(gl) {
-			gl.material.setDiffuseColor(E[this.type].color);
+			gl.setDiffuseColor(E[this.type].color);
 			gl.setMatrixUniforms(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ .3, .3, .3 ], []));
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
@@ -89,11 +89,11 @@ var iview = (function() {
 			}
 			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) * .5, .3 ];
 			// Draw one half.
-			gl.material.setDiffuseColor(E[this.a1.type].color);
+			gl.setDiffuseColor(E[this.a1.type].color);
 			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			// Draw the other half.
-			gl.material.setDiffuseColor(E[this.a2.type].color);
+			gl.setDiffuseColor(E[this.a2.type].color);
 			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
@@ -116,7 +116,6 @@ var iview = (function() {
 				axis = vec3.cross(y, a1a2, []);
 			}
 			gl.setMatrixUniforms(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ .05, vec3.dist(this.a1, this.a2), .05 ], []));
-			gl.material.setDiffuseColor('#33FF33');
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
 	};
@@ -219,27 +218,6 @@ var iview = (function() {
 		this.createBuffers(gl, positionData, normalData);
 	};
 	Cylinder.prototype = new Mesh();
-
-	Material = function(gl) {
-		var aUL = gl.getUniformLocation(gl.program, 'u_material.ambient_color');
-		var dUL = gl.getUniformLocation(gl.program, 'u_material.diffuse_color');
-		var sUL = gl.getUniformLocation(gl.program, 'u_material.specular_color');
-		var snUL = gl.getUniformLocation(gl.program, 'u_material.shininess');
-		var alUL = gl.getUniformLocation(gl.program, 'u_material.alpha');
-		var ambientColor = '#000000';
-		gl.uniform3f(aUL, parseInt(ambientColor.substring(1, 3), 16) / 255.0, parseInt(ambientColor.substring(3, 5), 16) / 255.0, parseInt(ambientColor.substring(5, 7), 16) / 255.0);
-		var specularColor = '#555555';
-		gl.uniform3f(sUL, parseInt(specularColor.substring(1, 3), 16) / 255.0, parseInt(specularColor.substring(3, 5), 16) / 255.0, parseInt(specularColor.substring(5, 7), 16) / 255.0);
-		gl.uniform1f(snUL, 32);
-		gl.uniform1f(alUL, 1);
-		this.dCache = null;
-		this.setDiffuseColor = function(diffuseColor) {
-			if (this.dCache != diffuseColor) {
-				this.dCache = diffuseColor;
-				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
-			}
-		};
-	};
 
 	monitor = {};
 	monitor.CANVAS_DRAGGING = null;
@@ -537,14 +515,25 @@ var iview = (function() {
 		gl.enableVertexAttribArray(gl.vertexNormalAttribute);
 		gl.sphereBuffer = new Sphere(gl, 60, 60);
 		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
-		gl.material = new Material(gl);
+		var ambientColor = '#000000';
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_material.ambient_color'), parseInt(ambientColor.substring(1, 3), 16) / 255.0, parseInt(ambientColor.substring(3, 5), 16) / 255.0, parseInt(ambientColor.substring(5, 7), 16) / 255.0);
+		var specularColor = '#555555';
+		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_material.specular_color'), parseInt(specularColor.substring(1, 3), 16) / 255.0, parseInt(specularColor.substring(3, 5), 16) / 255.0, parseInt(specularColor.substring(5, 7), 16) / 255.0);
+		gl.uniform1f(gl.getUniformLocation(gl.program, 'u_material.shininess'), 32);
+		gl.uniform1f(gl.getUniformLocation(gl.program, 'u_material.alpha'), 1);
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.diffuse_color'), 1, 1, 1);
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.specular_color'), 1, 1, 1);
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.direction'), .1, .1, 1);
 		gl.uniform3f(gl.getUniformLocation(gl.program, 'u_light.half_vector'), .1, .1, 1);
 		gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), .1, 10000));
-		this.rotationMatrix = mat4.identity();
-		this.translationMatrix = mat4.identity();
+		gl.dCache = null;
+		var dUL = gl.getUniformLocation(gl.program, 'u_material.diffuse_color');
+		gl.setDiffuseColor = function(diffuseColor) {
+			if (this.dCache != diffuseColor) {
+				this.dCache = diffuseColor;
+				gl.uniform3f(dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
+			}
+		};
 		var mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
 		var nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
 		gl.setMatrixUniforms = function(mvMatrix) {
@@ -552,6 +541,8 @@ var iview = (function() {
 			this.uniformMatrix3fv(nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
 		this.gl = gl;
+		this.rotationMatrix = mat4.identity();
+		this.translationMatrix = mat4.identity();
 	};
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
@@ -665,6 +656,7 @@ var iview = (function() {
 		for ( var i = 0, ii = this.ligand.bonds.length; i < ii; i++) {
 			this.ligand.bonds[i].render(this.gl);
 		}
+		this.gl.setDiffuseColor('#33FF33');
 		for ( var i = 0, ii = this.hbonds.length; i < ii; i++) {
 			this.hbonds[i].render(this.gl);
 		}
