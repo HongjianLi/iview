@@ -397,10 +397,7 @@ var iview = (function() {
 		if (!gl) {
 			gl = domCanvas.getContext('experimental-webgl');
 		}
-		gl.clearColor(1, 1, 1, 1.0);
-		gl.clearDepth(1.0);
 		gl.enable(gl.DEPTH_TEST);
-		gl.depthFunc(gl.LEQUAL);
 		gl.program = gl.createProgram();
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertexShader, [	// phong shader
@@ -476,7 +473,7 @@ var iview = (function() {
 	}
 	iview.prototype.parseReceptor = function(content) {
 		var residues = [], atoms = [];
-		for ( var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
+		for (var residue = 'XXXX', lines = content.split('\n'), ii = lines.length, i = 0; i < ii; ++i) {
 			var line = lines[i];
 			if (line.match('^ATOM|HETATM')) {
 				if ((line[25] != residue[3]) || (line[24] != residue[2]) || (line[23] != residue[1]) || (line[22] != residue[0])) {
@@ -491,9 +488,9 @@ var iview = (function() {
 		}
 		residues.push(atoms.length);
 		this.receptor = new Molecule();
-		for ( var r = 0, rr = residues.length - 1; r < rr; r++) {
+		for (var r = 0, rr = residues.length - 1; r < rr; ++r) {
 			var inside = false;
-			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
+			for (var i = residues[r], ii = residues[r + 1]; i < ii; ++i) {
 				var a = atoms[i];
 				if ((this.corner1[0] <= a[0]) && (a[0] < this.corner2[0]) && (this.corner1[1] <= a[1]) && (a[1] < this.corner2[1]) && (this.corner1[2] <= a[2]) && (a[2] < this.corner2[2])) {
 					inside = true;
@@ -501,10 +498,10 @@ var iview = (function() {
 				}
 			}
 			if (!inside) continue;
-			for ( var i = residues[r], ii = residues[r + 1]; i < ii; i++ ) {
+			for (var i = residues[r], ii = residues[r + 1]; i < ii; ++i) {
 				var a1 = atoms[i];
 				this.receptor.atoms.push(a1);
-				for ( var j = i + 1; j < ii; j++) {
+				for (var j = i + 1; j < ii; ++j) {
 					var a2 = atoms[j];
 					if (vec3.dist(a1, a2) < E[a1.type].covalentRadius + E[a2.type].covalentRadius) {
 						this.receptor.bonds.push(new Bond(a1, a2));
@@ -512,14 +509,14 @@ var iview = (function() {
 				}
 			}
 		}
-		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
 			vec3.subtract(this.receptor.atoms[i], this.center);
 		}
 	};
 	iview.prototype.parseLigand = function(content) {
 		this.ligand = new Molecule();
 		var frames = [0], rotorXes = [], rotorYes = [], serials = [];
-		for ( var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; i++) {
+		for (var lines = content.split('\n'), ii = lines.length, i = 0; i < ii; ++i) {
 			var line = lines[i];
 			if (line.match('^ATOM|HETATM')) {
 				// Hide nonpolar hydrogens
@@ -532,9 +529,9 @@ var iview = (function() {
 		}
 		frames.push(this.ligand.atoms.length);
 		for (var f = 0, ff = frames.length - 1; f < ff; f++) {
-			for ( var i = frames[f], ii = frames[f + 1]; i < ii; i++ ) {
+			for (var i = frames[f], ii = frames[f + 1]; i < ii; ++i) {
 				var a1 = this.ligand.atoms[i];
-				for ( var j = i + 1; j < ii; j++) {
+				for (var j = i + 1; j < ii; ++j) {
 					var a2 = this.ligand.atoms[j];
 					if (vec3.dist(a1, a2) < E[a1.type].covalentRadius + E[a2.type].covalentRadius) {
 						this.ligand.bonds.push(new Bond(a1, a2));
@@ -542,17 +539,29 @@ var iview = (function() {
 				}
 			}
 		}
-		for (var i = 0, ii = rotorXes.length; i < ii; i++) {
+		for (var i = 0, ii = rotorXes.length; i < ii; ++i) {
 			this.ligand.bonds.push(new Bond(this.ligand.atoms[rotorXes[i] - 1], this.ligand.atoms[rotorYes[i] - 1]));
 		}
-		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
+		for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 			vec3.subtract(this.ligand.atoms[i], this.center);
 		}
 		this.hbonds = [];
-		for (var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
-			for (var j = 0, jj = this.ligand.atoms.length; j < jj; j++) {
-				if (((this.receptor.atoms[i].isHBD() && this.ligand.atoms[j].isHBA()) || (this.receptor.atoms[i].isHBA() && this.ligand.atoms[j].isHBD())) && (vec3.dist(this.receptor.atoms[i], this.ligand.atoms[j]) < 3.5)) { // Consider distance
-					this.hbonds.push(new HBond(this.receptor.atoms[i], this.ligand.atoms[j]));
+		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
+			var r = this.receptor.atoms[i];
+			if (r.isHBD()) {
+				for (var j = 0, jj = this.ligand.atoms.length; j < jj; ++j) {
+					var l = this.ligand.atoms[j];
+					if (l.isHBA() && vec3.dist(r, l) < 3.5) {
+						this.hbonds.push(new HBond(r, l));
+					}
+				}
+			}
+			if (r.isHBA()) {
+				for (var j = 0, jj = this.ligand.atoms.length; j < jj; ++j) {
+					var l = this.ligand.atoms[j];
+					if (l.isHBD() && vec3.dist(r, l) < 3.5) {
+						this.hbonds.push(new HBond(r, l));
+					}
 				}
 			}
 		}
@@ -563,25 +572,25 @@ var iview = (function() {
 		this.gl.rotationMatrix = this.rotationMatrix;
 		// Draw atoms.
 		this.gl.sphereBuffer.bindBuffers(this.gl);
-		for ( var i = 0, ii = this.receptor.atoms.length; i < ii; i++) {
+		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
 			this.receptor.atoms[i].render(this.gl);
 		}
-		for ( var i = 0, ii = this.ligand.atoms.length; i < ii; i++) {
+		for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 			this.ligand.atoms[i].render(this.gl);
 		}
-		// Draw bonds.
+		// Draw covalent bonds.
 		this.gl.cylinderBuffer.bindBuffers(this.gl);
-		for ( var i = 0, ii = this.receptor.bonds.length; i < ii; i++) {
+		for (var i = 0, ii = this.receptor.bonds.length; i < ii; ++i) {
 			this.receptor.bonds[i].render(this.gl);
 		}
-		for ( var i = 0, ii = this.ligand.bonds.length; i < ii; i++) {
+		for (var i = 0, ii = this.ligand.bonds.length; i < ii; ++i) {
 			this.ligand.bonds[i].render(this.gl);
 		}
+		// Draw hydrogen bonds.
 		this.gl.setDiffuseColor('#33FF33');
-		for ( var i = 0, ii = this.hbonds.length; i < ii; i++) {
+		for (var i = 0, ii = this.hbonds.length; i < ii; ++i) {
 			this.hbonds[i].render(this.gl);
 		}
-		this.gl.flush();
 	};
 	iview.prototype.prehandleEvent = function(e) {
 		e.preventDefault();
