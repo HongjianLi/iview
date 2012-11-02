@@ -20,7 +20,9 @@ var iview = (function() {
 
 	function Element(ad, color, covalentRadius) {
 		this.ad = ad;
-		this.color = color;
+		this.r = parseInt(color.substring(1, 3), 16) / 255.0;
+		this.g = parseInt(color.substring(3, 5), 16) / 255.0;
+		this.b = parseInt(color.substring(5, 7), 16) / 255.0;
 		this.covalentRadius = covalentRadius;
 	}
 
@@ -65,7 +67,8 @@ var iview = (function() {
 			return (this.type == 'NA') || (this.type == 'OA') || (this.type == 'SA');
 		}
 		this.render = function(gl) {
-			gl.setDiffuseColor(E[this.type].color);
+			var e = E[this.type];
+			gl.uniform3f(gl.dUL, e.r, e.g, e.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ .3, .3, .3 ], []));
 			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		};
@@ -89,11 +92,13 @@ var iview = (function() {
 			}
 			var scaleVector = [ .3, vec3.dist(this.a1, this.a2) * .5, .3 ];
 			// Draw one half.
-			gl.setDiffuseColor(E[this.a1.type].color);
+			var e1 = E[this.a1.type];
+			gl.uniform3f(gl.dUL, e1.r, e1.g, e1.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 			// Draw the other half.
-			gl.setDiffuseColor(E[this.a2.type].color);
+			var e2 = E[this.a2.type];
+			gl.uniform3f(gl.dUL, e2.r, e2.g, e2.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.numItems);
 		};
@@ -429,12 +434,7 @@ var iview = (function() {
 		gl.sphereBuffer = new Sphere(gl, 60, 60);
 		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
 		gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), .1, 10000));
-		// Set up setDiffuseColor
 		gl.dUL = gl.getUniformLocation(gl.program, 'u_diffuse_color');
-		gl.setDiffuseColor = function(diffuseColor) {
-			this.uniform3f(this.dUL, parseInt(diffuseColor.substring(1, 3), 16) / 255.0, parseInt(diffuseColor.substring(3, 5), 16) / 255.0, parseInt(diffuseColor.substring(5, 7), 16) / 255.0);
-		};
-		// Set up setModelViewMatrix
 		gl.mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
 		gl.nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
 		gl.setModelViewMatrix = function(mvMatrix) {
@@ -577,7 +577,7 @@ var iview = (function() {
 			this.ligand.bonds[i].render(this.gl);
 		}
 		// Draw hydrogen bonds.
-		this.gl.setDiffuseColor('#33FF33');
+		this.gl.uniform3f(this.gl.dUL, 0.2, 1.0, 0.2);
 		for (var i = 0, ii = this.hbonds.length; i < ii; ++i) {
 			this.hbonds[i].render(this.gl);
 		}
