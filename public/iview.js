@@ -224,41 +224,19 @@ var iview = (function() {
 	};
 	Cylinder.prototype = new Mesh();
 
-	monitor = {};
-	monitor.canvas = null;
-	monitor.ALT = false;
-	monitor.CTRL = false;
-
-	$(function() {
-		var doc = $(document);
-		doc.mousemove(function(e) {
-			if (monitor.canvas != null) {
-				monitor.canvas.drag(e);
-			}
-		});
-		doc.mouseup(function(e) {
-			monitor.canvas = null;
-		});
-		doc.keydown(function(e) {
-			monitor.CTRL = e.ctrlKey;
-			monitor.ALT = e.altKey;
-		});
-		doc.keyup(function(e) {
-			monitor.CTRL = e.ctrlKey;
-			monitor.ALT = e.altKey;
-		});
-	});
-
 	var unitRadius = Math.PI / 180.0;
 
 	var iview = function(id) {
 		this.canvas = $('#' + id);
 		var me = this;
 		this.canvas.mousedown(function(e) {
-			monitor.canvas = me;
+			me.mousemove = true;
 			switch (e.which) {
 				case 1:
 					me.leftbutton = true;
+					break;
+				case 2:
+					me.middlebutton = true;
 					break;
 				case 3:
 					me.rightbutton = true;
@@ -267,13 +245,18 @@ var iview = (function() {
 			me.mousedown(e);
 		});
 		this.canvas.mousemove(function(e) {
-//			me.mousemove = true;
-//			me.drag(e);
+			if (me.mousemove) {
+				me.drag(e);
+			}
 		});
 		this.canvas.mouseup(function(e) {
+			me.mousemove = false;
 			switch (e.which) {
 				case 1:
 					me.leftbutton = false;
+					break;
+				case 2:
+					me.middlebutton = false;
 					break;
 				case 3:
 					me.rightbutton = false;
@@ -496,8 +479,8 @@ var iview = (function() {
 		var dy = e.pageY - this.pageY;
 		this.pageX = e.pageX;
 		this.pageY = e.pageY;
-		if (monitor.CTRL) {
-			if (monitor.ALT) {
+		if (this.middlebutton) {
+			if (this.rightbutton) {
 				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ dx * 0.05, -dy * 0.05, 0 ], []);
 				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
 					vec3.add(this.ligand.atoms[i], translation);
@@ -510,7 +493,7 @@ var iview = (function() {
 			}
 			this.refreshHBonds();
 		} else {
-			if (monitor.ALT) {
+			if (this.rightbutton) {
 				mat4.translate(this.translationMatrix, [ dx * 0.05, -dy * 0.05, 0 ]);
 			} else {
 				mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
