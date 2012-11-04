@@ -69,7 +69,7 @@ var iview = (function() {
 		this.render = function(gl) {
 			var e = E[this.type];
 			gl.uniform3f(gl.dUL, e.r, e.g, e.b);
-			gl.setModelViewMatrix(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ 0.3, 0.3, 0.3 ], []));
+			gl.setModelViewMatrix(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [0.3, 0.3, 0.3], []));
 			gl.drawElements(gl.TRIANGLES, gl.sphere.vertexIndexBuffer.size, gl.UNSIGNED_SHORT, 0);
 		};
 	};
@@ -79,18 +79,18 @@ var iview = (function() {
 		this.a2 = a2;
 		this.render = function(gl) {
 			var ang = 0;
-			var axis = [ 0, 0, 1 ];
+			var axis = [0, 0, 1];
 			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
 				if (this.a2[1] < this.a1[1]) {
 					ang = Math.PI;
 				}
 			} else {
-				var y = [ 0, 1, 0 ];
+				var y = [0, 1, 0];
 				var a1m = vec3.scale(vec3.subtract(this.a2, this.a1, []), 0.5, []);
 				ang = Math.acos(vec3.dot(y, a1m) / vec3.length(a1m));
 				axis = vec3.cross(y, a1m, []);
 			}
-			var scaleVector = [ 0.3, vec3.dist(this.a1, this.a2) * 0.5, 0.3 ];
+			var scaleVector = [0.3, vec3.dist(this.a1, this.a2) * 0.5, 0.3];
 			// Draw one half.
 			var e1 = E[this.a1.type];
 			gl.uniform3f(gl.dUL, e1.r, e1.g, e1.b);
@@ -109,18 +109,18 @@ var iview = (function() {
 		this.a2 = a2;
 		this.render = function(gl) {
 			var ang = 0;
-			var axis = [ 0, 0, 1 ];
+			var axis = [0, 0, 1];
 			if (this.a1[0] == this.a2[0] && this.a1[2] == this.a2[2]) {
 				if (this.a2[1] < this.a1[1]) {
 					ang = Math.PI;
 				}
 			} else {
-				var y = [ 0, 1, 0 ];
+				var y = [0, 1, 0];
 				var a1a2 = vec3.subtract(this.a2, this.a1, []);
 				ang = Math.acos(vec3.dot(y, a1a2) / vec3.length(a1a2));
 				axis = vec3.cross(y, a1a2, []);
 			}
-			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ 0.05, vec3.dist(this.a1, this.a2), 0.05 ], []));
+			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [0.05, vec3.dist(this.a1, this.a2), 0.05], []));
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinder.vertexPositionBuffer.size);
 		};
 	};
@@ -219,10 +219,11 @@ var iview = (function() {
 	};
 	$(document).keydown(keydownup).keyup(keydownup);
 
-	var iview = function(id) {
+	var iview = function(options) {
 		var me = this;
+		this.options = $.extend({}, options);
 		this.mousebuttons = [];
-		this.canvas = $('#' + id);
+		this.canvas = $('#' + options.id);
 		this.canvas.bind("contextmenu", function() {
 			return false;
 		});
@@ -244,13 +245,13 @@ var iview = (function() {
 			me.pageY = e.pageY;
 			if (CTRL) {
 				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
-					var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []);
+					var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []);
 					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
 						mat4.multiplyVec3(rotation, me.ligand.atoms[i]);
 					}
 					me.refreshHBonds();
 				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
-					var translation = mat3.multiply(mat4.toInverseMat3(me.gl.modelViewMatrix, []),  [ dx * 0.05, -dy * 0.05, 0 ], []);
+					var translation = mat3.multiply(mat4.toInverseMat3(me.gl.modelViewMatrix, []),  [dx * 0.05, -dy * 0.05, 0], []);
 					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
 						vec3.add(me.ligand.atoms[i], translation);
 					}
@@ -258,16 +259,16 @@ var iview = (function() {
 				}
 			} else {
 				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
-					mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []), me.rotationMatrix, me.rotationMatrix);
+					mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []), me.rotationMatrix, me.rotationMatrix);
 				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
-					mat4.translate(me.translationMatrix, [ dx * 0.05, -dy * 0.05, 0 ]);
+					mat4.translate(me.translationMatrix, [dx * 0.05, -dy * 0.05, 0]);
 				}
 			}
 			me.repaint();
 		});
 		this.canvas.mousewheel(function(e, delta) {
 			e.preventDefault();
-			mat4.translate(me.translationMatrix, [ 0, 0, delta * 2.5 ]);
+			mat4.translate(me.translationMatrix, [0, 0, delta * 2.5]);
 			me.repaint();
 		});
 		var gl = this.canvas.get(0).getContext('experimental-webgl');
@@ -335,7 +336,7 @@ var iview = (function() {
 		var half = vec3.scale(size, 0.5, []);
 		this.corner1 = vec3.subtract(center, half, []);
 		this.corner2 = vec3.add(center, half, []);
-		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -20 ]);
+		this.translationMatrix = mat4.translate(mat4.identity(), [0, 0, -20]);
 		this.rotationMatrix = mat4.identity();
 	}
 	iview.prototype.parseReceptor = function(content) {
@@ -444,6 +445,7 @@ var iview = (function() {
 				}
 			}
 		}
+		if (this.options.ligandmove) this.options.ligandmove(this.hbonds);
 	};
 	iview.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
