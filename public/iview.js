@@ -444,11 +444,10 @@ var iview = (function() {
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
 		this.size = size;
-		var half = vec3.scale(size, .5, []);
+		var half = vec3.scale(size, 0.5, []);
 		this.corner1 = vec3.subtract(center, half, []);
 		this.corner2 = vec3.add(center, half, []);
-		this.maxDimension = Math.max(size[0], size[1]);
-		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -this.maxDimension ]);
+		this.translationMatrix = mat4.translate(mat4.identity(), [ 0, 0, -20 ]);
 		this.rotationMatrix = mat4.identity();
 	}
 	iview.prototype.parseReceptor = function(content) {
@@ -515,7 +514,7 @@ var iview = (function() {
 			}
 		}
 		frames.push(this.ligand.atoms.length);
-		for (var f = 0, ff = frames.length - 1; f < ff; f++) {
+		for (var f = 0, ff = frames.length - 1; f < ff; ++f) {
 			for (var i = frames[f], ii = frames[f + 1]; i < ii; ++i) {
 				var a1 = this.ligand.atoms[i];
 				for (var j = i + 1; j < ii; ++j) {
@@ -620,7 +619,7 @@ var iview = (function() {
 	};
 	iview.prototype.mousewheel = function(e, delta) {
 		e.preventDefault();
-		mat4.translate(this.translationMatrix, [ 0, 0, delta * this.maxDimension * 0.125 ]);
+		mat4.translate(this.translationMatrix, [ 0, 0, delta * 2.5 ]);
 		this.repaint();
 	};
 
