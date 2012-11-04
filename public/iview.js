@@ -225,24 +225,19 @@ var iview = (function() {
 	Cylinder.prototype = new Mesh();
 
 	monitor = {};
-	monitor.CANVAS_DRAGGING = null;
+	monitor.canvas = null;
 	monitor.ALT = false;
 	monitor.CTRL = false;
 
 	$(function() {
 		var doc = $(document);
 		doc.mousemove(function(e) {
-			if (monitor.CANVAS_DRAGGING != null) {
-				monitor.CANVAS_DRAGGING.drag(e);
+			if (monitor.canvas != null) {
+				monitor.canvas.drag(e);
 			}
 		});
 		doc.mouseup(function(e) {
-			if (monitor.CANVAS_DRAGGING != null) {
-				if (monitor.CANVAS_DRAGGING.mouseup) {
-					monitor.CANVAS_DRAGGING.mouseup(e);
-				}
-			}
-			monitor.CANVAS_DRAGGING = null;
+			monitor.canvas = null;
 		});
 		doc.keydown(function(e) {
 			monitor.CTRL = e.ctrlKey;
@@ -281,7 +276,7 @@ var iview = (function() {
 		this.canvas.mousedown(function(e) {
 			switch (e.which) {
 			case 1: // left button
-				monitor.CANVAS_DRAGGING = me;
+				monitor.canvas = me;
 				if (me.mousedown) {
 					me.mousedown(e);
 				}
@@ -299,7 +294,7 @@ var iview = (function() {
 			}
 		});
 		this.canvas.mousemove(function(e) {
-			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
+			if (monitor.canvas == null && me.mousemove) {
 				me.mousemove(e);
 			}
 		});
