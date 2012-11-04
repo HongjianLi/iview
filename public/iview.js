@@ -254,43 +254,19 @@ var iview = (function() {
 	var iview = function(id) {
 		this.canvas = $('#' + id);
 		var me = this;
-		this.canvas.click(function(e) {
-			switch (e.which) {
-			case 1: // left button
-				if (me.click) {
-					me.click(e);
-				}
-				break;
-			case 2: // middle button
-				if (me.middleclick) {
-					me.middleclick(e);
-				}
-				break;
-			case 3: // right button
-				if (me.rightclick) {
-					me.rightclick(e);
-				}
-				break;
-			}
-		});
 		this.canvas.mousedown(function(e) {
 			switch (e.which) {
-			case 1: // left button
-				monitor.canvas = me;
-				if (me.mousedown) {
-					me.mousedown(e);
-				}
-				break;
-			case 2: // middle button
-				if (me.middlemousedown) {
-					me.middlemousedown(e);
-				}
-				break;
-			case 3: // right button
-				if (me.rightmousedown) {
-					me.rightmousedown(e);
-				}
-				break;
+				case 1: // left button
+					monitor.canvas = me;
+					if (me.mousedown) {
+						me.mousedown(e);
+					}
+					break;
+				case 3: // right button
+					if (me.rightmousedown) {
+						me.rightmousedown(e);
+					}
+					break;
 			}
 		});
 		this.canvas.mousemove(function(e) {
@@ -300,25 +276,23 @@ var iview = (function() {
 		});
 		this.canvas.mouseup(function(e) {
 			switch (e.which) {
-			case 1: // left button
-				if (me.mouseup) {
-					me.mouseup(e);
-				}
-				break;
-			case 2: // middle button
-				if (me.middlemouseup) {
-					me.middlemouseup(e);
-				}
-				break;
-			case 3: // right button
-				if (me.rightmouseup) {
-					me.rightmouseup(e);
-				}
-				break;
+				case 1: // left button
+					if (me.mouseup) {
+						me.mouseup(e);
+					}
+					break;
+				case 3: // right button
+					if (me.rightmouseup) {
+						me.rightmouseup(e);
+					}
+					break;
 			}
 		});
 		this.canvas.mousewheel(function(e, delta) {
 			me.mousewheel(e, delta);
+		});
+		this.canvas.bind("contextmenu", function() {
+			return false;   
 		});
 		// Set up WebGL
 		var gl = this.canvas.get(0).getContext('experimental-webgl');
