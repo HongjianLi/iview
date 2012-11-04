@@ -70,7 +70,7 @@ var iview = (function() {
 			var e = E[this.type];
 			gl.uniform3f(gl.dUL, e.r, e.g, e.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.translate(gl.modelViewMatrix, this, []), [ 0.3, 0.3, 0.3 ], []));
-			gl.drawElements(gl.TRIANGLES, gl.sphereBuffer.vertexIndexBuffer.size, gl.UNSIGNED_SHORT, 0);
+			gl.drawElements(gl.TRIANGLES, gl.sphere.vertexIndexBuffer.size, gl.UNSIGNED_SHORT, 0);
 		};
 	};
 
@@ -95,12 +95,12 @@ var iview = (function() {
 			var e1 = E[this.a1.type];
 			gl.uniform3f(gl.dUL, e1.r, e1.g, e1.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), scaleVector, []));
-			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.size);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinder.vertexPositionBuffer.size);
 			// Draw the other half.
 			var e2 = E[this.a2.type];
 			gl.uniform3f(gl.dUL, e2.r, e2.g, e2.b);
 			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a2, []), ang + Math.PI, axis, []), scaleVector, []));
-			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.size);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinder.vertexPositionBuffer.size);
 		};
 	};
 
@@ -121,7 +121,7 @@ var iview = (function() {
 				axis = vec3.cross(y, a1a2, []);
 			}
 			gl.setModelViewMatrix(mat4.scale(mat4.rotate(mat4.translate(gl.modelViewMatrix, this.a1, []), ang, axis, []), [ 0.05, vec3.dist(this.a1, this.a2), 0.05 ], []));
-			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinderBuffer.vertexPositionBuffer.size);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, gl.cylinder.vertexPositionBuffer.size);
 		};
 	};
 
@@ -162,16 +162,16 @@ var iview = (function() {
 		}
 	};
 
-	Sphere = function(gl, latitudeBands, longitudeBands) {
+	Sphere = function(gl, bands) {
 		var positionData = [];
 		var normalData = [];
-		var latitudeAngle = Math.PI / latitudeBands;
-		var longitudeAngle = 2 * Math.PI / longitudeBands;
-		for (var latNumber = 0; latNumber <= latitudeBands; ++latNumber) {
+		var latitudeAngle = Math.PI / bands;
+		var longitudeAngle = 2 * latitudeAngle;
+		for (var latNumber = 0; latNumber <= bands; ++latNumber) {
 			var theta = latitudeAngle * latNumber;
 			var sinTheta = Math.sin(theta);
 			var y = Math.cos(theta);
-			for (var longNumber = 0; longNumber <= longitudeBands; ++longNumber) {
+			for (var longNumber = 0; longNumber <= bands; ++longNumber) {
 				var phi = longitudeAngle * longNumber;
 				var x = Math.cos(phi) * sinTheta;
 				var z = Math.sin(phi) * sinTheta;
@@ -180,14 +180,13 @@ var iview = (function() {
 			}
 		}
 		var indexData = [];
-		longitudeBands += 1;
-		for (var latNumber = 0; latNumber < latitudeBands; ++latNumber) {
-			var offset = latNumber * longitudeBands;
-			for (var longNumber = 0; longNumber < longitudeBands; ++longNumber) {
+		for (var latNumber = 0; latNumber < bands; ++latNumber) {
+			var offset = latNumber * bands;
+			for (var longNumber = 0; longNumber <= bands; ++longNumber) {
 				var first = offset + longNumber;
-				var second = first + longitudeBands;
+				var second = first + bands;
 				indexData.push(first, second, first + 1);
-				if (longNumber < longitudeBands - 1) {
+				if (longNumber < bands) {
 					indexData.push(second, second + 1, first + 1);
 				}
 			}
@@ -326,8 +325,8 @@ var iview = (function() {
 			this.uniformMatrix4fv(this.mvUL, false, mvMatrix);
 			this.uniformMatrix3fv(this.nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
-		gl.sphereBuffer = new Sphere(gl, 60, 60);
-		gl.cylinderBuffer = new Cylinder(gl, 60);
+		gl.sphere = new Sphere(gl, 60);
+		gl.cylinder = new Cylinder(gl, 60);
 		this.gl = gl;
 	};
 	iview.prototype.setBox = function(center, size) {
@@ -450,7 +449,7 @@ var iview = (function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
 		// Draw atoms.
-		this.gl.sphereBuffer.bindBuffers(this.gl);
+		this.gl.sphere.bindBuffers(this.gl);
 		for (var i = 0, ii = this.receptor.atoms.length; i < ii; ++i) {
 			this.receptor.atoms[i].render(this.gl);
 		}
@@ -458,7 +457,7 @@ var iview = (function() {
 			this.ligand.atoms[i].render(this.gl);
 		}
 		// Draw covalent bonds.
-		this.gl.cylinderBuffer.bindBuffers(this.gl);
+		this.gl.cylinder.bindBuffers(this.gl);
 		for (var i = 0, ii = this.receptor.bonds.length; i < ii; ++i) {
 			this.receptor.bonds[i].render(this.gl);
 		}
