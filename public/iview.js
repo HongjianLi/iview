@@ -228,17 +228,13 @@ var iview = (function() {
 	monitor.CANVAS_DRAGGING = null;
 	monitor.CANVAS_OVER = null;
 	monitor.ALT = false;
-	monitor.SHIFT = false;
-	monitor.META = false;
+	monitor.CTRL = false;
 
-	var doc = $(document);
-	doc.ready(function() {
-		// handles dragging beyond the canvas bounds
+	$(function() {
+		var doc = $(document);
 		doc.mousemove(function(e) {
 			if (monitor.CANVAS_DRAGGING != null) {
-				if (monitor.CANVAS_DRAGGING.drag) {
-					monitor.CANVAS_DRAGGING.drag(e);
-				}
+				monitor.CANVAS_DRAGGING.drag(e);
 			}
 		});
 		doc.mouseup(function(e) {
@@ -249,45 +245,13 @@ var iview = (function() {
 			}
 			monitor.CANVAS_DRAGGING = null;
 		});
-		// handles modifier keys from a single keyboard
 		doc.keydown(function(e) {
-			monitor.SHIFT = e.shiftKey;
+			monitor.CTRL = e.ctrlKey;
 			monitor.ALT = e.altKey;
-			monitor.META = e.metaKey;
-			var affecting = monitor.CANVAS_OVER;
-			if (monitor.CANVAS_DRAGGING != null) {
-				affecting = monitor.CANVAS_DRAGGING;
-			}
-			if (affecting != null) {
-				if (affecting.keydown) {
-					affecting.keydown(e);
-				}
-			}
-		});
-		doc.keypress(function(e) {
-			var affecting = monitor.CANVAS_OVER;
-			if (monitor.CANVAS_DRAGGING != null) {
-				affecting = monitor.CANVAS_DRAGGING;
-			}
-			if (affecting != null) {
-				if (affecting.keypress) {
-					affecting.keypress(e);
-				}
-			}
 		});
 		doc.keyup(function(e) {
-			monitor.SHIFT = e.shiftKey;
+			monitor.CTRL = e.ctrlKey;
 			monitor.ALT = e.altKey;
-			monitor.META = e.metaKey;
-			var affecting = monitor.CANVAS_OVER;
-			if (monitor.CANVAS_DRAGGING != null) {
-				affecting = monitor.CANVAS_DRAGGING;
-			}
-			if (affecting != null) {
-				if (affecting.keyup) {
-					affecting.keyup(e);
-				}
-			}
 		});
 	});
 
@@ -313,11 +277,6 @@ var iview = (function() {
 					me.rightclick(e);
 				}
 				break;
-			}
-		});
-		this.canvas.dblclick(function(e) {
-			if (me.dblclick) {
-				me.dblclick(e);
 			}
 		});
 		this.canvas.mousedown(function(e) {
@@ -377,9 +336,7 @@ var iview = (function() {
 			}
 		});
 		this.canvas.mousewheel(function(e, delta) {
-			if (me.mousewheel) {
-				me.mousewheel(e, delta);
-			}
+			me.mousewheel(e, delta);
 		});
 		// Set up WebGL
 		var gl = this.canvas.get(0).getContext('experimental-webgl');
@@ -595,7 +552,7 @@ var iview = (function() {
 		var dy = e.pageY - this.pageY;
 		this.pageX = e.pageX;
 		this.pageY = e.pageY;
-		if (monitor.SHIFT) {
+		if (monitor.CTRL) {
 			if (monitor.ALT) {
 				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ dx * 0.05, -dy * 0.05, 0 ], []);
 				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
