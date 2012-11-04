@@ -1,6 +1,4 @@
 $(function() {
-//	if (canvas.getContext('experimental-webgl'));
-
 	var iv = new iview({
 		id: 'iview',
 		ligandmove: function(hbonds) {
@@ -8,7 +6,7 @@ $(function() {
 		}
 	});
 	if (iv.disabled) {
-		alert('Your browser does not support HTML5 canvas.');
+		$('#container').html('Your browser does not support HTML5 canvas.');
 		return;
 	}
 	$.get('receptor.pdbqt', function(receptor) {
@@ -17,7 +15,9 @@ $(function() {
 		$.get('ligand.pdbqt', function(ligand) {
 			iv.parseLigand(ligand);
 			iv.repaint();
+			$('#export').click(function() {
+				iv.png();
+			});
 		});
 	});
-//	iv.png();
 });

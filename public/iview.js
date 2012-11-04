@@ -222,7 +222,9 @@ var iview = (function() {
 	var iview = function(options) {
 		this.options = $.extend({}, options);
 		this.canvas = $('#' + this.options.id);
-		var gl = this.canvas.get(0).getContext('experimental-webgl');
+		var gl = this.canvas.get(0).getContext('experimental-webgl', {
+			preserveDrawingBuffer: true
+		});
 		this.disabled = !gl;
 		if (this.disabled) return;
 		gl.enable(gl.DEPTH_TEST);

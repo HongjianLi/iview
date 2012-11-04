@@ -7,8 +7,11 @@
     <title>iview: Interactive Visualizer of Protein-Ligand Complex</title>
   </head>
   <body>
-    <p>Hydrogen bonds: <span id="hbonds"></span></p>
-    <canvas id="iview" width="1170" height="1000">Your browser does not support HTML5 canvas.</canvas>
+    <div id="container">
+      <p>Hydrogen bonds: <span id="hbonds"></span><p>
+	  <p><a href="#" id="export">Export to png</a></p>
+      <canvas id="iview" width="1170" height="1000">Your browser does not support HTML5 canvas.</canvas>
+	</div>
     <script type="text/javascript" src="jquery-1.8.2.min.js"></script>
     <script type="text/javascript" src="jquery.mousewheel.min.js"></script>
     <script type="text/javascript" src="gl-matrix.js"></script>
