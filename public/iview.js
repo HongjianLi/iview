@@ -382,13 +382,8 @@ var iview = (function() {
 			}
 		});
 		// Set up WebGL
-		var domCanvas = this.canvas.get(0);
-		var gl = domCanvas.getContext('webgl');
-		if (!gl) {
-			gl = domCanvas.getContext('experimental-webgl');
-		}
+		var gl = this.canvas.get(0).getContext('experimental-webgl');
 		gl.enable(gl.DEPTH_TEST);
-		gl.program = gl.createProgram();
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertexShader, [	// phong shader
 			'attribute vec3 a_vertex_position;',
@@ -425,24 +420,25 @@ var iview = (function() {
 			'}'
 		].join(''));
 		gl.compileShader(fragmentShader);
-		gl.attachShader(gl.program, vertexShader);
-		gl.attachShader(gl.program, fragmentShader);
-		gl.linkProgram(gl.program);
-		gl.useProgram(gl.program);
-		gl.vertexPositionAttribute = gl.getAttribLocation(gl.program, 'a_vertex_position');
+		var program = gl.createProgram();
+		gl.attachShader(program, vertexShader);
+		gl.attachShader(program, fragmentShader);
+		gl.linkProgram(program);
+		gl.useProgram(program);
+		gl.vertexPositionAttribute = gl.getAttribLocation(program, 'a_vertex_position');
+		gl.vertexNormalAttribute = gl.getAttribLocation(program, 'a_vertex_normal');
 		gl.enableVertexAttribArray(gl.vertexPositionAttribute);
-		gl.vertexNormalAttribute = gl.getAttribLocation(gl.program, 'a_vertex_normal');
 		gl.enableVertexAttribArray(gl.vertexNormalAttribute);
-		gl.sphereBuffer = new Sphere(gl, 60, 60);
-		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
-		gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), 0.1, 10000));
-		gl.dUL = gl.getUniformLocation(gl.program, 'u_diffuse_color');
-		gl.mvUL = gl.getUniformLocation(gl.program, 'u_model_view_matrix');
-		gl.nUL = gl.getUniformLocation(gl.program, 'u_normal_matrix');
+		gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_projection_matrix'), false, mat4.perspective(45, this.canvas.attr('width') / this.canvas.attr('height'), 0.1, 1000));
+		gl.dUL = gl.getUniformLocation(program, 'u_diffuse_color');
+		gl.mvUL = gl.getUniformLocation(program, 'u_model_view_matrix');
+		gl.nUL = gl.getUniformLocation(program, 'u_normal_matrix');
 		gl.setModelViewMatrix = function(mvMatrix) {
 			this.uniformMatrix4fv(this.mvUL, false, mvMatrix);
 			this.uniformMatrix3fv(this.nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
+		gl.sphereBuffer = new Sphere(gl, 60, 60);
+		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
 		this.gl = gl;
 	};
 	iview.prototype.setBox = function(center, size) {
