@@ -226,7 +226,6 @@ var iview = (function() {
 
 	monitor = {};
 	monitor.CANVAS_DRAGGING = null;
-	monitor.CANVAS_OVER = null;
 	monitor.ALT = false;
 	monitor.CTRL = false;
 
@@ -238,7 +237,7 @@ var iview = (function() {
 			}
 		});
 		doc.mouseup(function(e) {
-			if (monitor.CANVAS_DRAGGING != null && monitor.CANVAS_DRAGGING != monitor.CANVAS_OVER) {
+			if (monitor.CANVAS_DRAGGING != null) {
 				if (monitor.CANVAS_DRAGGING.mouseup) {
 					monitor.CANVAS_DRAGGING.mouseup(e);
 				}
@@ -302,18 +301,6 @@ var iview = (function() {
 		this.canvas.mousemove(function(e) {
 			if (monitor.CANVAS_DRAGGING == null && me.mousemove) {
 				me.mousemove(e);
-			}
-		});
-		this.canvas.mouseout(function(e) {
-			monitor.CANVAS_OVER = null;
-			if (me.mouseout) {
-				me.mouseout(e);
-			}
-		});
-		this.canvas.mouseover(function(e) {
-			monitor.CANVAS_OVER = me;
-			if (me.mouseover) {
-				me.mouseover(e);
 			}
 		});
 		this.canvas.mouseup(function(e) {
