@@ -255,36 +255,28 @@ var iview = (function() {
 		this.canvas = $('#' + id);
 		var me = this;
 		this.canvas.mousedown(function(e) {
+			monitor.canvas = me;
 			switch (e.which) {
-				case 1: // left button
-					monitor.canvas = me;
-					if (me.mousedown) {
-						me.mousedown(e);
-					}
+				case 1:
+					me.leftbutton = true;
 					break;
-				case 3: // right button
-					if (me.rightmousedown) {
-						me.rightmousedown(e);
-					}
+				case 3:
+					me.rightbutton = true;
 					break;
 			}
+			me.mousedown(e);
 		});
 		this.canvas.mousemove(function(e) {
-			if (monitor.canvas == null && me.mousemove) {
-				me.mousemove(e);
-			}
+//			me.mousemove = true;
+//			me.drag(e);
 		});
 		this.canvas.mouseup(function(e) {
 			switch (e.which) {
-				case 1: // left button
-					if (me.mouseup) {
-						me.mouseup(e);
-					}
+				case 1:
+					me.leftbutton = false;
 					break;
-				case 3: // right button
-					if (me.rightmouseup) {
-						me.rightmouseup(e);
-					}
+				case 3:
+					me.rightbutton = false;
 					break;
 			}
 		});
@@ -496,10 +488,6 @@ var iview = (function() {
 		}
 	};
 	iview.prototype.mousedown = function(e) {
-		this.pageX = e.pageX;
-		this.pageY = e.pageY;
-	};
-	iview.prototype.rightmousedown = function(e) {
 		this.pageX = e.pageX;
 		this.pageY = e.pageY;
 	};
