@@ -7,6 +7,10 @@ $(function() {
 			$('#hbonds').html(hbonds.length);
 		}
 	});
+	if (iv.disabled) {
+		alert('Your browser does not support HTML5 canvas.');
+		return;
+	}
 	$.get('receptor.pdbqt', function(receptor) {
 		iv.setBox([49.712, -28.923, 36.824], [18, 18, 20]);
 		iv.parseReceptor(receptor);

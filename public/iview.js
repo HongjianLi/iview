@@ -220,58 +220,11 @@ var iview = (function() {
 	$(document).keydown(keydownup).keyup(keydownup);
 
 	var iview = function(options) {
-		var me = this;
 		this.options = $.extend({}, options);
-		this.mousebuttons = [];
-		this.canvas = $('#' + options.id);
-		this.canvas.bind("contextmenu", function() {
-			return false;
-		});
-		this.canvas.mousedown(function(e) {
-			me.ismousedown = true;
-			me.mousebuttons[e.which] = true;
-			me.pageX = e.pageX;
-			me.pageY = e.pageY;
-		});
-		this.canvas.mouseup(function(e) {
-			me.ismousedown = false;
-			me.mousebuttons[e.which] = false;
-		});
-		this.canvas.mousemove(function(e) {
-			if (!me.ismousedown) return;
-			var dx = e.pageX - me.pageX;
-			var dy = e.pageY - me.pageY;
-			me.pageX = e.pageX;
-			me.pageY = e.pageY;
-			if (CTRL) {
-				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
-					var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []);
-					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
-						mat4.multiplyVec3(rotation, me.ligand.atoms[i]);
-					}
-					me.refreshHBonds();
-				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
-					var translation = mat3.multiply(mat4.toInverseMat3(me.gl.modelViewMatrix, []),  [dx * 0.05, -dy * 0.05, 0], []);
-					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
-						vec3.add(me.ligand.atoms[i], translation);
-					}
-					me.refreshHBonds();
-				}
-			} else {
-				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
-					mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []), me.rotationMatrix, me.rotationMatrix);
-				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
-					mat4.translate(me.translationMatrix, [dx * 0.05, -dy * 0.05, 0]);
-				}
-			}
-			me.repaint();
-		});
-		this.canvas.mousewheel(function(e, delta) {
-			e.preventDefault();
-			mat4.translate(me.translationMatrix, [0, 0, delta * 2.5]);
-			me.repaint();
-		});
+		this.canvas = $('#' + this.options.id);
 		var gl = this.canvas.get(0).getContext('experimental-webgl');
+		this.disabled = !gl;
+		if (this.disabled) return;
 		gl.enable(gl.DEPTH_TEST);
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertexShader, [
@@ -329,6 +282,55 @@ var iview = (function() {
 		gl.sphere = new Sphere(gl, 60);
 		gl.cylinder = new Cylinder(gl, 60);
 		this.gl = gl;
+		var me = this;
+		this.mousebuttons = [];
+		this.canvas.bind("contextmenu", function() {
+			return false;
+		});
+		this.canvas.mousedown(function(e) {
+			me.ismousedown = true;
+			me.mousebuttons[e.which] = true;
+			me.pageX = e.pageX;
+			me.pageY = e.pageY;
+		});
+		this.canvas.mouseup(function(e) {
+			me.ismousedown = false;
+			me.mousebuttons[e.which] = false;
+		});
+		this.canvas.mousemove(function(e) {
+			if (!me.ismousedown) return;
+			var dx = e.pageX - me.pageX;
+			var dy = e.pageY - me.pageY;
+			me.pageX = e.pageX;
+			me.pageY = e.pageY;
+			if (CTRL) {
+				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
+					var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []);
+					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
+						mat4.multiplyVec3(rotation, me.ligand.atoms[i]);
+					}
+					me.refreshHBonds();
+				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
+					var translation = mat3.multiply(mat4.toInverseMat3(me.gl.modelViewMatrix, []),  [dx * 0.05, -dy * 0.05, 0], []);
+					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
+						vec3.add(me.ligand.atoms[i], translation);
+					}
+					me.refreshHBonds();
+				}
+			} else {
+				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
+					mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [0, 1, 0]), dy * unitRadius, [1, 0, 0], []), me.rotationMatrix, me.rotationMatrix);
+				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
+					mat4.translate(me.translationMatrix, [dx * 0.05, -dy * 0.05, 0]);
+				}
+			}
+			me.repaint();
+		});
+		this.canvas.mousewheel(function(e, delta) {
+			e.preventDefault();
+			mat4.translate(me.translationMatrix, [0, 0, delta * 2.5]);
+			me.repaint();
+		});
 	};
 	iview.prototype.setBox = function(center, size) {
 		this.center = center;
