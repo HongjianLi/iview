@@ -535,6 +535,9 @@ var iview = (function() {
 			if (a.isHBD()) this.ligand.hbds.push(a);
 			else if (a.isHBA()) this.ligand.hbas.push(a);
 		}
+		this.refreshHBonds();
+	}
+	iview.prototype.refreshHBonds = function() {
 		this.hbonds = [];
 		for (var i = 0, ii = this.receptor.hbds.length; i < ii; ++i) {
 			var r = this.receptor.hbds[i];
@@ -554,7 +557,7 @@ var iview = (function() {
 				}
 			}
 		}
-	}
+	};
 	iview.prototype.repaint = function() {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		this.gl.modelViewMatrix = mat4.multiply(this.translationMatrix, this.rotationMatrix, []);
@@ -605,6 +608,7 @@ var iview = (function() {
 					mat4.multiplyVec3(rotation, this.ligand.atoms[i]);
 				}
 			}
+			this.refreshHBonds();
 		} else {
 			if (monitor.ALT) {
 				mat4.translate(this.translationMatrix, [ dx * 0.05, -dy * 0.05, 0 ]);
