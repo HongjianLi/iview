@@ -1,8 +1,5 @@
 $(function() {
-//	var canvas = document.getElementById('iview');
-//	if (canvas.getContext('webgl')));
 //	if (canvas.getContext('experimental-webgl'));
-//	window.open(canvas.toDataURL('image/png'));
 
 	var c = new iview('iview');
 	$.get('receptor.pdbqt', function(receptor) {
@@ -11,6 +8,7 @@ $(function() {
 		$.get('ligand.pdbqt', function(ligand) {
 			c.parseLigand(ligand);
 			c.repaint();
+			c.png();
 		});
 	});
 });

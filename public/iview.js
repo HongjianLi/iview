@@ -470,6 +470,9 @@ var iview = (function() {
 			this.hbonds[i].render(this.gl);
 		}
 	};
+	iview.prototype.png = function() {
+		window.open(this.canvas.get(0).toDataURL('image/png'));
+	};
 
 	return iview;
 
