@@ -179,7 +179,6 @@ var iview = (function() {
 				positionData.push(x, y, z);
 			}
 		}
-
 		var indexData = [];
 		longitudeBands += 1;
 		for (var latNumber = 0; latNumber < latitudeBands; ++latNumber) {
@@ -187,93 +186,95 @@ var iview = (function() {
 			for (var longNumber = 0; longNumber < longitudeBands; ++longNumber) {
 				var first = offset + longNumber;
 				var second = first + longitudeBands;
-				indexData.push(first);
-				indexData.push(second);
-				indexData.push(first + 1);
+				indexData.push(first, second, first + 1);
 				if (longNumber < longitudeBands - 1) {
-					indexData.push(second);
-					indexData.push(second + 1);
-					indexData.push(first + 1);
+					indexData.push(second, second + 1, first + 1);
 				}
 			}
 		}
-
 		this.createBuffers(gl, positionData, normalData, indexData);
 	};
 	Sphere.prototype = new Mesh();
 
-	Cylinder = function(gl, height, bands) {
+	Cylinder = function(gl, bands) {
 		var positionData = [];
 		var normalData = [];
 		var angle = 2 * Math.PI / bands;
-		for (var i = 0; i < bands; ++i) {
+		for (var i = 0; i <= bands; ++i) {
 			var theta = angle * i;
 			var cosTheta = Math.cos(theta);
 			var sinTheta = Math.sin(theta);
 			normalData.push(cosTheta, 0, sinTheta);
 			positionData.push(cosTheta, 0, sinTheta);
 			normalData.push(cosTheta, 0, sinTheta);
-			positionData.push(cosTheta, height, sinTheta);
+			positionData.push(cosTheta, 1, sinTheta);
 		}
-		normalData.push(1, 0, 0);
-		positionData.push(1, 0, 0);
-		normalData.push(1, 0, 0);
-		positionData.push(1, height, 0);
-
 		this.createBuffers(gl, positionData, normalData);
 	};
 	Cylinder.prototype = new Mesh();
 
 	var unitRadius = Math.PI / 180.0;
+	var CTRL = false;
+	var keydownup = function(e) {
+		CTRL = e.ctrlKey;
+	};
+	$(document).keydown(keydownup).keyup(keydownup);
 
 	var iview = function(id) {
-		this.canvas = $('#' + id);
 		var me = this;
-		this.canvas.mousedown(function(e) {
-			me.mousemove = true;
-			switch (e.which) {
-				case 1:
-					me.leftbutton = true;
-					break;
-				case 2:
-					me.middlebutton = true;
-					break;
-				case 3:
-					me.rightbutton = true;
-					break;
-			}
-			me.mousedown(e);
+		this.mousebuttons = [];
+		this.canvas = $('#' + id);
+		this.canvas.bind("contextmenu", function() {
+			return false;
 		});
-		this.canvas.mousemove(function(e) {
-			if (me.mousemove) {
-				me.drag(e);
-			}
+		this.canvas.mousedown(function(e) {
+			me.ismousedown = true;
+			me.mousebuttons[e.which] = true;
+			me.pageX = e.pageX;
+			me.pageY = e.pageY;
 		});
 		this.canvas.mouseup(function(e) {
-			me.mousemove = false;
-			switch (e.which) {
-				case 1:
-					me.leftbutton = false;
-					break;
-				case 2:
-					me.middlebutton = false;
-					break;
-				case 3:
-					me.rightbutton = false;
-					break;
+			me.ismousedown = false;
+			me.mousebuttons[e.which] = false;
+		});
+		this.canvas.mousemove(function(e) {
+			if (!me.ismousedown) return;
+			var dx = e.pageX - me.pageX;
+			var dy = e.pageY - me.pageY;
+			me.pageX = e.pageX;
+			me.pageY = e.pageY;
+			if (CTRL) {
+				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
+					var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []);
+					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
+						mat4.multiplyVec3(rotation, me.ligand.atoms[i]);
+					}
+					me.refreshHBonds();
+				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
+					var translation = mat3.multiply(mat4.toInverseMat3(me.gl.modelViewMatrix, []),  [ dx * 0.05, -dy * 0.05, 0 ], []);
+					for (var i = 0, ii = me.ligand.atoms.length; i < ii; ++i) {
+						vec3.add(me.ligand.atoms[i], translation);
+					}
+					me.refreshHBonds();
+				}
+			} else {
+				if (me.mousebuttons[1] && !me.mousebuttons[3]) {
+					mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []), me.rotationMatrix, me.rotationMatrix);
+				} else if (me.mousebuttons[3] && !me.mousebuttons[1]) {
+					mat4.translate(me.translationMatrix, [ dx * 0.05, -dy * 0.05, 0 ]);
+				}
 			}
+			me.repaint();
 		});
 		this.canvas.mousewheel(function(e, delta) {
-			me.mousewheel(e, delta);
+			e.preventDefault();
+			mat4.translate(me.translationMatrix, [ 0, 0, delta * 2.5 ]);
+			me.repaint();
 		});
-		this.canvas.bind("contextmenu", function() {
-			return false;   
-		});
-		// Set up WebGL
 		var gl = this.canvas.get(0).getContext('experimental-webgl');
 		gl.enable(gl.DEPTH_TEST);
 		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(vertexShader, [	// phong shader
+		gl.shaderSource(vertexShader, [
 			'attribute vec3 a_vertex_position;',
 			'attribute vec3 a_vertex_normal;',
 			'uniform vec3 u_diffuse_color;',
@@ -326,7 +327,7 @@ var iview = (function() {
 			this.uniformMatrix3fv(this.nUL, false, mat3.transpose(mat4.toInverseMat3(mvMatrix, []), []));
 		};
 		gl.sphereBuffer = new Sphere(gl, 60, 60);
-		gl.cylinderBuffer = new Cylinder(gl, 1, 60);
+		gl.cylinderBuffer = new Cylinder(gl, 60);
 		this.gl = gl;
 	};
 	iview.prototype.setBox = function(center, size) {
@@ -469,42 +470,6 @@ var iview = (function() {
 		for (var i = 0, ii = this.hbonds.length; i < ii; ++i) {
 			this.hbonds[i].render(this.gl);
 		}
-	};
-	iview.prototype.mousedown = function(e) {
-		this.pageX = e.pageX;
-		this.pageY = e.pageY;
-	};
-	iview.prototype.drag = function(e) {
-		var dx = e.pageX - this.pageX;
-		var dy = e.pageY - this.pageY;
-		this.pageX = e.pageX;
-		this.pageY = e.pageY;
-		if (this.middlebutton) {
-			if (this.rightbutton) {
-				var translation = mat3.multiply(mat4.toInverseMat3(this.gl.modelViewMatrix, []),  [ dx * 0.05, -dy * 0.05, 0 ], []);
-				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
-					vec3.add(this.ligand.atoms[i], translation);
-				}
-			} else {
-				var rotation = mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []);
-				for (var i = 0, ii = this.ligand.atoms.length; i < ii; ++i) {
-					mat4.multiplyVec3(rotation, this.ligand.atoms[i]);
-				}
-			}
-			this.refreshHBonds();
-		} else {
-			if (this.rightbutton) {
-				mat4.translate(this.translationMatrix, [ dx * 0.05, -dy * 0.05, 0 ]);
-			} else {
-				mat4.multiply(mat4.rotate(mat4.rotate(mat4.identity(), dx * unitRadius, [ 0, 1, 0 ]), dy * unitRadius, [ 1, 0, 0 ], []), this.rotationMatrix, this.rotationMatrix);
-			}
-		}
-		this.repaint();
-	};
-	iview.prototype.mousewheel = function(e, delta) {
-		e.preventDefault();
-		mat4.translate(this.translationMatrix, [ 0, 0, delta * 2.5 ]);
-		this.repaint();
 	};
 
 	return iview;
