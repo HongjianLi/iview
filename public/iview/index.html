@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Jacky Lee">
+    <meta name="description" content="an interactive HTML5 visualizer of protein-ligand complex">
+    <title>iview: an interactive HTML5 visualizer of protein-ligand complex</title>
+
+    <link href="/bootstrap.min.css" rel="stylesheet">
+    <link href="/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="/index.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-57-precomposed.png">
+
+    <script src="/modernizr-2.6.2.min.js"></script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-static-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li>
+                <a href="/"><img src="/logo.png" alt="istar logo">istar: software as a service</a>
+              </li>
+              <li class="divider-vertical"></li>
+              <li>
+                <a href="/idock"><img src="/idock/logo.png" alt="idock logo">idock: protein-ligand docking</a>
+              </li>
+              <li class="divider-vertical"></li>
+              <li>
+                <a href="/igrep"><img src="/igrep/logo.png" alt="igrep logo">igrep: DNA sequence matching</a>
+              </li>
+              <li class="divider-vertical"></li>
+              <li class="active">
+                <a href="/iview"><img src="/iview/logo.png" alt="iview logo">iview: interactive HTML5 visualizer</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="https://github.com/HongjianLi/istar" class="ribbon"></a>
+
+    <div class="container">
+
+      <header class="hero-unit">
+        <h1><img src="logo.png" class="logo" alt="logo" />iview</h1>
+        <p>an interactive HTML5 visualizer of protein-ligand complex</p>
+      </header>
+
+      <section>
+        <div class="page-header">
+          <h1 id="demo">Demo</h1>
+        </div>
+        <div class="row">
+          <div class="span12">
+            <canvas id="iview" style="width: 100%; height: 800px">Your browser does not support HTML5 canvas.</canvas>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span4">
+            <div class="control-group">
+              <label class="control-label">Camera</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="camera">
+                  <button type="button" class="btn btn-info active">perspective</button>
+                  <button type="button" class="btn btn-info">orthographic</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Background</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="background">
+                  <button type="button" class="btn btn-info active">white</button>
+                  <button type="button" class="btn btn-info">grey</button>
+                  <button type="button" class="btn btn-info">black</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Color by</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="colorBy">
+                  <button type="button" class="btn btn-info active">spectrum</button>
+                  <button type="button" class="btn btn-info">chain</button>
+<!--              <button type="button" class="btn btn-info">secondary structure</button>-->
+                  <button type="button" class="btn btn-info">B factor</button>
+                  <button type="button" class="btn btn-info">residue</button>
+                  <button type="button" class="btn btn-info">polarity</button>
+                  <button type="button" class="btn btn-info">atom</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Display secondary structure as</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="secondaryStructure">
+                  <button type="button" class="btn btn-info active">thick ribbon</button>
+                  <button type="button" class="btn btn-info">thin ribbon</button>
+                  <button type="button" class="btn btn-info">strand</button>
+                  <button type="button" class="btn btn-info">cylinder & plate</button>
+                  <button type="button" class="btn btn-info">C alpha trace</button>
+                  <button type="button" class="btn btn-info">B factor tube</button>
+                  <button type="button" class="btn btn-info">none</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Display primary structure as lines</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="primaryStructure">
+                  <button type="button" class="btn btn-info active">residues</button>
+                  <button type="button" class="btn btn-info">sidechains</button>
+                  <button type="button" class="btn btn-info">none</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Display ligands as</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="ligands">
+                  <button type="button" class="btn btn-info">lines</button>
+                  <button type="button" class="btn btn-info active">stick</button>
+                  <button type="button" class="btn btn-info">ball and stick</button>
+                  <button type="button" class="btn btn-info">sphere</button>
+                  <button type="button" class="btn btn-info">none</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Display waters as</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="waters">
+                  <button type="button" class="btn btn-info active">sphere</button>
+                  <button type="button" class="btn btn-info">none</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Display ions as</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="ions">
+                  <button type="button" class="btn btn-info active">sphere</button>
+                  <button type="button" class="btn btn-info">none</button>
+                </div>
+              </div>
+            </div>
+            <p>iview supports the following keyrings</p>
+            <ul>
+              <li>Mouse wheel: zoom in / zoom out</li>
+              <li>Left mouse button: rotate the complex</li>
+              <li>Right mouse button: translate the complex</li>
+              <li>Ctrl + left mouse button: rotate the ligand</li>
+              <li>Ctrl + right mouse button: translate the ligand</li>
+            </ul>
+	        <p>iview supports the following functions</p>
+            <ul>
+              <li><a href="#" id="dock">Perform protein-ligand docking</a></li>
+              <li><a href="#" id="resetView">Reset the view</a></li>
+              <li><a href="#" id="export">Export the canvas to png</a></li>
+            </ul>
+            <hr>
+            <div class="row">
+	          <div class="span2">
+                <p>Ligand properties</p>
+                <ul>
+                  <li>Atoms: <span id="atoms"></span></li>
+                  <li>Heavy atoms: <span id="hatoms"></span></li>
+                  <li>Weight: <span id="mwt"></span></li>
+                  <li>Rotatable bonds: <span id="nrb"></span></li>
+                  <li>Hbond donors: <span id="hbds"></span></li>
+                  <li>Hbond acceptors: <span id="hbas"></span></li>
+                </ul>
+              </div>
+	          <div class="span2">
+                <p>Free energy (kcal/mol)</p>
+                <ul>
+                  <li>Normalized: <span id="eNormalized"></span></li>
+                  <li>Inter+Intra: <span id="eTotal"></span></li>
+                  <li>Inter-ligand: <span id="eInter"></span></li>
+                  <li>Intra-ligand: <span id="eIntra"></span></li>
+                  <li>Efficiency: <span id="efficiency"></span></li>
+                  <li>Flex penalty: <span id="flexPenalty"></span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="span6">
+            <textarea id="conformation" class="span6" rows="20" readonly></textarea>
+          </div>
+          <div class="span2">
+            <p># of hydrogen bonds: <span id="nhbonds"></span></p>
+            <ul id="hbonds"></ul>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p><a href="http://www.cuhk.edu.hk"><img src="/cuhk.jpg" alt="CUHK logo"></a>&copy; 2012-2013 Chinese University of Hong Kong. Platform designed by <a href="http://www.cse.cuhk.edu.hk/~hjli">Hongjian Li</a>. Code licensed under <a href="http://opensource.org/licenses/MIT">MIT License</a>. Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.<a href="http://validator.w3.org/check?uri=referer"><img src="/HTML5_Badge_512.png" alt="HTML5 logo"></a></p>
+      </footer>
+
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="/jquery-1.9.0.min.js"><\/script>')</script>
+
+    <script src="/bootstrap-button.js"></script>
+    <script src="three55.js"></script>
+    <script src="iview.js"></script>
+    <script src="index.js"></script>
+
+    <script>
+      var _gaq=[['_setAccount','UA-20604862-1'],['_trackPageview']];
+      (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+      g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+      s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>
