@@ -252,7 +252,9 @@ var iview = (function () {
 		$('body').bind('mouseup touchend', function (ev) {
 			me.isDragging = false;
 		});
-		this.container.bind("contextmenu", function (ev) { ev.preventDefault(); });
+		this.container.bind('contextmenu', function (ev) {
+			ev.preventDefault();
+		});
 		this.container.bind('mousedown touchstart', function (ev) {
 			ev.preventDefault();
 			if (!me.scene) return;
@@ -277,9 +279,9 @@ var iview = (function () {
 			if (!me.scene) return;
 			var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
 			if (ev.originalEvent.detail) { // Webkit
-				me.rotationGroup.position.z += scaleFactor * ev.originalEvent.detail / 10;
+				me.rotationGroup.position.z += scaleFactor * ev.originalEvent.detail * 0.1;
 			} else if (ev.originalEvent.wheelDelta) { // Firefox
-				me.rotationGroup.position.z -= scaleFactor * ev.originalEvent.wheelDelta / 400;
+				me.rotationGroup.position.z -= scaleFactor * ev.originalEvent.wheelDelta * 0.0025;
 			}
 			me.show();
 		});
@@ -307,10 +309,7 @@ var iview = (function () {
 			} else if (mode == 1 || me.mouseButton == 2 || ev.ctrlKey) { // Translate
 				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
 				if (scaleFactor < 20) scaleFactor = 20;
-				var translationByScreen = new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0);
-				var q = me.rotationGroup.quaternion;
-				var qinv = new THREE.Quaternion(q.x, q.y, q.z, q.w).inverse().normalize();
-				var translation = translationByScreen.applyQuaternion(qinv);
+				var translation = new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize());
 				me.modelGroup.position.x = me.currentModelPos.x + translation.x;
 				me.modelGroup.position.y = me.currentModelPos.y + translation.y;
 				me.modelGroup.position.z = me.currentModelPos.z + translation.z;
@@ -331,10 +330,7 @@ var iview = (function () {
 
 	iview.prototype.isConnected = function (atom1, atom2) {
 		if (atom1.bonds.indexOf(atom2.serial) != -1) return 1;
-		var distSquared = (atom1.x - atom2.x) * (atom1.x - atom2.x) +
-						  (atom1.y - atom2.y) * (atom1.y - atom2.y) +
-						  (atom1.z - atom2.z) * (atom1.z - atom2.z);
-		if (isNaN(distSquared)) return 0;
+		var distSquared = new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
 		if (distSquared < 0.5) return 0; // maybe duplicate position.
 		if (distSquared > 1.3 && (atom1.elem == 'H' || atom2.elem == 'H')) return 0;
 		if (distSquared < 3.42 && (atom1.elem == 'S' || atom2.elem == 'S')) return 1;
@@ -343,24 +339,22 @@ var iview = (function () {
 	};
 
 	// Catmull-Rom subdivision
-	iview.prototype.subdivide = function (_points, DIV) { // points as Vector3
+	iview.prototype.subdivide = function (_points, DIV) {
 		var ret = [];
-		var points = _points;
-		points = new Array(); // Smoothing test
+		var points = new Array(); // Smoothing test
 		points.push(_points[0]);
-		for (var i = 1, lim = _points.length - 1; i < lim; i++) {
+		for (var i = 1, lim = _points.length - 1; i < lim; ++i) {
 			var p1 = _points[i], p2 = _points[i + 1];
-			if (p1.smoothen) points.push(new THREE.Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2));
-			else points.push(p1);
+			points.push(p1.smoothen ? new THREE.Vector3(p1.x, p1.y, p1.z).add(new THREE.Vector3(p2.x, p2.y, p2.z)).multiplyScalar(0.5) : p1);
 		}
 		points.push(_points[_points.length - 1]);
-		for (var i = -1, size = points.length; i <= size - 3; i++) {
+		for (var i = -1, size = points.length; i <= size - 3; ++i) {
 			var p0 = points[(i == -1) ? 0 : i];
 			var p1 = points[i + 1], p2 = points[i + 2];
 			var p3 = points[(i == size - 3) ? size - 1 : i + 3];
-			var v0 = new THREE.Vector3().subVectors(p2, p0).multiplyScalar(0.5);
-			var v1 = new THREE.Vector3().subVectors(p3, p1).multiplyScalar(0.5);
-			for (var j = 0; j < DIV; j++) {
+			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
+			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
+			for (var j = 0; j < DIV; ++j) {
 				var t = 1.0 / DIV * j;
 				var x = p1.x + t * v0.x
 						 + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x)
@@ -470,22 +464,20 @@ var iview = (function () {
 
 	iview.prototype.drawSmoothCurve = function (_points, width, colors, div) {
 		if (_points.length == 0) return;
-		div = (div == undefined) ? 5 : div;
-		var geo = new THREE.Geometry();
+		div = div || 5;
 		var points = this.subdivide(_points, div);
+		var geo = new THREE.Geometry();
 		for (var i = 0; i < points.length; i++) {
 			geo.vertices.push(points[i]);
 			geo.colors.push(new THREE.Color(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
 		}
-		var lineMaterial = new THREE.LineBasicMaterial({ linewidth: width });
-		lineMaterial.vertexColors = true;
-		this.modelGroup.add(new THREE.Line(geo, lineMaterial, THREE.LineStrip));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: width, vertexColors: true }), THREE.LineStrip));
 	};
 
 	iview.prototype.drawMainchainCurve = function (atomlist, curveWidth, atomName, div) {
 		var points = [], colors = [];
 		var currentChain, currentResi;
-		if (div == undefined) div = 5;
+		div = div || 5;
 		for (var i in atomlist) {
 			var atom = this.atoms[atomlist[i]];
 			if ((atom.atom == atomName) && !atom.het) {
@@ -510,59 +502,48 @@ var iview = (function () {
 		p2 = this.subdivide(p2, div);
 		var geo = new THREE.Geometry();
 		if (!thickness) {
-			for (var i = 0, lim = p1.length; i < lim; i++) {
+			for (var i = 0, lim = p1.length; i < lim; ++i) {
 				geo.vertices.push(p1[i]); // 2i
 				geo.vertices.push(p2[i]); // 2i + 1
 			}
-			for (var i = 1, lim = p1.length; i < lim; i++) {
-				var f = new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2);
-				f.color = new THREE.Color(colors[Math.round((i - 1) / div)]);
-				geo.faces.push(f);
+			for (var i = 1, lim = p1.length; i < lim; ++i) {
+				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, new THREE.Color(colors[Math.round((i - 1) / div)])));
 			}
-			geo.computeFaceNormals();
-			geo.computeVertexNormals(false);
-			var material = new THREE.MeshLambertMaterial();
-			material.vertexColors = THREE.FaceColors;
-			var mesh = new THREE.Mesh(geo, material);
-			mesh.doubleSided = true;
-			this.modelGroup.add(mesh);
-			return;
-		}
-		var vs = geo.vertices, fs = geo.faces;
-		var axis, p1v, p2v, a1v, a2v;
-		for (var i = 0, lim = p1.length; i < lim; i++) {
-			vs.push(p1v = p1[i]); // 0
-			vs.push(p1v); // 1
-			vs.push(p2v = p2[i]); // 2
-			vs.push(p2v); // 3
-			if (i < lim - 1) {
-				var toNext = p1[i + 1].clone().sub(p1[i]);
-				var toSide = p2[i].clone().sub(p1[i]);
-				axis = toSide.cross(toNext).normalize().multiplyScalar(thickness);
+		} else {
+			var vs = geo.vertices, fs = geo.faces;
+			var axis, p1v, p2v, a1v, a2v;
+			for (var i = 0, lim = p1.length; i < lim; ++i) {
+				vs.push(p1v = p1[i]); // 0
+				vs.push(p1v); // 1
+				vs.push(p2v = p2[i]); // 2
+				vs.push(p2v); // 3
+				if (i < lim - 1) {
+					axis = p2[i].clone().sub(p1[i]).cross(p1[i + 1].clone().sub(p1[i])).normalize().multiplyScalar(thickness);
+				}
+				vs.push(a1v = p1[i].clone().add(axis)); // 4
+				vs.push(a1v); // 5
+				vs.push(a2v = p2[i].clone().add(axis)); // 6
+				vs.push(a2v); // 7
 			}
-			vs.push(a1v = p1[i].clone().add(axis)); // 4
-			vs.push(a1v); // 5
-			vs.push(a2v = p2[i].clone().add(axis)); // 6
-			vs.push(a2v); // 7
-		}
-		var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
-		for (var i = 1, lim = p1.length; i < lim; i++) {
-			var offset = 8 * i, color = new THREE.Color(colors[Math.round((i - 1) / div)]);
-			for (var j = 0; j < 4; j++) {
-				var f = new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color);
-				fs.push(f);
+			var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
+			for (var i = 1, lim = p1.length; i < lim; ++i) {
+				var offset = 8 * i, color = new THREE.Color(colors[Math.round((i - 1) / div)]);
+				for (var j = 0; j < 4; ++j) {
+					fs.push(new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color));
+				}
 			}
+			var vsize = vs.length - 8; // Cap
+			for (var i = 0; i < 4; ++i) {
+				vs.push(vs[i * 2]);
+				vs.push(vs[vsize + i * 2]);
+			};
+			vsize += 8;
+			fs.push(new THREE.Face4(vsize, vsize + 2, vsize + 6, vsize + 4, undefined, fs[0].color));
+			fs.push(new THREE.Face4(vsize + 1, vsize + 5, vsize + 7, vsize + 3, undefined, fs[fs.length - 3].color));
 		}
-		var vsize = vs.length - 8; // Cap
-		for (var i = 0; i < 4; i++) { vs.push(vs[i * 2]); vs.push(vs[vsize + i * 2]) };
-		vsize += 8;
-		fs.push(new THREE.Face4(vsize, vsize + 2, vsize + 6, vsize + 4, undefined, fs[0].color));
-		fs.push(new THREE.Face4(vsize + 1, vsize + 5, vsize + 7, vsize + 3, undefined, fs[fs.length - 3].color));
 		geo.computeFaceNormals();
 		geo.computeVertexNormals(false);
-		var material = new THREE.MeshLambertMaterial();
-		material.vertexColors = THREE.FaceColors;
-		var mesh = new THREE.Mesh(geo, material);
+		var mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: THREE.FaceColors }));
 		mesh.doubleSided = true;
 		this.modelGroup.add(mesh);
 	};
@@ -571,7 +552,7 @@ var iview = (function () {
 		num = num || this.strandDIV;
 		div = div || this.axisDIV;
 		coilWidth = coilWidth || this.coilWidth;
-		doNotSmoothen == (doNotSmoothen == undefined) ? false : doNotSmoothen;
+		doNotSmoothen = doNotSmoothen || false;
 		helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
 		var points = []; for (var k = 0; k < num; k++) points[k] = [];
 		var colors = [];
@@ -582,7 +563,7 @@ var iview = (function () {
 			if ((atom.atom == 'O' || atom.atom == 'CA') && !atom.het) {
 				if (atom.atom == 'CA') {
 					if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-						for (var j = 0; !thickness && j < num; j++)
+						for (var j = 0; !thickness && j < num; ++j)
 							this.drawSmoothCurve(points[j], 1, colors, div);
 						if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
 						var points = []; for (var k = 0; k < num; k++) points[k] = [];
@@ -598,7 +579,7 @@ var iview = (function () {
 					var O = new THREE.Vector3(atom.x, atom.y, atom.z);
 					O.sub(currentCA);
 					O.normalize(); // can be omitted for performance
-					O.multiplyScalar((ss == 'coil') ? coilWidth : helixSheetWidth);
+					O.multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
 					if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
 					prevCO = O;
 					for (var j = 0; j < num; j++) {
@@ -635,9 +616,9 @@ var iview = (function () {
 			}
 			var delta, axis1, axis2;
 			if (i < lim - 1) {
-				delta = new THREE.Vector3().subVectors(points[i], points[i + 1]);
+				delta = points[i].clone().sub(points[i + 1]);
 				axis1 = new THREE.Vector3(0, -delta.z, delta.y).normalize().multiplyScalar(r);
-				axis2 = new THREE.Vector3().crossVectors(delta, axis1).normalize().multiplyScalar(r);
+				axis2 = delta.clone().cross(axis1).normalize().multiplyScalar(r);
 				//      var dir = 1, offset = 0;
 				if (prevAxis1.dot(axis1) < 0) {
 					axis1.negate(); axis2.negate();  //dir = -1;//offset = 2 * Math.PI / axisDiv;
@@ -659,22 +640,18 @@ var iview = (function () {
 		for (var i = 0, lim = points.length - 1; i < lim; i++) {
 			var c = new THREE.Color(colors[Math.round((i - 1) / axisDiv)]);
 			var reg = 0;
-			var r1 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv]).lengthSq();
-			var r2 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv + 1]).lengthSq();
+			var r1 = geo.vertices[offset].clone().sub(geo.vertices[offset + circleDiv]).lengthSq();
+			var r2 = geo.vertices[offset].clone().sub(geo.vertices[offset + circleDiv + 1]).lengthSq();
 			if (r1 > r2) { r1 = r2; reg = 1; };
 			for (var j = 0; j < circleDiv; j++) {
-				geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv));
-				geo.faces.push(new THREE.Face3(offset + (j + 1) % circleDiv, offset + (j + reg) % circleDiv + circleDiv, offset + (j + reg + 1) % circleDiv + circleDiv));
-				geo.faces[geo.faces.length - 2].color = c;
-				geo.faces[geo.faces.length - 1].color = c;
+				geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv, undefined, c));
+				geo.faces.push(new THREE.Face3(offset + (j + 1) % circleDiv, offset + (j + reg) % circleDiv + circleDiv, offset + (j + reg + 1) % circleDiv + circleDiv, undefined, c));
 			}
 			offset += circleDiv;
 		}
 		geo.computeFaceNormals();
 		geo.computeVertexNormals(false);
-		var mat = new THREE.MeshLambertMaterial();
-		mat.vertexColors = THREE.FaceColors;
-		var mesh = new THREE.Mesh(geo, mat);
+		var mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: THREE.FaceColors }));
 		mesh.doubleSided = true;
 		this.modelGroup.add(mesh);
 	};
@@ -690,11 +667,7 @@ var iview = (function () {
 					points = []; colors = []; radii = [];
 				}
 				points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
-				if (radius == undefined) {
-					radii.push((atom.b > 0) ? atom.b / 100 : 0.3);
-				} else {
-					radii.push(radius);
-				}
+				radii.push(radius || atom.b > 0 ? atom.b * 0.01 : 0.3);
 				colors.push(atom.color);
 				currentChain = atom.chain;
 				currentResi = atom.resi;
@@ -730,7 +703,7 @@ var iview = (function () {
 	iview.prototype.drawDottedLines = function (points, color) {
 		var geo = new THREE.Geometry();
 		var step = 0.3;
-		for (var i = 0, lim = Math.floor(points.length / 2) ; i < lim; i++) {
+		for (var i = 0, lim = Math.floor(points.length * 0.5) ; i < lim; i++) {
 			var p1 = points[2 * i], p2 = points[2 * i + 1];
 			var delta = p2.clone().sub(p1);
 			var dist = delta.length();
@@ -745,13 +718,6 @@ var iview = (function () {
 	};
 
 	iview.prototype.rebuildScene = function (options) {
-		var view;
-		if (!this.modelGroup) view = [0, 0, 0, 0, 0, 0, 0, 1];
-		else {
-			var pos = this.modelGroup.position;
-			var q = this.rotationGroup.quaternion;
-			view = [pos.x, pos.y, pos.z, this.rotationGroup.position.z, q.x, q.y, q.z, q.w];
-		}
 		var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1.2);
 		directionalLight.position = new THREE.Vector3(0.2, 0.2, -1).normalize();
 		var ambientLight = new THREE.AmbientLight(0x202020);
@@ -759,10 +725,15 @@ var iview = (function () {
 		this.scene.add(directionalLight);
 		this.scene.add(ambientLight);
 
+		var mp = this.modelGroup ? this.modelGroup.position : new THREE.Vector3();
+		var rz = this.rotationGroup ? this.rotationGroup.position.z : 0;
+		var rq = this.rotationGroup ? this.rotationGroup.quaternion : new THREE.Quaternion();
 		this.modelGroup = new THREE.Object3D();
+		this.modelGroup.position = mp;
 		this.rotationGroup = new THREE.Object3D();
 		this.rotationGroup.useQuaternion = true;
-		this.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
+		this.rotationGroup.position.z = rz;
+		this.rotationGroup.quaternion = rq;
 		this.rotationGroup.add(this.modelGroup);
 		this.scene.add(this.rotationGroup);
 
@@ -831,10 +802,11 @@ var iview = (function () {
 					}
 					this.middB = (maxB + minB) * 0.5;
 					this.spanB = (maxB - minB) * 0.5;
+					this.spanBinv = 1.0 / this.spanB;
 				}
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.b < this.middB ? new THREE.Color().setHSV(0.667, (this.middB - atom.b) / this.spanB, 1).getHex() : new THREE.Color().setHSV(0, (atom.b - this.middB) / this.spanB, 1).getHex();
+					atom.color = atom.b < this.middB ? new THREE.Color().setHSV(0.667, (this.middB - atom.b) * this.spanBinv, 1).getHex() : new THREE.Color().setHSV(0, (atom.b - this.middB) * this.spanBinv, 1).getHex();
 				}
 				break;
 			case 'residue':
@@ -917,21 +889,12 @@ var iview = (function () {
 				this.drawAtomsAsSphere(ions, 0.3, true);
 				break;
 		}
-
-		this.modelGroup.position.x = view[0];
-		this.modelGroup.position.y = view[1];
-		this.modelGroup.position.z = view[2];
-		this.rotationGroup.position.z = view[3];
-		this.rotationGroup.quaternion.x = view[4];
-		this.rotationGroup.quaternion.y = view[5];
-		this.rotationGroup.quaternion.z = view[6];
-		this.rotationGroup.quaternion.w = view[7];
 	};
 
 	iview.prototype.loadReceptor = function (src) {
 		var helices = [], sheets = [];
 		this.atoms = [];
-		var lines = src.split("\n");
+		var lines = src.split('\n');
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
@@ -1025,7 +988,9 @@ var iview = (function () {
 		var xsum = ysum = zsum = cnt = 0;
 		for (var i in this.atoms) {
 			var atom = this.atoms[i];
-			xsum += atom.x; ysum += atom.y; zsum += atom.z;
+			xsum += atom.x;
+			ysum += atom.y;
+			zsum += atom.z;
 			xmin = (xmin < atom.x) ? xmin : atom.x;
 			ymin = (ymin < atom.y) ? ymin : atom.y;
 			zmin = (zmin < atom.z) ? zmin : atom.z;
@@ -1034,14 +999,12 @@ var iview = (function () {
 			zmax = (zmax > atom.z) ? zmax : atom.z;
 			++cnt;
 		}
-		var center = new THREE.Vector3(xsum / cnt, ysum / cnt, zsum / cnt);
-		this.modelGroup.position = center.multiplyScalar(-1);
-		var x = xmax - xmin, y = ymax - ymin, z = zmax - zmin;
-		var maxD = Math.sqrt(x * x + y * y + z * z);
+		this.modelGroup.position = new THREE.Vector3(xsum / cnt, ysum / cnt, zsum / cnt).multiplyScalar(-1);
+		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
 		if (maxD < 25) maxD = 25;
 		this.slabNear = -maxD / 1.9;
 		this.slabFar = maxD / 3;
-		this.rotationGroup.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * this.camera.fov / 2) - 150;
+		this.rotationGroup.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * this.camera.fov * 0.5) - 150;
 		this.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
 		this.show();
 	};
