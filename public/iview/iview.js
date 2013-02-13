@@ -215,15 +215,20 @@ var iview = (function () {
 		};
 		this.helixColor = 0xCC00CC;
 		this.sheetColor = 0x00CCCC;
-		this.coilColor  = 0xCCCC00;
+		this.coilColor = 0xCCCC00;
+		this.ssColors = {
+			helix: this.helixColor,
+			sheet: this.sheetColor,
+			 coil: this.coilColor,
+		};
 		this.options = {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'spectrum',
 			secondaryStructure: 'cylinder & plate',
-			primaryStructure: 'none',
+			primaryStructure: 'residues',
 			ligands: 'stick',
-			waters: 'sphere',
+			waters: 'dot',
 			ions: 'sphere',
 		};
 
@@ -815,98 +820,6 @@ var iview = (function () {
 		return ret;
 	};
 
-	iview.prototype.colorByAtom = function (atomlist) {
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			atom.color = this.elementColors[atom.elem] || this.defaultColor;
-		}
-	};
-
-	iview.prototype.colorByStructure = function (atomlist, colorSidechains) {
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (!colorSidechains && (atom.atom != 'CA' || atom.het)) continue;
-			if (atom.ss == 'sheet') atom.color = this.sheetColor;
-			else if (atom.ss == 'helix') atom.color = this.helixColor;
-		}
-	};
-
-	iview.prototype.colorByBFactor = function (atomlist, colorSidechains) {
-		var minB = 1000, maxB = -1000;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if (colorSidechains || atom.atom == 'CA' || atom.atom == 'O3\'') {
-				if (minB > atom.b) minB = atom.b;
-				if (maxB < atom.b) maxB = atom.b;
-			}
-		}
-		var mid = (maxB + minB) * 0.5;
-		var range = (maxB - minB) * 0.5;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if (colorSidechains || atom.atom == 'CA' || atom.atom == 'O3\'') {
-				var color = new THREE.Color();
-				if (atom.b < mid)
-					color.setHSV(0.667, (mid - atom.b) / range, 1);
-				else
-					color.setHSV(0, (atom.b - mid) / range, 1);
-				atom.color = color.getHex();
-			}
-		}
-	};
-
-	iview.prototype.colorByChain = function (atomlist, colorSidechains) {
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if (colorSidechains || atom.atom == 'CA' || atom.atom == 'O3\'') {
-				var color = new THREE.Color();
-				color.setHSV((atom.chain.charCodeAt(0) * 5) % 17 / 17.0, 1, 0.9);
-				atom.color = color.getHex();
-			}
-		}
-	};
-
-	iview.prototype.colorByResidue = function (atomlist) {
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (this.residueColors[atom.resn]) {
-				atom.color = this.residueColors[atom.resn];
-			}
-		}
-	};
-
-	iview.prototype.colorByPolarity = function (atomlist) {
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (this.polarityColors[atom.resn]) {
-				atom.color = this.polarityColors[atom.resn];
-			}
-		}
-	};
-
-	iview.prototype.colorChainbow = function (atomlist, colorSidechains) {
-		var cnt = 0;
-		var atom, i;
-		for (i in atomlist) {
-			atom = this.atoms[atomlist[i]];
-			if ((colorSidechains || atom.atom != 'CA' || atom.atom != 'O3\'') && !atom.het)
-				cnt++;
-		}
-		var total = cnt;
-		cnt = 0;
-		for (i in atomlist) {
-			atom = this.atoms[atomlist[i]];
-			if ((colorSidechains || atom.atom != 'CA' || atom.atom != 'O3\'') && !atom.het) {
-				var color = new THREE.Color(0);
-				color.setHSV(2 / 3 * (1 - cnt++ / total), 1, 0.9);
-				atom.color = color.getHex();
-			}
-		}
-	};
-
 	iview.prototype.rebuildScene = function (options) {
 		var view;
 		if (!this.modelGroup) view = [0, 0, 0, 0, 0, 0, 0, 1];
@@ -942,27 +855,65 @@ var iview = (function () {
 		var waters = this.getWaters(hetatms);
 		var ions = this.getIons(hetatms);
 
-		this.colorByAtom(all);
 		switch (this.options.colorBy) {
 			case 'spectrum':
-				this.colorChainbow(all);
+				if (!this.stdAtoms) {
+					this.stdAtoms = 0;
+					for (var i in this.atoms) {
+						if (!this.atoms[i].het) ++this.stdAtoms;
+					}
+				}
+				var idx = 0;
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms), 1, 0.9).getHex();
+				}
 				break;
 			case 'chain':
-				this.colorByChain(all);
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = new THREE.Color().setHSV((atom.chain.charCodeAt(0) * 5) % 17 / 17, 1, 0.9).getHex();
+				}
 				break;
 			case 'secondary structure':
-				this.colorByStructure(all);
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.ssColors[atom.ss];
+				}
 				break;
 			case 'B factor':
-				this.colorByBFactor(all);
+				if (!this.middB) {
+					var minB = 1000, maxB = -1000;
+					for (var i in this.atoms) {
+						var atom = this.atoms[i];
+						if (minB > atom.b) minB = atom.b;
+						if (maxB < atom.b) maxB = atom.b;
+					}
+					this.middB = (maxB + minB) * 0.5;
+					this.spanB = (maxB - minB) * 0.5;
+				}
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = atom.b < this.middB ? new THREE.Color().setHSV(0.667, (this.middB - atom.b) / this.spanB, 1).getHex() : new THREE.Color().setHSV(0, (atom.b - this.middB) / this.spanB, 1).getHex();
+				}
 				break;
 			case 'residue':
-				this.colorByResidue(all);
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.residueColors[atom.resn] || this.defaultColor;
+				}
 				break;
 			case 'polarity':
-				this.colorByPolarity(all);
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.polarityColors[atom.resn] || this.defaultColor;
+				}
 				break;
 			case 'atom':
+				for (var i in this.atoms) {
+					var atom = this.atoms[i];
+					atom.color = this.elementColors[atom.elem] || this.defaultColor;
+				}
 				break;
 		}
 
@@ -1011,6 +962,9 @@ var iview = (function () {
 
 		switch (this.options.waters) {
 			case 'sphere':
+				this.drawAtomsAsSphere(waters, this.sphereRadius);
+				break;
+			case 'dot':
 				this.drawAtomsAsSphere(waters, 0.3, true);
 				break;
 		}
@@ -1018,6 +972,9 @@ var iview = (function () {
 		switch (this.options.ions) {
 			case 'sphere':
 				this.drawAtomsAsSphere(ions, this.sphereRadius);
+				break;
+			case 'dot':
+				this.drawAtomsAsSphere(ions, 0.3, true);
 				break;
 		}
 
