@@ -378,15 +378,18 @@ var iview = (function () {
 		return ret;
 	};
 
+	iview.prototype.drawSphere = function (atom, defaultRadius, forceDefault, scale) {
+		var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
+		sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
+		sphere.position.x = atom.x;
+		sphere.position.y = atom.y;
+		sphere.position.z = atom.z;
+		this.modelGroup.add(sphere);
+	};
+
 	iview.prototype.drawAtomsAsSphere = function (atomlist, defaultRadius, forceDefault, scale) {
 		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
-			sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
-			sphere.position.x = atom.x;
-			sphere.position.y = atom.y;
-			sphere.position.z = atom.z;
-			this.modelGroup.add(sphere);
+			this.drawSphere(this.atoms[atomlist[i]], defaultRadius, forceDefault, scale);
 		}
 	};
 
@@ -404,15 +407,12 @@ var iview = (function () {
 		var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
 		var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
 		var mp = p1.clone().add(p2).multiplyScalar(0.5);
-		var c1 = new THREE.Color(atom1.color);
-		var c2 = new THREE.Color(atom2.color);
 		this.drawCylinder(p1, mp, bondR, atom1.color);
 		this.drawCylinder(p2, mp, bondR, atom2.color);
 	};
 
-	iview.prototype.drawBondsAsStick = function (atomlist, bondR, atomR, ignoreNonbonded, scale) {
-		var nAtoms = atomlist.length, mp;
-		var forSpheres = [];
+	iview.prototype.drawBondsAsStick = function (atomlist, bondR, atomR, scale) {
+		var nAtoms = atomlist.length;
 		for (var _i = 0; _i < nAtoms; _i++) {
 			var i = atomlist[_i];
 			var atom1 = this.atoms[i];
@@ -431,9 +431,8 @@ var iview = (function () {
 				atom1.connected = atom2.connected = true;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
-			if (atom1.connected) forSpheres.push(i);
+			if (atom1.connected) this.drawSphere(atom1, atomR, !scale, scale);
 		}
-		this.drawAtomsAsSphere(forSpheres, atomR, !scale, scale);
 	};
 
 	iview.prototype.drawBondsAsLineSub = function (geo, atom1, atom2) {
@@ -466,9 +465,7 @@ var iview = (function () {
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 		}
-		var lineMaterial = new THREE.LineBasicMaterial({ linewidth: lineWidth });
-		lineMaterial.vertexColors = true;
-		this.modelGroup.add(new THREE.Line(geo, lineMaterial, THREE.LinePieces));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: lineWidth, vertexColors: true }), THREE.LinePieces));
 	};
 
 	iview.prototype.drawSmoothCurve = function (_points, width, colors, div) {
@@ -504,118 +501,6 @@ var iview = (function () {
 			}
 		}
 		this.drawSmoothCurve(points, curveWidth, colors, div);
-	};
-
-	// FIXME: Winkled...
-	iview.prototype.drawSmoothTube = function (_points, colors, radii) {
-		if (_points.length < 2) return;
-		var circleDiv = this.tubeDIV, axisDiv = this.axisDIV;
-		var geo = new THREE.Geometry();
-		var points = this.subdivide(_points, axisDiv);
-		var prevAxis1 = new THREE.Vector3(), prevAxis2;
-		for (var i = 0, lim = points.length; i < lim; i++) {
-			var r, idx = (i - 1) / axisDiv;
-			if (i == 0) r = radii[0];
-			else {
-				if (idx % 1 == 0) r = radii[idx];
-				else {
-					var floored = Math.floor(idx);
-					var tmp = idx - floored;
-					r = radii[floored] * tmp + radii[floored + 1] * (1 - tmp);
-				}
-			}
-			var delta, axis1, axis2;
-			if (i < lim - 1) {
-				delta = new THREE.Vector3().subVectors(points[i], points[i + 1]);
-				axis1 = new THREE.Vector3(0, -delta.z, delta.y).normalize().multiplyScalar(r);
-				axis2 = new THREE.Vector3().crossVectors(delta, axis1).normalize().multiplyScalar(r);
-				//      var dir = 1, offset = 0;
-				if (prevAxis1.dot(axis1) < 0) {
-					axis1.negate(); axis2.negate();  //dir = -1;//offset = 2 * Math.PI / axisDiv;
-				}
-				prevAxis1 = axis1; prevAxis2 = axis2;
-			} else {
-				axis1 = prevAxis1; axis2 = prevAxis2;
-			}
-			for (var j = 0; j < circleDiv; j++) {
-				var angle = 2 * Math.PI / circleDiv * j; //* dir  + offset;
-				var c = Math.cos(angle), s = Math.sin(angle);
-				geo.vertices.push(new THREE.Vector3(
-				points[i].x + c * axis1.x + s * axis2.x,
-				points[i].y + c * axis1.y + s * axis2.y,
-				points[i].z + c * axis1.z + s * axis2.z));
-			}
-		}
-		var offset = 0;
-		for (var i = 0, lim = points.length - 1; i < lim; i++) {
-			var c = new THREE.Color(colors[Math.round((i - 1) / axisDiv)]);
-			var reg = 0;
-			var r1 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv]).lengthSq();
-			var r2 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv + 1]).lengthSq();
-			if (r1 > r2) { r1 = r2; reg = 1; };
-			for (var j = 0; j < circleDiv; j++) {
-				geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv));
-				geo.faces.push(new THREE.Face3(offset + (j + 1) % circleDiv, offset + (j + reg) % circleDiv + circleDiv, offset + (j + reg + 1) % circleDiv + circleDiv));
-				geo.faces[geo.faces.length - 2].color = c;
-				geo.faces[geo.faces.length - 1].color = c;
-			}
-			offset += circleDiv;
-		}
-		geo.computeFaceNormals();
-		geo.computeVertexNormals(false);
-		var mat = new THREE.MeshLambertMaterial();
-		mat.vertexColors = THREE.FaceColors;
-		var mesh = new THREE.Mesh(geo, mat);
-		mesh.doubleSided = true;
-		this.modelGroup.add(mesh);
-	};
-
-	iview.prototype.drawMainchainTube = function (atomlist, atomName, radius) {
-		var points = [], colors = [], radii = [];
-		var currentChain, currentResi;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if ((atom.atom == atomName) && !atom.het) {
-				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					this.drawSmoothTube(points, colors, radii);
-					points = []; colors = []; radii = [];
-				}
-				points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
-				if (radius == undefined) {
-					radii.push((atom.b > 0) ? atom.b / 100 : 0.3);
-				} else {
-					radii.push(radius);
-				}
-				colors.push(atom.color);
-				currentChain = atom.chain;
-				currentResi = atom.resi;
-			}
-		}
-		this.drawSmoothTube(points, colors, radii);
-	};
-
-	// FIXME: transition!
-	iview.prototype.drawHelixAsCylinder = function (atomlist, radius) {
-		var start = null;
-		var currentChain, currentResi;
-		var others = [], beta = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others.push(atom.serial);
-			if (atom.ss == 'sheet') beta.push(atom.serial);
-			if (atom.atom != 'CA') continue;
-			if (atom.ss == 'helix' && atom.ssend) {
-				if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
-				start = null;
-			}
-			currentChain = atom.chain;
-			currentResi = atom.resi;
-			if (start == null && atom.ss == 'helix' && atom.ssbegin) start = atom;
-		}
-		if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color);
-		this.drawMainchainTube(others, "CA", 0.3);
-		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
 	};
 
 	iview.prototype.drawStrip = function (p1, p2, colors, div, thickness) {
@@ -730,6 +615,118 @@ var iview = (function () {
 		if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
 	};
 
+	// FIXME: Winkled...
+	iview.prototype.drawSmoothTube = function (_points, colors, radii) {
+		if (_points.length < 2) return;
+		var circleDiv = this.tubeDIV, axisDiv = this.axisDIV;
+		var geo = new THREE.Geometry();
+		var points = this.subdivide(_points, axisDiv);
+		var prevAxis1 = new THREE.Vector3(), prevAxis2;
+		for (var i = 0, lim = points.length; i < lim; i++) {
+			var r, idx = (i - 1) / axisDiv;
+			if (i == 0) r = radii[0];
+			else {
+				if (idx % 1 == 0) r = radii[idx];
+				else {
+					var floored = Math.floor(idx);
+					var tmp = idx - floored;
+					r = radii[floored] * tmp + radii[floored + 1] * (1 - tmp);
+				}
+			}
+			var delta, axis1, axis2;
+			if (i < lim - 1) {
+				delta = new THREE.Vector3().subVectors(points[i], points[i + 1]);
+				axis1 = new THREE.Vector3(0, -delta.z, delta.y).normalize().multiplyScalar(r);
+				axis2 = new THREE.Vector3().crossVectors(delta, axis1).normalize().multiplyScalar(r);
+				//      var dir = 1, offset = 0;
+				if (prevAxis1.dot(axis1) < 0) {
+					axis1.negate(); axis2.negate();  //dir = -1;//offset = 2 * Math.PI / axisDiv;
+				}
+				prevAxis1 = axis1; prevAxis2 = axis2;
+			} else {
+				axis1 = prevAxis1; axis2 = prevAxis2;
+			}
+			for (var j = 0; j < circleDiv; j++) {
+				var angle = 2 * Math.PI / circleDiv * j; //* dir  + offset;
+				var c = Math.cos(angle), s = Math.sin(angle);
+				geo.vertices.push(new THREE.Vector3(
+				points[i].x + c * axis1.x + s * axis2.x,
+				points[i].y + c * axis1.y + s * axis2.y,
+				points[i].z + c * axis1.z + s * axis2.z));
+			}
+		}
+		var offset = 0;
+		for (var i = 0, lim = points.length - 1; i < lim; i++) {
+			var c = new THREE.Color(colors[Math.round((i - 1) / axisDiv)]);
+			var reg = 0;
+			var r1 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv]).lengthSq();
+			var r2 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv + 1]).lengthSq();
+			if (r1 > r2) { r1 = r2; reg = 1; };
+			for (var j = 0; j < circleDiv; j++) {
+				geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv));
+				geo.faces.push(new THREE.Face3(offset + (j + 1) % circleDiv, offset + (j + reg) % circleDiv + circleDiv, offset + (j + reg + 1) % circleDiv + circleDiv));
+				geo.faces[geo.faces.length - 2].color = c;
+				geo.faces[geo.faces.length - 1].color = c;
+			}
+			offset += circleDiv;
+		}
+		geo.computeFaceNormals();
+		geo.computeVertexNormals(false);
+		var mat = new THREE.MeshLambertMaterial();
+		mat.vertexColors = THREE.FaceColors;
+		var mesh = new THREE.Mesh(geo, mat);
+		mesh.doubleSided = true;
+		this.modelGroup.add(mesh);
+	};
+
+	iview.prototype.drawMainchainTube = function (atomlist, atomName, radius) {
+		var points = [], colors = [], radii = [];
+		var currentChain, currentResi;
+		for (var i in atomlist) {
+			var atom = this.atoms[atomlist[i]];
+			if ((atom.atom == atomName) && !atom.het) {
+				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
+					this.drawSmoothTube(points, colors, radii);
+					points = []; colors = []; radii = [];
+				}
+				points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
+				if (radius == undefined) {
+					radii.push((atom.b > 0) ? atom.b / 100 : 0.3);
+				} else {
+					radii.push(radius);
+				}
+				colors.push(atom.color);
+				currentChain = atom.chain;
+				currentResi = atom.resi;
+			}
+		}
+		this.drawSmoothTube(points, colors, radii);
+	};
+
+	// FIXME: transition!
+	iview.prototype.drawHelixAsCylinder = function (atomlist, radius) {
+		var start = null;
+		var currentChain, currentResi;
+		var others = [], beta = [];
+		for (var i in atomlist) {
+			var atom = this.atoms[atomlist[i]];
+			if (atom.het) continue;
+			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others.push(atom.serial);
+			if (atom.ss == 'sheet') beta.push(atom.serial);
+			if (atom.atom != 'CA') continue;
+			if (atom.ss == 'helix' && atom.ssend) {
+				if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
+				start = null;
+			}
+			currentChain = atom.chain;
+			currentResi = atom.resi;
+			if (start == null && atom.ss == 'helix' && atom.ssbegin) start = atom;
+		}
+		if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color);
+		this.drawMainchainTube(others, 'CA', 0.3);
+		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
+	};
+
 	iview.prototype.drawDottedLines = function (points, color) {
 		var geo = new THREE.Geometry();
 		var step = 0.3;
@@ -744,8 +741,7 @@ var iview = (function () {
 			}
 			if (jlim % 2 == 1) geo.vertices.push(p2);
 		}
-		var mat = new THREE.LineBasicMaterial({ 'color': color, linewidth: 2 });
-		this.modelGroup.add(new THREE.Line(geo, mat, THREE.LinePieces));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ 'color': color, linewidth: 2 }), THREE.LinePieces));
 	};
 
 	iview.prototype.rebuildScene = function (options) {
@@ -894,10 +890,10 @@ var iview = (function () {
 				this.drawBondsAsLine(ligands, this.curveWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(ligands, this.cylinderRadius, this.cylinderRadius, true);
+				this.drawBondsAsStick(ligands, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(ligands, this.cylinderRadius * 0.5, this.cylinderRadius, true, 0.3);
+				this.drawBondsAsStick(ligands, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(ligands, this.sphereRadius);
