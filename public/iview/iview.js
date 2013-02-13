@@ -118,11 +118,9 @@ var iview = (function () {
 		};
 
 		this.container = $('#' + id);
-		this.WIDTH = this.container.width();
+		this.WIDTH  = this.container.width();
 		this.HEIGHT = this.container.height();
 		this.ASPECT = this.WIDTH / this.HEIGHT;
-		this.NEAR = 1;
-		this.FAR = 800;
 		this.CAMERA_Z = -150;
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.container.get(0),
@@ -135,31 +133,31 @@ var iview = (function () {
 		this.perspectiveCamera.position = new THREE.Vector3(0, 0, this.CAMERA_Z);
 		this.perspectiveCamera.lookAt(new THREE.Vector3(0, 0, 0));
 		this.orthographicCamera = new THREE.OrthographicCamera();
-		this.orthographicCamera.position.z = this.CAMERA_Z;
+		this.orthographicCamera.position = new THREE.Vector3(0, 0, this.CAMERA_Z);
 		this.orthographicCamera.lookAt(new THREE.Vector3(0, 0, 0));
 		this.camera = this.perspectiveCamera;
 
 		this.slabNear = -50; // relative to the center of rotationGroup
-		this.slabFar = +50;
+		this.slabFar  = +50;
 
 		// Default values
-		this.fov = 20;
-		this.fogStart = 0.4;
+		this.sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+		this.cylinderGeometry = new THREE.CylinderGeometry(1, 1, 1, 32, 1);
 		this.sphereRadius = 1.5;
 		this.cylinderRadius = 0.4;
 		this.lineWidth = 1.5;
 		this.curveWidth = 3;
+		this.helixSheetWidth = 1.3;
+		this.coilWidth = 0.3;
+		this.thickness = 0.4;
 		this.defaultColor = 0xCCCCCC;
-		this.sphereQuality = 16; // 16
-		this.cylinderQuality = 16; // 8
 		this.axisDIV = 5; // 3
 		this.strandDIV = 6;
 		this.tubeDIV = 8;
-		this.coilWidth = 0.3;
-		this.helixSheetWidth = 1.3;
-		this.thickness = 0.4;
+		this.fov = 20;
+		this.fogStart = 0.4;
 		this.cameras = {
-			perspective:  this.perspectiveCamera,
+			 perspective: this.perspectiveCamera,
 			orthographic: this.orthographicCamera,
 		}
 		this.backgroundColors = {
@@ -215,7 +213,7 @@ var iview = (function () {
 		};
 		this.helixColor = 0xCC00CC;
 		this.sheetColor = 0x00CCCC;
-		this.coilColor = 0xCCCC00;
+		this.coilColor  = 0xCCCC00;
 		this.ssColors = {
 			helix: this.helixColor,
 			sheet: this.sheetColor,
@@ -225,8 +223,8 @@ var iview = (function () {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'spectrum',
-			secondaryStructure: 'cylinder & plate',
 			primaryStructure: 'residues',
+			secondaryStructure: 'cylinder & plate',
 			ligands: 'stick',
 			waters: 'dot',
 			ions: 'sphere',
@@ -285,7 +283,7 @@ var iview = (function () {
 			}
 			me.show();
 		});
-		this.container.bind('mousemove touchmove', function (ev) { // touchmove
+		this.container.bind('mousemove touchmove', function (ev) {
 			ev.preventDefault();
 			if (!me.scene) return;
 			if (!me.isDragging) return;
@@ -381,19 +379,25 @@ var iview = (function () {
 	};
 
 	iview.prototype.drawAtomsAsSphere = function (atomlist, defaultRadius, forceDefault, scale) {
-		var sphereGeometry = new THREE.SphereGeometry(1, this.sphereQuality, this.sphereQuality); // r, seg, ring
-		for (var i = 0; i < atomlist.length; i++) {
+		for (var i in atomlist) {
 			var atom = this.atoms[atomlist[i]];
-			var sphereMaterial = new THREE.MeshLambertMaterial({ color: atom.color });
-			var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-			var r = (!forceDefault && this.vdwRadii[atom.elem] != undefined) ? this.vdwRadii[atom.elem] : defaultRadius;
-			if (!forceDefault && scale) r *= scale;
-			sphere.scale.x = sphere.scale.y = sphere.scale.z = r;
+			var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
+			sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
 			sphere.position.x = atom.x;
 			sphere.position.y = atom.y;
 			sphere.position.z = atom.z;
 			this.modelGroup.add(sphere);
 		}
+	};
+
+	iview.prototype.drawCylinder = function (p1, p2, radius, color) {
+		var cylinder = new THREE.Mesh(this.cylinderGeometry, new THREE.MeshLambertMaterial({ color: color }));
+		cylinder.position = p1.clone().add(p2).multiplyScalar(0.5);
+		cylinder.matrixAutoUpdate = false;
+		cylinder.lookAt(p1);
+		cylinder.updateMatrix();
+		cylinder.matrix.multiply(new THREE.Matrix4().makeScale(radius, radius, p1.distanceTo(p2)).rotateX(Math.PI * 0.5));
+		this.modelGroup.add(cylinder);
 	};
 
 	iview.prototype.drawBondAsStickSub = function (atom1, atom2, bondR) {
@@ -407,7 +411,6 @@ var iview = (function () {
 	};
 
 	iview.prototype.drawBondsAsStick = function (atomlist, bondR, atomR, ignoreNonbonded, scale) {
-		var sphereGeometry = new THREE.SphereGeometry(1, this.sphereQuality, this.sphereQuality);
 		var nAtoms = atomlist.length, mp;
 		var forSpheres = [];
 		for (var _i = 0; _i < nAtoms; _i++) {
@@ -591,26 +594,6 @@ var iview = (function () {
 		this.drawSmoothTube(points, colors, radii);
 	};
 
-	iview.prototype.drawCylinder = function (from, to, radius, color, cap) {
-		if (!from || !to) return;
-		var midpoint = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
-		if (!this.cylinderGeometry) {
-			this.cylinderGeometry = new THREE.CylinderGeometry(1, 1, 1, this.cylinderQuality, 1, !cap);
-			this.cylinderGeometry.faceUvs = [];
-			this.faceVertexUvs = [];
-		}
-		var cylinderMaterial = new THREE.MeshLambertMaterial({ color: color });
-		var cylinder = new THREE.Mesh(this.cylinderGeometry, cylinderMaterial);
-		cylinder.position = midpoint;
-		cylinder.lookAt(from);
-		cylinder.updateMatrix();
-		cylinder.matrixAutoUpdate = false;
-		var m = new THREE.Matrix4().makeScale(radius, radius, from.distanceTo(to));
-		m.rotateX(Math.PI / 2);
-		cylinder.matrix.multiply(m);
-		this.modelGroup.add(cylinder);
-	};
-
 	// FIXME: transition!
 	iview.prototype.drawHelixAsCylinder = function (atomlist, radius) {
 		var start = null;
@@ -765,61 +748,6 @@ var iview = (function () {
 		this.modelGroup.add(new THREE.Line(geo, mat, THREE.LinePieces));
 	};
 
-	iview.prototype.getAllAtoms = function () {
-		var ret = [];
-		for (var i in this.atoms) {
-			ret.push(this.atoms[i].serial);
-		}
-		return ret;
-	};
-
-	iview.prototype.getHetatms = function (atomlist) {
-		var ret = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) ret.push(atom.serial);
-		}
-		return ret;
-	};
-
-	iview.prototype.getLigands = function (atomlist) {
-		var ret = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.bonds.length) ret.push(atom.serial);
-		}
-		return ret;
-	};
-
-	iview.prototype.getWaters = function (atomlist) {
-		var ret = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.bonds.length == 0 && atom.resn == 'HOH') ret.push(atom.serial);
-		}
-		return ret;
-	};
-
-	iview.prototype.getIons = function (atomlist) {
-		var ret = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.bonds.length == 0 && atom.resn != 'HOH') ret.push(atom.serial);
-		}
-		return ret;
-	};
-
-	iview.prototype.getSidechains = function (atomlist) {
-		var ret = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if (atom.atom == 'C' || atom.atom == 'O' || (atom.atom == 'N' && atom.resn != 'PRO')) continue;
-			ret.push(atom.serial);
-		}
-		return ret;
-	};
-
 	iview.prototype.rebuildScene = function (options) {
 		var view;
 		if (!this.modelGroup) view = [0, 0, 0, 0, 0, 0, 0, 1];
@@ -849,11 +777,27 @@ var iview = (function () {
 		this.renderer.setClearColorHex(this.options.background);
 		this.scene.fog = new THREE.Fog(this.options.background, 100, 200);
 
-		var all = this.getAllAtoms();
-		var hetatms = this.getHetatms(all);
-		var ligands = this.getLigands(hetatms);
-		var waters = this.getWaters(hetatms);
-		var ions = this.getIons(hetatms);
+		var all = [], sidechains = [], hetatms = [], ligands = [], waters = [], ions = [];
+		for (var i in this.atoms) {
+			var atom = this.atoms[i];
+			all.push(atom.serial);
+			if (atom.het) {
+				hetatms.push(atom.serial);
+				if (atom.bonds.length) {
+					ligands.push(atom.serial);
+				} else {
+					if (atom.resn == 'HOH') {
+						waters.push(atom.serial);
+					} else {
+						ions.push(atom.serial);
+					}
+				}
+			} else {
+				if (atom.atom != 'C' && atom.atom != 'O' && (atom.atom != 'N' || atom.resn == 'PRO')) {
+					sidechains.push(atom.serial); // The N atoms in PRO residuees are included as sidechain atomms.
+				}
+			}
+		}
 
 		switch (this.options.colorBy) {
 			case 'spectrum':
@@ -941,7 +885,7 @@ var iview = (function () {
 				this.drawBondsAsLine(all, this.lineWidth);
 				break;
 			case 'sidechains':
-				this.drawBondsAsLine(this.getSidechains(all), this.lineWidth);
+				this.drawBondsAsLine(sidechains, this.lineWidth);
 				break;
 		}
 
@@ -953,7 +897,7 @@ var iview = (function () {
 				this.drawBondsAsStick(ligands, this.cylinderRadius, this.cylinderRadius, true);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(ligands, this.cylinderRadius / 2.0, this.cylinderRadius, true, 0.3);
+				this.drawBondsAsStick(ligands, this.cylinderRadius * 0.5, this.cylinderRadius, true, 0.3);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(ligands, this.sphereRadius);

@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="row">
-          <div class="span4">
+          <div class="span3">
             <div class="control-group">
               <label class="control-label">Camera</label>
               <div class="controls">
@@ -85,6 +85,8 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div class="span3">
             <div class="control-group">
               <label class="control-label">Background</label>
               <div class="controls">
@@ -95,6 +97,8 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div class="span6">
             <div class="control-group">
               <label class="control-label">Color by</label>
               <div class="controls">
@@ -109,6 +113,22 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span6">
+            <div class="control-group">
+              <label class="control-label">Display primary structure as lines</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="primaryStructure">
+                  <button type="button" class="btn btn-info">residues</button>
+                  <button type="button" class="btn btn-info">sidechains</button>
+                  <button type="button" class="btn btn-info active">nothing</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="span6">
             <div class="control-group">
               <label class="control-label">Display secondary structure as</label>
               <div class="controls">
@@ -118,20 +138,14 @@
                   <button type="button" class="btn btn-info active">cylinder & plate</button>
                   <button type="button" class="btn btn-info">C alpha trace</button>
                   <button type="button" class="btn btn-info">B factor tube</button>
-                  <button type="button" class="btn btn-info">none</button>
+                  <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
             </div>
-            <div class="control-group">
-              <label class="control-label">Display primary structure as lines</label>
-              <div class="controls">
-                <div class="btn-group" data-toggle="buttons-radio" id="primaryStructure">
-                  <button type="button" class="btn btn-info">residues</button>
-                  <button type="button" class="btn btn-info">sidechains</button>
-                  <button type="button" class="btn btn-info active">none</button>
-                </div>
-              </div>
-            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span6">
             <div class="control-group">
               <label class="control-label">Display ligands as</label>
               <div class="controls">
@@ -140,30 +154,38 @@
                   <button type="button" class="btn btn-info active">stick</button>
                   <button type="button" class="btn btn-info">ball and stick</button>
                   <button type="button" class="btn btn-info">sphere</button>
-                  <button type="button" class="btn btn-info">none</button>
+                  <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
             </div>
+          </div>
+          <div class="span3">
             <div class="control-group">
               <label class="control-label">Display waters as</label>
               <div class="controls">
                 <div class="btn-group" data-toggle="buttons-radio" id="waters">
                   <button type="button" class="btn btn-info">sphere</button>
                   <button type="button" class="btn btn-info active">dot</button>
-                  <button type="button" class="btn btn-info">none</button>
+                  <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
             </div>
+          </div>
+          <div class="span3">
             <div class="control-group">
               <label class="control-label">Display ions as</label>
               <div class="controls">
                 <div class="btn-group" data-toggle="buttons-radio" id="ions">
                   <button type="button" class="btn btn-info active">sphere</button>
                   <button type="button" class="btn btn-info">dot</button>
-                  <button type="button" class="btn btn-info">none</button>
+                  <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span4">
             <p>iview supports the following keyrings</p>
             <ul>
               <li>Mouse wheel: zoom in / zoom out</li>
@@ -174,8 +196,7 @@
             </ul>
 	        <p>iview supports the following functions</p>
             <ul>
-              <li><a href="#" id="dock">Perform protein-ligand docking</a></li>
-              <li><a href="#" id="resetView">Reset the view</a></li>
+              <li><a href="#" id="resetView">Reset the canvas view</a></li>
               <li><a href="#" id="export">Export the canvas to png</a></li>
             </ul>
             <hr>
@@ -185,21 +206,10 @@
                 <ul>
                   <li>Atoms: <span id="atoms"></span></li>
                   <li>Heavy atoms: <span id="hatoms"></span></li>
-                  <li>Weight: <span id="mwt"></span></li>
+                  <li>Molecular weight: <span id="mwt"></span></li>
                   <li>Rotatable bonds: <span id="nrb"></span></li>
                   <li>Hbond donors: <span id="hbds"></span></li>
                   <li>Hbond acceptors: <span id="hbas"></span></li>
-                </ul>
-              </div>
-	          <div class="span2">
-                <p>Free energy (kcal/mol)</p>
-                <ul>
-                  <li>Normalized: <span id="eNormalized"></span></li>
-                  <li>Inter+Intra: <span id="eTotal"></span></li>
-                  <li>Inter-ligand: <span id="eInter"></span></li>
-                  <li>Intra-ligand: <span id="eIntra"></span></li>
-                  <li>Efficiency: <span id="efficiency"></span></li>
-                  <li>Flex penalty: <span id="flexPenalty"></span></li>
                 </ul>
               </div>
             </div>
