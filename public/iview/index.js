@@ -1,10 +1,10 @@
 $(function() {
 	var iv = new iview('iview');
-	$.get('3krv.pdb', function (src) {
+	$.get('3KRV.pdb', function (src) {
 		iv.loadReceptor(src);
 	});
 
-	[ 'camera', 'background', 'colorBy', 'secondaryStructure', 'primaryStructure', 'ligands', 'waters', 'ions' ].forEach(function(opt) {
+	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligands', 'waters', 'ions'].forEach(function (opt) {
 		$('#' + opt).click(function(e){
 			var options = {};
 			options[opt] = e.target.innerText;

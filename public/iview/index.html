@@ -145,6 +145,48 @@
           </div>
         </div>
         <div class="row">
+          <div class="span7">
+            <div class="control-group">
+              <label class="control-label">Display protein surface as</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="surface">
+                  <button type="button" class="btn btn-info">vdw surface</button>
+                  <button type="button" class="btn btn-info">solvent excluded surface</button>
+                  <button type="button" class="btn btn-info">solvent accessible surface</button>
+                  <button type="button" class="btn btn-info">molecular surface</button>
+                  <button type="button" class="btn btn-info active">nothing</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="span3">
+            <div class="control-group">
+              <label class="control-label">Surface opacity</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="opacity">
+                  <button type="button" class="btn btn-info">1.0</button>
+                  <button type="button" class="btn btn-info">0.9</button>
+                  <button type="button" class="btn btn-info active">0.8</button>
+                  <button type="button" class="btn btn-info">0.7</button>
+                  <button type="button" class="btn btn-info">0.6</button>
+                  <button type="button" class="btn btn-info">0.5</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="span2">
+            <div class="control-group">
+              <label class="control-label">Wireframe</label>
+              <div class="controls">
+                <div class="btn-group" data-toggle="buttons-radio" id="wireframe">
+                  <button type="button" class="btn btn-info">yes</button>
+                  <button type="button" class="btn btn-info active">no</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="span6">
             <div class="control-group">
               <label class="control-label">Display ligands as</label>
@@ -234,6 +276,7 @@
     <script src="/bootstrap-button.js"></script>
     <script src="three55.js"></script>
     <script src="iview.js"></script>
+    <script src="surface.js"></script>
     <script src="index.js"></script>
 
     <script>

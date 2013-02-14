@@ -223,8 +223,11 @@ var iview = (function () {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'spectrum',
-			primaryStructure: 'residues',
+			primaryStructure: 'nothing',
 			secondaryStructure: 'cylinder & plate',
+			surface: 'nothing',
+			wireframe: 'no',
+			opacity: '0.8',
 			ligands: 'stick',
 			waters: 'dot',
 			ions: 'sphere',
@@ -887,6 +890,32 @@ var iview = (function () {
 				break;
 			case 'dot':
 				this.drawAtomsAsSphere(ions, 0.3, true);
+				break;
+		}
+
+		switch (this.options.wireframe) {
+			case 'yes':
+				this.options.wireframe = true;
+				break;
+			case 'no':
+				this.options.wireframe = false;
+				break;
+		}
+
+		this.options.opacity = parseFloat(this.options.opacity);
+
+		switch (this.options.surface) {
+			case 'van der Waals surface':
+				this.drawSurface(all, 1, this.options.wireframe, this.options.opacity);
+				break;
+			case 'solvent excluded surface':
+				this.drawSurface(all, 2, this.options.wireframe, this.options.opacity);
+				break;
+			case 'solvent accessible surface':
+				this.drawSurface(all, 3, this.options.wireframe, this.options.opacity);
+				break;
+			case 'molecular surface':
+				this.drawSurface(all, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
 	};
