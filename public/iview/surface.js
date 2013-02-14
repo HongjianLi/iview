@@ -17,19 +17,17 @@ by Euclidean Distance Transform. PLoS ONE 4(12): e8140.
 */
 
 iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
-	if (!this.surfaceGeometries) {
-		this.surfaceGeometries = {
-			1: undefined,
-			2: undefined,
-			3: undefined,
-			4: undefined,
-		};
-	}
-	if (!this.surfaceGeometries[type]) {
-		var atomsToShow = this.removeSolvents(atomlist);
+	this.surfaces = this.surfaces || {
+		1: undefined,
+		2: undefined,
+		3: undefined,
+		4: undefined,
+	};
+	var atomsToShow = this.removeSolvents(atomlist);
+	if (!this.surfaces[type]) {
 		var extent = this.getExtent(atomsToShow);
 		var expandedExtent = [[extent[0][0] - 4, extent[0][1] - 4, extent[0][2] - 4], [extent[1][0] + 4, extent[1][1] + 4, extent[1][2] + 4]];
-		var extendedAtoms = this.removeSolvents(this.getAtomsWithin(this.getAllAtoms(), expandedExtent));
+		var extendedAtoms = this.removeSolvents(this.getAtomsWithin(this.all, expandedExtent));
 		var ps = new ProteinSurface();
 		ps.initparm(expandedExtent, (type == 1) ? false : true);
 		ps.fillvoxels(this.atoms, extendedAtoms);
@@ -38,9 +36,10 @@ iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
 		if (type == 2) { ps.boundingatom(false); ps.fillvoxelswaals(this.atoms, extendedAtoms); }
 		ps.marchingcube(type);
 		ps.laplaciansmooth(1);
-		this.surfaceGeometries[type] = ps.getModel(this.atoms, atomsToShow);
+		ps.transformVertices();
+		this.surfaces[type] = ps;
 	}
-	var mesh = new THREE.Mesh(this.surfaceGeometries[type], new THREE.MeshLambertMaterial({
+	var mesh = new THREE.Mesh(this.surfaces[type].getModel(this.atoms, atomsToShow), new THREE.MeshLambertMaterial({
 		vertexColors: THREE.VertexColors,
 		wireframe: wireframe,
 		opacity: opacity,
@@ -48,14 +47,6 @@ iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
 	}));
 	mesh.doubleSided = true;
 	this.modelGroup.add(mesh);
-};
-
-iview.prototype.getAllAtoms = function () {
-	var ret = [];
-	for (var i in this.atoms) {
-		ret.push(this.atoms[i].serial);
-	}
-	return ret;
 };
 
 iview.prototype.getAtomsWithin = function (atomlist, extent) {
@@ -118,14 +109,20 @@ var ProteinSurface = (function () {
  [1, 1, 0], [1, -1, 0], [-1, 1, 0], [-1, -1, 0], [1, 0, 1], [1, 0, -1], [-1, 0, 1], [-1, 0, -1], [0, 1, 1], [0, 1, -1], [0, -1, 1], [0, -1, -1],
  [1, 1, 1], [1, 1, -1], [1, -1, 1], [-1, 1, 1], [1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, -1, -1]];
 
+	this.transformVertices = function () {
+		var vertices = this.verts;
+		for (var i = 0; i < vertnumber; i++) {
+			vertices[i].x = vertices[i].x / scaleFactor - ptranx;
+			vertices[i].y = vertices[i].y / scaleFactor - ptrany;
+			vertices[i].z = vertices[i].z / scaleFactor - ptranz;
+		}
+	};
+
 	this.getModel = function (atoms, atomlist) {
 		var atomsToShow = new Object();
 		for (var i = 0, lim = atomlist.length; i < lim; i++) atomsToShow[atomlist[i]] = true;
 		var v = [], vertices = this.verts;
 		for (i = 0; i < vertnumber; i++) {
-			vertices[i].x = vertices[i].x / scaleFactor - ptranx;
-			vertices[i].y = vertices[i].y / scaleFactor - ptrany;
-			vertices[i].z = vertices[i].z / scaleFactor - ptranz;
 			v.push(new THREE.Vector3(vertices[i].x, vertices[i].y, vertices[i].z));
 		}
 		var geo = new THREE.Geometry();
@@ -135,13 +132,14 @@ var ProteinSurface = (function () {
 		for (var i = 0; i < facenumber; i++) {
 			var f = this.faces[i];
 			var a = vertices[f.a].atomid, b = vertices[f.b].atomid, c = vertices[f.c].atomid;
-			if (!atomsToShow[a] && !atomsToShow[b] && !atomsToShow[c]) { continue; }
+			if (!atomsToShow[a] && !atomsToShow[b] && !atomsToShow[c]) continue;
 			f.vertexColors = [new THREE.Color(atoms[a].color),
 							  new THREE.Color(atoms[b].color),
 							  new THREE.Color(atoms[c].color)];
 			faces.push(f);
 		}
-		geo.computeFaceNormals(); geo.computeVertexNormals(false);
+		geo.computeFaceNormals();
+		geo.computeVertexNormals(false);
 		return geo;
 	};
 
