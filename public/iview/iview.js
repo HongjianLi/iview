@@ -430,14 +430,8 @@ var iview = (function () {
 
 	iview.prototype.isConnected = function (atom1, atom2) {
 		if (atom1.bonds.indexOf(atom2.serial) != -1) return 1;
-		var distSquared = new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
-		if (distSquared < 0.5) return 0; // maybe duplicate position.
-		if (distSquared > 1.3 && (atom1.elem == 'H' || atom2.elem == 'H')) return 0;
-		if (distSquared < 3.42 && (atom1.elem == 'S' || atom2.elem == 'S')) return 1;
-		if (distSquared > 2.78) return 0;
-		return 1;
 		var r = this.covalentRadii[atom1.elem] + this.covalentRadii[atom2.elem];
-		if (distSquared < 1.1 * r * r) return 1;
+		return (new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.1 * r * r);
 	};
 
 	// Catmull-Rom subdivision
@@ -1004,7 +998,7 @@ var iview = (function () {
 		this.options.opacity = parseFloat(this.options.opacity);
 
 		switch (this.options.surface) {
-			case 'van der Waals surface':
+			case 'vdw surface':
 				this.drawSurface(all, 1, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent excluded surface':
