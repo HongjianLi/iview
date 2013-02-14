@@ -339,6 +339,8 @@ var iview = (function () {
 		if (distSquared < 3.42 && (atom1.elem == 'S' || atom2.elem == 'S')) return 1;
 		if (distSquared > 2.78) return 0;
 		return 1;
+		var r = covalentRadii[atom1.elem] + covalentRadii[atom2.elem]; // http://en.wikipedia.org/wiki/Covalent_radius
+		if (distSquared < r * r) return 1;
 	};
 
 	// Catmull-Rom subdivision
@@ -483,7 +485,7 @@ var iview = (function () {
 		div = div || 5;
 		for (var i in atomlist) {
 			var atom = this.atoms[atomlist[i]];
-			if ((atom.atom == atomName) && !atom.het) {
+			if ((atom.name == atomName) && !atom.het) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothCurve(points, curveWidth, colors, div);
 					points = [];
@@ -563,8 +565,8 @@ var iview = (function () {
 		var prevCO = null, ss = null, ssborder = false;
 		for (var i in atomlist) {
 			var atom = this.atoms[atomlist[i]];
-			if ((atom.atom == 'O' || atom.atom == 'CA') && !atom.het) {
-				if (atom.atom == 'CA') {
+			if ((atom.name == 'O' || atom.name == 'CA') && !atom.het) {
+				if (atom.name == 'CA') {
 					if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 						for (var j = 0; !thickness && j < num; ++j)
 							this.drawSmoothCurve(points[j], 1, colors, div);
@@ -664,7 +666,7 @@ var iview = (function () {
 		var currentChain, currentResi;
 		for (var i in atomlist) {
 			var atom = this.atoms[atomlist[i]];
-			if ((atom.atom == atomName) && !atom.het) {
+			if ((atom.name == atomName) && !atom.het) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothTube(points, colors, radii);
 					points = []; colors = []; radii = [];
@@ -689,7 +691,7 @@ var iview = (function () {
 			if (atom.het) continue;
 			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others.push(atom.serial);
 			if (atom.ss == 'sheet') beta.push(atom.serial);
-			if (atom.atom != 'CA') continue;
+			if (atom.name != 'CA') continue;
 			if (atom.ss == 'helix' && atom.ssend) {
 				if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
 				start = null;
@@ -763,7 +765,7 @@ var iview = (function () {
 					}
 				}
 			} else {
-				if (atom.atom != 'C' && atom.atom != 'O' && (atom.atom != 'N' || atom.resn == 'PRO')) {
+				if (atom.name != 'C' && atom.name != 'O' && (atom.name != 'N' || atom.resn == 'PRO')) {
 					sidechains.push(atom.serial); // The N atoms in PRO residuees are included as sidechain atomms.
 				}
 			}
@@ -933,7 +935,7 @@ var iview = (function () {
 				this.atoms[serial] = {
 					het: record[0] == 'H',
 					serial: serial,
-					atom: line.substr(12, 4).replace(/ /g, ''),
+					name: line.substr(12, 4).replace(/ /g, ''),
 					resn: line.substr(17, 3),
 					chain: line.substr(21, 1),
 					resi: parseInt(line.substr(22, 5)),
@@ -1038,7 +1040,7 @@ var iview = (function () {
 		this.show();
 	};
 
-	iview.prototype.export = function () {
+	iview.prototype.exportView = function () {
 		this.show();
 		window.open(this.renderer.domElement.toDataURL('image/png'));
 	};

@@ -1,11 +1,11 @@
-$(function() {
+$(function () {
 	var iv = new iview('iview');
 	$.get('3KRV.pdb', function (src) {
 		iv.loadReceptor(src);
 	});
 
 	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligands', 'waters', 'ions'].forEach(function (opt) {
-		$('#' + opt).click(function(e){
+		$('#' + opt).click(function (e) {
 			var options = {};
 			options[opt] = e.target.innerText;
 			iv.rebuildScene(options);
@@ -13,17 +13,16 @@ $(function() {
 		})
 	});
 
-	[ 'export', 'resetView' ].forEach(function(func) {
-		$('#' + func).click(function(e){
+	['resetView', 'exportView'].forEach(function (func) {
+		$('#' + func).click(function (e) {
 			e.preventDefault();
 			iv[func]();
 		})
 	});
 
-	function loadFile() {
+	$('').click(function (e) {
 		var file = $('#file').get(0);
-		if (file) file = file.files;
-		if (!file || !window.FileReader || !file[0]) {
+		if (!window.FileReader || !file || !file.files || !file.files[0]) {
 			alert("No file is selected. Or File API is not supported in your browser. Please try Firefox or Chrome.");
 			return;
 		}
@@ -31,6 +30,6 @@ $(function() {
 		reader.onload = function () {
 			iv.loadMolecule(reader.result);
 		};
-		reader.readAsText(file[0]);
-	}
+		reader.readAsText(file.files[0]);
+	});
 });

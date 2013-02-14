@@ -378,17 +378,17 @@ var ProteinSurface = (function () {
 
 	this.getAtomType = function (atom) {
 		var at = 10;
-		if (atom.atom == 'CA') at = 0;
-		else if (atom.atom == 'C') at = 1;
+		if (atom.name == 'CA') at = 0;
+		else if (atom.name == 'C') at = 1;
 		else if (atom.elem == 'C') at = 7;
-		else if (atom.atom == '0') at = 3;
+		else if (atom.name == '0') at = 3;
 		else if (atom.elem == 'O') at = 11;
-		else if (atom.atom == 'N') at = 2;
+		else if (atom.name == 'N') at = 2;
 		else if (atom.elem == 'N') at = 8;
 		else if (atom.elem == 'S') at = 4;
 		else if (atom.elem == 'P') at = 6;
-		else if (atom.atom == 'FE') at = 9;
-		else if (atom.atom == 'H') at = 5;
+		else if (atom.name == 'FE') at = 9;
+		else if (atom.name == 'H') at = 5;
 		else if (atom.elem == 'H') at = 12;
 		return at;
 	};
