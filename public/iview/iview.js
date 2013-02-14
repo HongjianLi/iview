@@ -840,40 +840,12 @@ var iview = (function () {
 		this.renderer.setClearColorHex(this.options.background);
 		this.scene.fog = new THREE.Fog(this.options.background, 100, 200);
 
-		var all = [], sidechains = [], hetatms = [], ligands = [], waters = [], ions = [];
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
-			all.push(atom.serial);
-			if (atom.het) {
-				hetatms.push(atom.serial);
-				if (atom.bonds.length) {
-					ligands.push(atom.serial);
-				} else {
-					if (atom.resn == 'HOH') {
-						waters.push(atom.serial);
-					} else {
-						ions.push(atom.serial);
-					}
-				}
-			} else {
-				if (atom.name != 'C' && atom.name != 'O' && (atom.name != 'N' || atom.resn == 'PRO')) {
-					sidechains.push(atom.serial); // The N atoms in PRO residuees are included as sidechain atomms.
-				}
-			}
-		}
-
 		switch (this.options.colorBy) {
 			case 'spectrum':
-				if (!this.stdAtoms) {
-					this.stdAtoms = 0;
-					for (var i in this.atoms) {
-						if (!this.atoms[i].het) ++this.stdAtoms;
-					}
-				}
 				var idx = 0;
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms), 1, 0.9).getHex();
+					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms.length), 1, 0.9).getHex();
 				}
 				break;
 			case 'chain':
@@ -925,64 +897,70 @@ var iview = (function () {
 				break;
 		}
 
-		var doNotSmoothen = false;
-		switch (this.options.secondaryStructure) {
-			case 'ribbon':
-				this.drawStrand(all, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
+		switch (this.options.primaryStructure) {
+			case 'lines':
+				this.drawBondsAsLine(this.stdAtoms, this.lineWidth);
 				break;
-			case 'strand':
-				this.drawStrand(all, null, null, null, null, null, doNotSmoothen);
+			case 'stick':
+				this.drawBondsAsStick(this.stdAtoms, this.cylinderRadius, this.cylinderRadius);
 				break;
-			case 'cylinder & plate':
-				this.drawHelixAsCylinder(all, 1.6);
+			case 'ball and stick':
+				this.drawBondsAsStick(this.stdAtoms, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
-			case 'C alpha trace':
-				this.drawMainchainCurve(all, this.curveWidth, 'CA', 1);
-				break;
-			case 'B factor tube':
-				this.drawMainchainTube(all, 'CA');
+			case 'sphere':
+				this.drawAtomsAsSphere(this.stdAtoms, this.sphereRadius);
 				break;
 		}
 
-		switch (this.options.primaryStructure) {
-			case 'residues':
-				this.drawBondsAsLine(all, this.lineWidth);
+		var doNotSmoothen = false;
+		switch (this.options.secondaryStructure) {
+			case 'ribbon':
+				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
 				break;
-			case 'sidechains':
-				this.drawBondsAsLine(sidechains, this.lineWidth);
+			case 'strand':
+				this.drawStrand(this.stdAtoms, null, null, null, null, null, doNotSmoothen);
+				break;
+			case 'cylinder & plate':
+				this.drawHelixAsCylinder(this.stdAtoms, 1.6);
+				break;
+			case 'C alpha trace':
+				this.drawMainchainCurve(this.stdAtoms, this.curveWidth, 'CA', 1);
+				break;
+			case 'B factor tube':
+				this.drawMainchainTube(this.stdAtoms, 'CA');
 				break;
 		}
 
 		switch (this.options.ligands) {
 			case 'line':
-				this.drawBondsAsLine(ligands, this.curveWidth);
+				this.drawBondsAsLine(this.ligands, this.curveWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(ligands, this.cylinderRadius, this.cylinderRadius);
+				this.drawBondsAsStick(this.ligands, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(ligands, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.ligands, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
-				this.drawAtomsAsSphere(ligands, this.sphereRadius);
+				this.drawAtomsAsSphere(this.ligands, this.sphereRadius);
 				break;
 		}
 
 		switch (this.options.waters) {
 			case 'sphere':
-				this.drawAtomsAsSphere(waters, this.sphereRadius);
+				this.drawAtomsAsSphere(this.waters, this.sphereRadius);
 				break;
 			case 'dot':
-				this.drawAtomsAsSphere(waters, 0.3, true);
+				this.drawAtomsAsSphere(this.waters, 0.3, true);
 				break;
 		}
 
 		switch (this.options.ions) {
 			case 'sphere':
-				this.drawAtomsAsSphere(ions, this.sphereRadius);
+				this.drawAtomsAsSphere(this.ions, this.sphereRadius);
 				break;
 			case 'dot':
-				this.drawAtomsAsSphere(ions, 0.3, true);
+				this.drawAtomsAsSphere(this.ions, 0.3, true);
 				break;
 		}
 
@@ -999,16 +977,16 @@ var iview = (function () {
 
 		switch (this.options.surface) {
 			case 'vdw surface':
-				this.drawSurface(all, 1, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.all, 1, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent excluded surface':
-				this.drawSurface(all, 2, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.all, 2, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent accessible surface':
-				this.drawSurface(all, 3, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.all, 3, this.options.wireframe, this.options.opacity);
 				break;
 			case 'molecular surface':
-				this.drawSurface(all, 4, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.all, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
 	};
@@ -1076,6 +1054,28 @@ var iview = (function () {
 					if (atom.resi == sheet.initialResidue) atom.ssbegin = true;
 					else if (atom.resi == sheet.terminalResidue) atom.ssend = true;
 				}
+			}
+		}
+		this.all = [];
+		this.stdAtoms = [];
+		this.ligands = [];
+		this.waters = [];
+		this.ions = [];
+		for (var i in this.atoms) {
+			var atom = this.atoms[i];
+			this.all.push(atom.serial);
+			if (atom.het) {
+				if (atom.bonds.length) {
+					this.ligands.push(atom.serial);
+				} else {
+					if (atom.resn == 'HOH') {
+						this.waters.push(atom.serial);
+					} else {
+						this.ions.push(atom.serial);
+					}
+				}
+			} else {
+				this.stdAtoms.push(atom.serial);
 			}
 		}
 		this.rebuildScene();
