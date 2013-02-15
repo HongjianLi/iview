@@ -9,7 +9,7 @@ $(function () {
 			var options = {};
 			options[opt] = e.target.innerText;
 			iv.rebuildScene(options);
-			iv.show();
+			iv.render();
 		})
 	});
 
