@@ -972,6 +972,20 @@ var iview = (function () {
 
 		this.effect = this.effects[this.options.effect];
 		this.effect.setSize(this.container.width(), this.container.height());
+
+		for (var i in this.atoms) {
+			var atom = this.atoms[i];
+			if (atom.name !== 'CA') continue;
+			var text = new THREE.Mesh(new THREE.TextGeometry(atom.resn + atom.resi, {
+				size: 0.5,
+				height: 0.05,
+				font: 'optimer',
+			}), new THREE.MeshPhongMaterial({ color: 0xFFFFFF }));
+			text.position.x = atom.x;
+			text.position.y = atom.y;
+			text.position.z = atom.z;
+			this.modelGroup.add(text);
+		}
 	};
 
 	iview.prototype.loadReceptor = function (src) {
