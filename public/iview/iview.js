@@ -682,7 +682,6 @@ var iview = (function () {
 		if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
 	};
 
-	// FIXME: Winkled...
 	iview.prototype.drawSmoothTube = function (_points, colors, radii) {
 		if (_points.length < 2) return;
 		var circleDiv = this.tubeDIV, axisDiv = this.axisDIV;
@@ -762,7 +761,6 @@ var iview = (function () {
 		this.drawSmoothTube(points, colors, radii);
 	};
 
-	// FIXME: transition!
 	iview.prototype.drawHelixAsCylinder = function (atomlist, radius) {
 		var start = null;
 		var currentChain, currentResi;
@@ -786,11 +784,12 @@ var iview = (function () {
 		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
 	};
 
-	iview.prototype.drawDottedLines = function (p1, p2, color) {
+	iview.prototype.drawDashLines = function (p1, p2, color) {
 		var geo = new THREE.Geometry();
 		geo.vertices.push(p1);
 		geo.vertices.push(p2);
-		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ 'color': color }), THREE.LinePieces));
+		geo.computeLineDistances();
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': color, dashSize: 0.5, gapSize: 0.25 })));
 	};
 
 	iview.prototype.rebuildScene = function (options) {
@@ -1063,7 +1062,6 @@ var iview = (function () {
 			}
 		}
 		this.rebuildScene();
-//		this.drawDottedLines(new THREE.Vector3(this.atoms[1].x, this.atoms[1].y, this.atoms[1].z), new THREE.Vector3(this.atoms[this.atoms.length - 100].x, this.atoms[this.atoms.length - 100].y, this.atoms[this.atoms.length - 100].z), 0xCCCCCC);
 		this.resetView();
 	};
 
