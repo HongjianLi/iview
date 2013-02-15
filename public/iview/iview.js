@@ -1137,7 +1137,8 @@ var iview = (function () {
 					name: line.substr(12, 4).replace(/ /g, ''),
 					resn: line.substr(17, 3),
 					chain: line.substr(21, 1),
-					resi: parseInt(line.substr(22, 5)),
+					resi: parseInt(line.substr(22, 4)),
+					insc: line.substr(26, 1),
 					x: parseFloat(line.substr(30, 8)),
 					y: parseFloat(line.substr(38, 8)),
 					z: parseFloat(line.substr(46, 8)),
@@ -1157,13 +1158,17 @@ var iview = (function () {
 				helices.push({
 					chain: line.substr(19, 1),
 					initialResidue: parseInt(line.substr(21, 4)),
+					initialInscode: line.substr(25, 1),
 					terminalResidue: parseInt(line.substr(33, 4)),
+					terminalInscode: line.substr(37, 1),
 				});
 			} else if (record == 'SHEET ') {
 				sheets.push({
 					chain: line.substr(21, 1),
 					initialResidue: parseInt(line.substr(22, 4)),
+					initialInscode: line.substr(26, 1),
 					terminalResidue: parseInt(line.substr(33, 4)),
+					terminalInscode: line.substr(37, 1),
 				});
 			}
 		}
@@ -1171,18 +1176,18 @@ var iview = (function () {
 			var atom = this.atoms[i];
 			for (var j in helices) {
 				var helix = helices[j];
-				if (atom.chain == helix.chain && atom.resi >= helix.initialResidue && atom.resi <= helix.terminalResidue) {
+				if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
 					atom.ss = 'helix';
-					if (atom.resi == helix.initialResidue) atom.ssbegin = true;
-					else if (atom.resi == helix.terminalResidue) atom.ssend = true;
+					if (atom.resi == helix.initialResidue && atom.insc == helix.initialInscode) atom.ssbegin = true;
+					if (atom.resi == helix.terminalResidue && atom.insc == helix.terminalInscode) atom.ssend = true;
 				}
 			}
 			for (var j in sheets) {
 				var sheet = sheets[j];
-				if (atom.chain == sheet.chain && atom.resi >= sheet.initialResidue && atom.resi <= sheet.terminalResidue) {
+				if (atom.chain == sheet.chain && (atom.resi > sheet.initialResidue || (atom.resi == sheet.initialResidue && atom.insc >= sheet.initialInscode)) && (atom.resi < sheet.terminalResidue || (atom.resi == sheet.terminalResidue && atom.insc <= sheet.terminalInscode))) {
 					atom.ss = 'sheet';
-					if (atom.resi == sheet.initialResidue) atom.ssbegin = true;
-					else if (atom.resi == sheet.terminalResidue) atom.ssend = true;
+					if (atom.resi == sheet.initialResidue && atom.insc == sheet.initialInscode) atom.ssbegin = true;
+					if (atom.resi == sheet.terminalResidue && atom.insc == sheet.terminalInscode) atom.ssend = true;
 				}
 			}
 		}
