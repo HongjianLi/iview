@@ -1,6 +1,6 @@
 $(function () {
 	var iv = new iview('iview');
-	$.get('3KRV.pdb', function (src) {
+	$.get('2DHB.pdb', function (src) {
 		iv.loadReceptor(src);
 	});
 

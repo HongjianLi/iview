@@ -1,19 +1,5 @@
 var iview = (function () {
 	function iview(id) {
-		this.elementColors = {
-			 H: 0xCCCCCC,
-			 C: 0xAAAAAA,
-			 O: 0xCC0000,
-			 N: 0x0000CC,
-			 S: 0xCCCC00,
-			 P: 0x6622CC,
-			 F: 0x00CC00,
-			CL: 0x00CC00,
-			BR: 0x882200,
-			 I: 0x6600AA,
-			FE: 0xCC6600,
-			CA: 0x8888AA,
-		};
 		this.vdwRadii = { // Hu, S.Z.; Zhou, Z.H.; Tsai, K.R. Acta Phys.-Chim. Sin., 2003, 19:1073.
 			 H: 1.08,
 			HE: 1.34,
@@ -214,6 +200,165 @@ var iview = (function () {
 			AM: 1.80,
 			CM: 1.69,
 		};
+		this.atomColors = {
+			 H: 0xFFFFFF,
+			HE: 0xD9FFFF,
+			LI: 0xCC80FF,
+			BE: 0xC2FF00,
+			 B: 0xFFB5B5,
+		 	 C: 0x909090,
+		  	 N: 0x3050F8,
+		   	 O: 0xFF0D0D,
+			 F: 0x90E050,
+		 	NE: 0xB3E3F5,
+		 	NA: 0xAB5CF2,
+		 	MG: 0x8AFF00,
+		 	AL: 0xBFA6A6,
+		 	SI: 0xF0C8A0,
+		 	 P: 0xFF8000,
+		  	 S: 0xFFFF30,
+		   	CL: 0x1FF01F,
+		   	AR: 0x80D1E3,
+		   	 K: 0x8F40D4,
+			CA: 0x3DFF00,
+			SC: 0xE6E6E6,
+			TI: 0xBFC2C7,
+			 V: 0xA6A6AB,
+		 	CR: 0x8A99C7,
+		 	MN: 0x9C7AC7,
+		 	FE: 0xE06633,
+		 	CO: 0xF090A0,
+		 	NI: 0x50D050,
+		 	CU: 0xC88033,
+		 	ZN: 0x7D80B0,
+		 	GA: 0xC28F8F,
+		 	GE: 0x668F8F,
+		 	AS: 0xBD80E3,
+		 	SE: 0xFFA100,
+		 	BR: 0xA62929,
+		 	KR: 0x5CB8D1,
+		 	RB: 0x702EB0,
+		 	SR: 0x00FF00,
+		 	 Y: 0x94FFFF,
+		  	ZR: 0x94E0E0,
+		  	NB: 0x73C2C9,
+		  	MO: 0x54B5B5,
+		  	TC: 0x3B9E9E,
+		  	RU: 0x248F8F,
+		  	RH: 0x0A7D8C,
+		  	PD: 0x006985,
+		  	AG: 0xC0C0C0,
+		  	CD: 0xFFD98F,
+		  	IN: 0xA67573,
+		  	SN: 0x668080,
+		  	SB: 0x9E63B5,
+		  	TE: 0xD47A00,
+		  	 I: 0x940094,
+		   	XE: 0x429EB0,
+		   	CS: 0x57178F,
+		   	BA: 0x00C900,
+		   	LA: 0x70D4FF,
+		   	CE: 0xFFFFC7,
+		   	PR: 0xD9FFC7,
+		   	ND: 0xC7FFC7,
+		   	PM: 0xA3FFC7,
+		   	SM: 0x8FFFC7,
+		   	EU: 0x61FFC7,
+		   	GD: 0x45FFC7,
+		   	TB: 0x30FFC7,
+		   	DY: 0x1FFFC7,
+		   	HO: 0x00FF9C,
+		   	ER: 0x00E675,
+		   	TM: 0x00D452,
+		   	YB: 0x00BF38,
+		   	LU: 0x00AB24,
+		   	HF: 0x4DC2FF,
+		   	TA: 0x4DA6FF,
+		   	 W: 0x2194D6,
+			RE: 0x267DAB,
+			OS: 0x266696,
+			IR: 0x175487,
+			PT: 0xD0D0E0,
+			AU: 0xFFD123,
+			HG: 0xB8B8D0,
+			TL: 0xA6544D,
+			PB: 0x575961,
+			BI: 0x9E4FB5,
+			PO: 0xAB5C00,
+			AT: 0x754F45,
+			RN: 0x428296,
+			FR: 0x420066,
+			RA: 0x007D00,
+			AC: 0x70ABFA,
+			TH: 0x00BAFF,
+			PA: 0x00A1FF,
+			 U: 0x008FFF,
+		 	NP: 0x0080FF,
+		 	PU: 0x006BFF,
+		 	AM: 0x545CF2,
+		 	CM: 0x785CE3,
+		 	BK: 0x8A4FE3,
+		 	CF: 0xA136D4,
+		 	ES: 0xB31FD4,
+		 	FM: 0xB31FBA,
+		};
+		this.defaultAtomColor = 0xCCCCCC;
+		this.stdChainColors = {
+			A: 0xC0D0FF,
+			B: 0xB0FFB0,
+			C: 0xFFC0C8,
+			D: 0xFFFF80,
+			E: 0xFFC0FF,
+			F: 0xB0F0F0,
+			G: 0xFFD070,
+			H: 0xF08080,
+			I: 0xF5DEB3,
+			J: 0x00BFFF,
+			K: 0xCD5C5C,
+			L: 0x66CDAA,
+			M: 0x9ACD32,
+			N: 0xEE82EE,
+			O: 0x00CED1,
+			P: 0x00FF7F,
+			Q: 0x3CB371,
+			R: 0x00008B,
+			S: 0xBDB76B,
+			T: 0x006400,
+			U: 0x800000,
+			V: 0x808000,
+			W: 0x800080,
+			X: 0x008080,
+			Y: 0xB8860B,
+			Z: 0xB22222,
+		};
+		this.hetChainColors = {
+			A: 0x90A0CF,
+			B: 0x80CF98,
+			C: 0xCF90B0,
+			D: 0xCFCF70,
+			E: 0xCF90CF,
+			F: 0x80C0C0,
+			G: 0xCFA060,
+			H: 0xC05070,
+			I: 0xC5AE83,
+			J: 0x00A7CF,
+			K: 0xB54C4C,
+			L: 0x56B592,
+			M: 0x8AB52A,
+			N: 0xBE72BE,
+			O: 0x00B6A1,
+			P: 0x00CF6F,
+			Q: 0x349B61,
+			R: 0x0000BB,
+			S: 0xA59F5B,
+			T: 0x009400,
+			U: 0xB00000,
+			V: 0xB0B000,
+			W: 0xB000B0,
+			X: 0x00B0B0,
+			Y: 0xE8B613,
+			Z: 0xC23232,
+		};
 		this.container = $('#' + id);
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.container.get(0),
@@ -251,7 +396,6 @@ var iview = (function () {
 		this.helixSheetWidth = 1.3;
 		this.coilWidth = 0.3;
 		this.thickness = 0.4;
-		this.defaultColor = 0xCCCCCC;
 		this.axisDIV = 5; // 3
 		this.strandDIV = 6;
 		this.tubeDIV = 8;
@@ -282,7 +426,10 @@ var iview = (function () {
 			TRP: 0xB45AB4,
 			TYR: 0x3232AA,
 			VAL: 0x0F820F,
+			ASX: 0xFF69B4,
+			GLX: 0xFF69B4,
 		};
+		this.defaultResidueColor = 0xBEA06E;
 		this.polarColor = 0xCC0000;
 		this.nonpolarColor = 0x00CCCC;
 		this.polarityColors = {
@@ -307,9 +454,9 @@ var iview = (function () {
 			CYS: this.nonpolarColor,
 			TRP: this.nonpolarColor,
 		};
-		this.helixColor = 0xCC00CC;
-		this.sheetColor = 0x00CCCC;
-		this.coilColor  = 0xCCCC00;
+		this.helixColor = 0xFF0080;
+		this.sheetColor = 0xFFC800;
+		this.coilColor  = 0x6080FF;
 		this.ssColors = {
 			helix: this.helixColor,
 			sheet: this.sheetColor,
@@ -825,19 +972,19 @@ var iview = (function () {
 				var idx = 0;
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms.length), 1, 0.9).getHex();
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms.length), 1, 0.9).getHex();
 				}
 				break;
 			case 'chain':
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = new THREE.Color().setHSV((atom.chain.charCodeAt(0) * 5) % 17 / 17, 1, 0.9).getHex();
+					atom.color = (atom.het ? this.hetChainColors : this.stdChainColors)[atom.chain];
 				}
 				break;
 			case 'secondary structure':
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.ssColors[atom.ss];
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.ssColors[atom.ss];
 				}
 				break;
 			case 'B factor':
@@ -860,19 +1007,19 @@ var iview = (function () {
 			case 'residue':
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.residueColors[atom.resn] || this.defaultColor;
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.residueColors[atom.resn] || this.defaultResidueColor;
 				}
 				break;
 			case 'polarity':
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.elementColors[atom.elem] || this.defaultColor : this.polarityColors[atom.resn] || this.defaultColor;
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.polarityColors[atom.resn] || this.defaultResidueColor;
 				}
 				break;
 			case 'atom':
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = this.elementColors[atom.elem] || this.defaultColor;
+					atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
 				}
 				break;
 		}
