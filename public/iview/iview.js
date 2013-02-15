@@ -420,7 +420,7 @@ var iview = (function () {
 	}
 
 	iview.prototype.isConnected = function (atom1, atom2) {
-		if (atom1.bonds.indexOf(atom2.serial) != -1) return 1;
+		if (atom1.bonds.indexOf(atom2.serial) != -1) return true;
 		var r = this.covalentRadii[atom1.elem] + this.covalentRadii[atom2.elem];
 		return (new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.1 * r * r);
 	};
@@ -534,7 +534,7 @@ var iview = (function () {
 			for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
 				var j = atomlist[_j];
 				var atom2 = this.atoms[j];
-				if (this.isConnected(atom1, atom2) == 0) continue;
+				if (!this.isConnected(atom1, atom2)) continue;
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 			for (var _j = 0; _j < atom1.bonds.length; _j++) {
@@ -911,6 +911,32 @@ var iview = (function () {
 				break;
 		}
 
+		switch (this.options.wireframe) {
+			case 'yes':
+				this.options.wireframe = true;
+				break;
+			case 'no':
+				this.options.wireframe = false;
+				break;
+		}
+
+		this.options.opacity = parseFloat(this.options.opacity);
+
+		switch (this.options.surface) {
+			case 'vdw surface':
+				this.drawSurface(this.all, 1, this.options.wireframe, this.options.opacity);
+				break;
+			case 'solvent excluded surface':
+				this.drawSurface(this.all, 2, this.options.wireframe, this.options.opacity);
+				break;
+			case 'solvent accessible surface':
+				this.drawSurface(this.all, 3, this.options.wireframe, this.options.opacity);
+				break;
+			case 'molecular surface':
+				this.drawSurface(this.all, 4, this.options.wireframe, this.options.opacity);
+				break;
+		}
+
 		switch (this.options.ligands) {
 			case 'line':
 				this.drawBondsAsLine(this.ligands, this.curveWidth);
@@ -941,32 +967,6 @@ var iview = (function () {
 				break;
 			case 'dot':
 				this.drawAtomsAsSphere(this.ions, 0.3, true);
-				break;
-		}
-
-		switch (this.options.wireframe) {
-			case 'yes':
-				this.options.wireframe = true;
-				break;
-			case 'no':
-				this.options.wireframe = false;
-				break;
-		}
-
-		this.options.opacity = parseFloat(this.options.opacity);
-
-		switch (this.options.surface) {
-			case 'vdw surface':
-				this.drawSurface(this.all, 1, this.options.wireframe, this.options.opacity);
-				break;
-			case 'solvent excluded surface':
-				this.drawSurface(this.all, 2, this.options.wireframe, this.options.opacity);
-				break;
-			case 'solvent accessible surface':
-				this.drawSurface(this.all, 3, this.options.wireframe, this.options.opacity);
-				break;
-			case 'molecular surface':
-				this.drawSurface(this.all, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
 
@@ -1085,6 +1085,10 @@ var iview = (function () {
 		//if (this.scene.fog.near > center) this.scene.fog.near = center;
 		this.scene.fog.far = this.camera.far;
 		this.effect.render(this.scene, this.camera);
+		if (!this.effect.init) {
+			this.effect.render(this.scene, this.camera);
+			this.effect.init = true;
+		}
 	};
 
 	iview.prototype.resetView = function () {
