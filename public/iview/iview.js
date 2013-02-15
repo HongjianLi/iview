@@ -215,23 +215,27 @@ var iview = (function () {
 			CM: 1.69,
 		};
 		this.container = $('#' + id);
-		this.WIDTH  = this.container.width();
-		this.HEIGHT = this.container.height();
-		this.ASPECT = this.WIDTH / this.HEIGHT;
-		this.CAMERA_Z = -150;
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.container.get(0),
 			antialias: true,
 		});
-//		this.renderer.sortObjects = false;
-		this.renderer.setSize(this.WIDTH, this.HEIGHT);
+		this.effects = {
+			'anaglyph': new THREE.AnaglyphEffect(this.renderer),
+			'parallax barrier': new THREE.ParallaxBarrierEffect(this.renderer),
+			'none': this.renderer,
+		};
 
-		this.perspectiveCamera = new THREE.PerspectiveCamera(20, this.ASPECT, 1, 800);
+		this.CAMERA_Z = -150;
+		this.perspectiveCamera = new THREE.PerspectiveCamera(20, this.container.width() / this.container.height(), 1, 800);
 		this.perspectiveCamera.position = new THREE.Vector3(0, 0, this.CAMERA_Z);
 		this.perspectiveCamera.lookAt(new THREE.Vector3(0, 0, 0));
 		this.orthographicCamera = new THREE.OrthographicCamera();
 		this.orthographicCamera.position = new THREE.Vector3(0, 0, this.CAMERA_Z);
 		this.orthographicCamera.lookAt(new THREE.Vector3(0, 0, 0));
+		this.cameras = {
+			 perspective: this.perspectiveCamera,
+			orthographic: this.orthographicCamera,
+		};
 		this.camera = this.perspectiveCamera;
 
 		this.slabNear = -50; // relative to the center of rotationGroup
@@ -252,11 +256,6 @@ var iview = (function () {
 		this.strandDIV = 6;
 		this.tubeDIV = 8;
 		this.fov = 20;
-		this.fogStart = 0.4;
-		this.cameras = {
-			 perspective: this.perspectiveCamera,
-			orthographic: this.orthographicCamera,
-		};
 		this.backgroundColors = {
 			black: 0x000000,
 			 grey: 0xCCCCCC,
@@ -328,6 +327,7 @@ var iview = (function () {
 			ligands: 'stick',
 			waters: 'dot',
 			ions: 'sphere',
+			effect: 'none',
 		};
 
 		// UI variables
@@ -340,16 +340,6 @@ var iview = (function () {
 		this.cz = 0;
 
 		var me = this;
-		$(window).resize(function () {
-			if (!me.scene) return;
-			me.WIDTH = me.container.width();
-			me.HEIGHT = me.container.height();
-			me.ASPECT = me.WIDTH / me.HEIGHT;
-			me.renderer.setSize(me.WIDTH, me.HEIGHT);
-			me.camera.aspect = me.ASPECT;
-			me.camera.updateProjectionMatrix();
-			me.render();
-		});
 		$('body').bind('mouseup touchend', function (ev) {
 			me.isDragging = false;
 		});
@@ -396,8 +386,8 @@ var iview = (function () {
 				y = ev.originalEvent.targetTouches[0].pageY;
 			}
 			if (x == undefined) return;
-			var dx = (x - me.mouseStartX) / me.WIDTH;
-			var dy = (y - me.mouseStartY) / me.HEIGHT;
+			var dx = (x - me.mouseStartX) / me.container.width();
+			var dy = (y - me.mouseStartY) / me.container.height();
 			if (!dx && !dy) return;
 			var mode = 0;
 			if (mode == 3 || (me.mouseButton == 3 && ev.ctrlKey)) { // Slab
@@ -435,8 +425,7 @@ var iview = (function () {
 		return (new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.1 * r * r);
 	};
 
-	// Catmull-Rom subdivision
-	iview.prototype.subdivide = function (_points, DIV) {
+	iview.prototype.subdivide = function (_points, DIV) { // Catmull-Rom subdivision
 		var ret = [];
 		var points = new Array(); // Smoothing test
 		points.push(_points[0]);
@@ -805,10 +794,11 @@ var iview = (function () {
 	};
 
 	iview.prototype.rebuildScene = function (options) {
+		this.scene = new THREE.Scene();
+
 		var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1.2);
 		directionalLight.position = new THREE.Vector3(0.2, 0.2, -1).normalize();
 		var ambientLight = new THREE.AmbientLight(0x202020);
-		this.scene = new THREE.Scene();
 		this.scene.add(directionalLight);
 		this.scene.add(ambientLight);
 
@@ -827,9 +817,9 @@ var iview = (function () {
 		$.extend(this.options, options);
 		this.camera = this.cameras[this.options.camera];
 
-		this.options.background = this.backgroundColors[this.options.background];
-		this.renderer.setClearColorHex(this.options.background);
-		this.scene.fog = new THREE.Fog(this.options.background, 100, 200);
+		var background = this.backgroundColors[this.options.background];
+		this.renderer.setClearColorHex(background);
+		this.scene.fog = new THREE.Fog(background, 100, 200);
 
 		switch (this.options.colorBy) {
 			case 'spectrum':
@@ -980,6 +970,9 @@ var iview = (function () {
 				this.drawSurface(this.all, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
+
+		this.effect = this.effects[this.options.effect];
+		this.effect.setSize(this.container.width(), this.container.height());
 	};
 
 	iview.prototype.loadReceptor = function (src) {
@@ -1086,14 +1079,14 @@ var iview = (function () {
 		} else {
 			this.camera.right = center * Math.tan(Math.PI / 180 * this.fov);
 			this.camera.left = -this.camera.right;
-			this.camera.top = this.camera.right / this.ASPECT;
+			this.camera.top = this.camera.right / (this.container.width() / this.container.height());
 			this.camera.bottom = -this.camera.top;
 		}
 		this.camera.updateProjectionMatrix();
-		this.scene.fog.near = this.camera.near + this.fogStart * (this.camera.far - this.camera.near);
+		this.scene.fog.near = this.camera.near + 0.4 * (this.camera.far - this.camera.near);
 		//if (this.scene.fog.near > center) this.scene.fog.near = center;
 		this.scene.fog.far = this.camera.far;
-		this.renderer.render(this.scene, this.camera);
+		this.effect.render(this.scene, this.camera);
 	};
 
 	iview.prototype.resetView = function () {
