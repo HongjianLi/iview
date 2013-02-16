@@ -566,11 +566,10 @@ var iview = (function () {
 		});
 	}
 
-	iview.prototype.isConnected = function (atom1, atom2) {
-		if (atom1.bonds.indexOf(atom2.serial) != -1) return true;
+	iview.prototype.hasCovalentBond = function (atom1, atom2) {
 		var r = this.covalentRadii[atom1.elem] + this.covalentRadii[atom2.elem];
-		return (new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.1 * r * r);
-	};
+		return new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.2 * r * r;
+	}
 
 	iview.prototype.subdivide = function (_points, DIV) { // Catmull-Rom subdivision
 		var ret = [];
@@ -646,7 +645,7 @@ var iview = (function () {
 			for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
 				var j = atomlist[_j];
 				var atom2 = this.atoms[j];
-				if (this.isConnected(atom1, atom2) == 0) continue;
+				if (atom1.bonds.indexOf(atom2.serial) == -1) continue;
 				atom1.connected = atom2.connected = true;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
@@ -658,7 +657,7 @@ var iview = (function () {
 				atom1.connected = atom2.connected = true;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
-			if (atom1.connected) this.drawSphere(atom1, atomR, !scale, scale);
+			this.drawSphere(atom1, atomR, !scale, scale);
 		}
 	};
 
@@ -681,7 +680,7 @@ var iview = (function () {
 			for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
 				var j = atomlist[_j];
 				var atom2 = this.atoms[j];
-				if (!this.isConnected(atom1, atom2)) continue;
+				if (atom1.bonds.indexOf(atom2.serial) == -1) continue;
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 			for (var _j = 0; _j < atom1.bonds.length; _j++) {
@@ -972,7 +971,7 @@ var iview = (function () {
 				var idx = 0;
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.stdAtoms.length), 1, 0.9).getHex();
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.peptides.length), 1, 0.9).getHex();
 				}
 				break;
 			case 'chain':
@@ -1026,35 +1025,35 @@ var iview = (function () {
 
 		switch (this.options.primaryStructure) {
 			case 'lines':
-				this.drawBondsAsLine(this.stdAtoms, this.lineWidth);
+				this.drawBondsAsLine(this.peptides, this.lineWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(this.stdAtoms, this.cylinderRadius, this.cylinderRadius);
+				this.drawBondsAsStick(this.peptides, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.stdAtoms, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.peptides, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
-				this.drawAtomsAsSphere(this.stdAtoms, this.sphereRadius);
+				this.drawAtomsAsSphere(this.peptides, this.sphereRadius);
 				break;
 		}
 
 		var doNotSmoothen = false;
 		switch (this.options.secondaryStructure) {
 			case 'ribbon':
-				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
+				this.drawStrand(this.peptides, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
 				break;
 			case 'strand':
-				this.drawStrand(this.stdAtoms, null, null, null, null, null, doNotSmoothen);
+				this.drawStrand(this.peptides, null, null, null, null, null, doNotSmoothen);
 				break;
 			case 'cylinder & plate':
-				this.drawHelixAsCylinder(this.stdAtoms, 1.6);
+				this.drawHelixAsCylinder(this.peptides, 1.6);
 				break;
 			case 'C alpha trace':
-				this.drawMainchainCurve(this.stdAtoms, this.curveWidth, 'CA', 1);
+				this.drawMainchainCurve(this.peptides, this.curveWidth, 'CA', 1);
 				break;
 			case 'B factor tube':
-				this.drawMainchainTube(this.stdAtoms, 'CA');
+				this.drawMainchainTube(this.peptides, 'CA');
 				break;
 		}
 
@@ -1128,7 +1127,23 @@ var iview = (function () {
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
-			if (record == 'ATOM  ' || record == 'HETATM') {
+			if (record == 'HELIX ') {
+				helices.push({
+					chain: line.substr(19, 1),
+					initialResidue: parseInt(line.substr(21, 4)),
+					initialInscode: line.substr(25, 1),
+					terminalResidue: parseInt(line.substr(33, 4)),
+					terminalInscode: line.substr(37, 1),
+				});
+			} else if (record == 'SHEET ') {
+				sheets.push({
+					chain: line.substr(21, 1),
+					initialResidue: parseInt(line.substr(22, 4)),
+					initialInscode: line.substr(26, 1),
+					terminalResidue: parseInt(line.substr(33, 4)),
+					terminalInscode: line.substr(37, 1),
+				});
+			} else if (record == 'ATOM  ' || record == 'HETATM') {
 				if (!(line[16] == ' ' || line[16] == 'A')) continue;
 				var serial = parseInt(line.substr(6, 5));
 				this.atoms[serial] = {
@@ -1147,6 +1162,8 @@ var iview = (function () {
 					bonds: [],
 					ss: 'coil',
 				};
+			} else if (record == 'TER   ') {
+				this.lastTER = parseInt(line.substr(6, 5));
 			} else if (record == 'CONECT') {
 				var from = parseInt(line.substr(6, 5));
 				for (var j = 0; j < 4; ++j) {
@@ -1154,22 +1171,6 @@ var iview = (function () {
 					if (isNaN(to)) continue;
 					this.atoms[from].bonds.push(to);
 				}
-			} else if (record == 'HELIX ') {
-				helices.push({
-					chain: line.substr(19, 1),
-					initialResidue: parseInt(line.substr(21, 4)),
-					initialInscode: line.substr(25, 1),
-					terminalResidue: parseInt(line.substr(33, 4)),
-					terminalInscode: line.substr(37, 1),
-				});
-			} else if (record == 'SHEET ') {
-				sheets.push({
-					chain: line.substr(21, 1),
-					initialResidue: parseInt(line.substr(22, 4)),
-					initialInscode: line.substr(26, 1),
-					terminalResidue: parseInt(line.substr(33, 4)),
-					terminalInscode: line.substr(37, 1),
-				});
 			}
 		}
 		for (var i in this.atoms) {
@@ -1191,15 +1192,53 @@ var iview = (function () {
 				}
 			}
 		}
+		var curChain, curResi, curInsc, curResAtoms = [];
+		for (var i in this.atoms) {
+			var atom = this.atoms[i];
+			if (atom.het) continue;
+			if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
+				for (var j in curResAtoms) {
+					var from = this.atoms[curResAtoms[j]];
+					for (var k in curResAtoms) {
+						if (j == k) continue;
+						var to = this.atoms[curResAtoms[k]];
+						if (this.hasCovalentBond(from, to)) {
+							from.bonds.push(to.serial);
+						}
+					}
+					if (from.name == 'C' && atom.name == 'N' && this.hasCovalentBond(from, atom)) {
+						from.bonds.push(atom.serial);
+						atom.bonds.push(from.serial);
+					}
+				}
+				curChain = atom.chain;
+				curResi = atom.resi;
+				curInsc = atom.insc;
+				curResAtoms.length = 0;
+			}
+			curResAtoms.push(atom.serial);
+		}
+		for (var j in curResAtoms) {
+			var from = this.atoms[curResAtoms[j]];
+			for (var k in curResAtoms) {
+				if (j == k) continue;
+				var to = this.atoms[curResAtoms[k]];
+				if (this.hasCovalentBond(from, to)) {
+					from.bonds.push(to.serial);
+				}
+			}
+		}
 		this.all = [];
-		this.stdAtoms = [];
+		this.peptides = [];
 		this.ligands = [];
 		this.waters = [];
 		this.ions = [];
 		for (var i in this.atoms) {
 			var atom = this.atoms[i];
 			this.all.push(atom.serial);
-			if (atom.het) {
+			if (atom.serial < this.lastTER) {
+				this.peptides.push(atom.serial);
+			} else {
 				if (atom.bonds.length) {
 					this.ligands.push(atom.serial);
 				} else {
@@ -1209,8 +1248,6 @@ var iview = (function () {
 						this.ions.push(atom.serial);
 					}
 				}
-			} else {
-				this.stdAtoms.push(atom.serial);
 			}
 		}
 		this.rebuildScene();
