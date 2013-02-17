@@ -7,7 +7,7 @@ iview is an interactive HTML5 visualizer of protein-ligand complex.
 License
 -------
 
-[GPLv3]
+[MIT License]
 
 
 Author
@@ -22,5 +22,5 @@ Logo
 ![iview logo](https://github.com/HongjianLi/iview/raw/master/logo.png)
 
 
-[GPLv3]: http://www.gnu.org/licenses/gpl.html
+[MIT License]: http://opensource.org/licenses/MIT
 [Jacky Lee]: http://www.cse.cuhk.edu.hk/~hjli
