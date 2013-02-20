@@ -477,14 +477,6 @@ var iview = (function () {
 			effect: 'none',
 		};
 
-		// UI variables
-		this.cq = new THREE.Quaternion(1, 0, 0, 0);
-		this.dq = new THREE.Quaternion(1, 0, 0, 0);
-		this.isDragging = false;
-		this.mouseStartX = 0;
-		this.mouseStartY = 0;
-		this.cz = 0;
-
 		var me = this;
 		$('body').bind('mouseup touchend', function (ev) {
 			me.isDragging = false;
@@ -551,13 +543,7 @@ var iview = (function () {
 				} else if (me.mouseButton == 1) { // Rotate
 					var r = Math.sqrt(dx * dx + dy * dy);
 					var rs = Math.sin(r * Math.PI) / r;
-					me.dq.x = Math.cos(r * Math.PI);
-					me.dq.y = 0;
-					me.dq.z = rs * dx;
-					me.dq.w = rs * dy;
-					me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
-					me.rotationGroup.quaternion.multiply(me.dq);
-					me.rotationGroup.quaternion.multiply(me.cq);
+					me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0).multiply(new THREE.Quaternion(Math.cos(r * Math.PI), 0, rs * dx, rs * dy)).multiply(me.cq);
 				}
 			}
 			me.render();
