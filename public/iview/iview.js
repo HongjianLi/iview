@@ -535,28 +535,30 @@ var iview = (function () {
 			var dx = (x - me.mouseStartX) / me.container.width();
 			var dy = (y - me.mouseStartY) / me.container.height();
 			if (!dx && !dy) return;
-			var mode = 0;
-			if (mode == 3 || (me.mouseButton == 3 && ev.ctrlKey)) { // Slab
-				me.slabNear = me.cslabNear + dx * 100;
-				me.slabFar = me.cslabFar + dy * 100;
-			} else if (mode == 2 || me.mouseButton == 3 || ev.shiftKey) { // Zoom
-				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
-				if (scaleFactor < 80) scaleFactor = 80;
-				me.rotationGroup.position.z = me.cz - dy * scaleFactor;
-			} else if (mode == 1 || me.mouseButton == 2 || ev.ctrlKey) { // Translate
-				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
-				if (scaleFactor < 20) scaleFactor = 20;
-				me.modelGroup.position = me.cp.clone().add(new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize()));
-			} else if ((mode == 0 || me.mouseButton == 1)) { // Rotate
-				var r = Math.sqrt(dx * dx + dy * dy);
-				var rs = Math.sin(r * Math.PI) / r;
-				me.dq.x = Math.cos(r * Math.PI);
-				me.dq.y = 0;
-				me.dq.z = rs * dx;
-				me.dq.w = rs * dy;
-				me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
-				me.rotationGroup.quaternion.multiply(me.dq);
-				me.rotationGroup.quaternion.multiply(me.cq);
+			if (ev.ctrlKey) { // Apply to ligand only
+			} else {
+				if (me.mouseButton == 3 && ev.shiftKey) { // Slab
+					me.slabNear = me.cslabNear + dx * 100;
+					me.slabFar = me.cslabFar + dy * 100;
+				} else if (me.mouseButton == 3) { // Translate
+					var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
+					if (scaleFactor < 20) scaleFactor = 20;
+					me.modelGroup.position = me.cp.clone().add(new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize()));
+				} else if (me.mouseButton == 2) { // Zoom
+					var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
+					if (scaleFactor < 80) scaleFactor = 80;
+					me.rotationGroup.position.z = me.cz - dy * scaleFactor;
+				} else if (me.mouseButton == 1) { // Rotate
+					var r = Math.sqrt(dx * dx + dy * dy);
+					var rs = Math.sin(r * Math.PI) / r;
+					me.dq.x = Math.cos(r * Math.PI);
+					me.dq.y = 0;
+					me.dq.z = rs * dx;
+					me.dq.w = rs * dy;
+					me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
+					me.rotationGroup.quaternion.multiply(me.dq);
+					me.rotationGroup.quaternion.multiply(me.cq);
+				}
 			}
 			me.render();
 		});
