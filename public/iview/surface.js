@@ -361,7 +361,7 @@ var ProteinSurface = (function () {
 		}
 
 		for (i in atomlist) {
-			atom = atoms[atomlist[i]]; if (atom == undefined || atom.hetflag) continue;
+			atom = atoms[atomlist[i]]; if (atom.het) continue;
 			this.fillAtom(atom, atoms);
 		}
 
@@ -447,7 +447,7 @@ var ProteinSurface = (function () {
 		for (var i = 0, lim = vp.length; i < lim; i++) vp[i].isdone = false;
 
 		for (i in atomlist) {
-			atom = atoms[atomlist[i]]; if (atom == undefined || atom.hetflag) continue;
+			atom = atoms[atomlist[i]]; if (atom.het) continue;
 
 			this.fillAtomWaals(atom, atoms);
 		}
