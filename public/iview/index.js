@@ -32,4 +32,17 @@ $(function () {
 		};
 		reader.readAsText(file.files[0]);
 	});
+
+	$.get('trainx.csv', function (trainxcsv) {
+	$.get('trainy.csv', function (trainycsv) {
+		var trainx = trainxcsv.split('\n').map(function (line) {
+			return line.split(',').map(function (token) {
+				return parseFloat(token);
+			});
+		});
+		var trainy = trainycsv.split('\n').map(function (line) {
+			return parseFloat(line);
+		});
+	});
+	});
 });
