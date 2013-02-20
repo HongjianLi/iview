@@ -971,7 +971,7 @@ var iview = (function () {
 				var idx = 0;
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSV(0.666 * (1 - idx++ / this.peptides.length), 1, 0.9).getHex();
+					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSL(2 / 3 * (1 - idx++ / this.peptides.length), 1, 0.45).getHex();
 				}
 				break;
 			case 'chain':
@@ -1000,7 +1000,7 @@ var iview = (function () {
 				}
 				for (var i in this.atoms) {
 					var atom = this.atoms[i];
-					atom.color = atom.b < this.middB ? new THREE.Color().setHSV(0.667, (this.middB - atom.b) * this.spanBinv, 1).getHex() : new THREE.Color().setHSV(0, (atom.b - this.middB) * this.spanBinv, 1).getHex();
+					atom.color = atom.b < this.middB ? new THREE.Color().setRGB(1 - (s = (this.middB - atom.b) * this.spanBinv), 1 - s, 1).getHex() : new THREE.Color().setRGB(1, 1 - (s = (atom.b - this.middB) * this.spanBinv), 1 - s).getHex();
 				}
 				break;
 			case 'residue':
