@@ -26,14 +26,12 @@ iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
 	var atomsToShow = this.removeSolvents(atomlist);
 	if (!this.surfaces[type]) {
 		var extent = this.getExtent(atomsToShow);
-		var expandedExtent = [[extent[0][0] - 4, extent[0][1] - 4, extent[0][2] - 4], [extent[1][0] + 4, extent[1][1] + 4, extent[1][2] + 4]];
-		var extendedAtoms = this.removeSolvents(this.getAtomsWithin(this.all, expandedExtent));
 		var ps = new ProteinSurface();
-		ps.initparm(expandedExtent, (type == 1) ? false : true);
-		ps.fillvoxels(this.atoms, extendedAtoms);
+		ps.initparm(extent, (type == 1) ? false : true);
+		ps.fillvoxels(this.atoms, atomsToShow);
 		ps.buildboundary();
 		if (type == 4 || type == 2) ps.fastdistancemap();
-		if (type == 2) { ps.boundingatom(false); ps.fillvoxelswaals(this.atoms, extendedAtoms); }
+		if (type == 2) { ps.boundingatom(false); ps.fillvoxelswaals(this.atoms, atomsToShow); }
 		ps.marchingcube(type);
 		ps.laplaciansmooth(1);
 		ps.transformVertices();
@@ -47,18 +45,6 @@ iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
 	}));
 	mesh.doubleSided = true;
 	this.modelGroup.add(mesh);
-};
-
-iview.prototype.getAtomsWithin = function (atomlist, extent) {
-	var ret = [];
-	for (var i in atomlist) {
-		var atom = this.atoms[atomlist[i]];
-		if (atom.x < extent[0][0] || atom.x > extent[1][0]) continue;
-		if (atom.y < extent[0][1] || atom.y > extent[1][1]) continue;
-		if (atom.z < extent[0][2] || atom.z > extent[1][2]) continue;
-		ret.push(atom.serial);
-	}
-	return ret;
 };
 
 iview.prototype.removeSolvents = function (atomlist) {
