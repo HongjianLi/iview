@@ -1234,6 +1234,12 @@ var iview = (function () {
 				}
 			}
 		}
+		this.surfaces = {
+			1: undefined,
+			2: undefined,
+			3: undefined,
+			4: undefined,
+		};
 		this.rebuildScene();
 		this.resetView();
 	};

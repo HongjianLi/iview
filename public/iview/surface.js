@@ -17,12 +17,6 @@ by Euclidean Distance Transform. PLoS ONE 4(12): e8140.
 */
 
 iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
-	this.surfaces = this.surfaces || {
-		1: undefined,
-		2: undefined,
-		3: undefined,
-		4: undefined,
-	};
 	var atomsToShow = this.removeSolvents(atomlist);
 	if (!this.surfaces[type]) {
 		var extent = this.getExtent(atomsToShow);
