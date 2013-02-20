@@ -483,7 +483,6 @@ var iview = (function () {
 		this.isDragging = false;
 		this.mouseStartX = 0;
 		this.mouseStartY = 0;
-		this.currentModelPos = 0;
 		this.cz = 0;
 
 		var me = this;
@@ -508,7 +507,7 @@ var iview = (function () {
 			me.mouseStartY = y;
 			me.cq = me.rotationGroup.quaternion;
 			me.cz = me.rotationGroup.position.z;
-			me.currentModelPos = me.modelGroup.position.clone();
+			me.cp = me.modelGroup.position.clone();
 			me.cslabNear = me.slabNear;
 			me.cslabFar = me.slabFar;
 		});
@@ -547,10 +546,7 @@ var iview = (function () {
 			} else if (mode == 1 || me.mouseButton == 2 || ev.ctrlKey) { // Translate
 				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
 				if (scaleFactor < 20) scaleFactor = 20;
-				var translation = new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize());
-				me.modelGroup.position.x = me.currentModelPos.x + translation.x;
-				me.modelGroup.position.y = me.currentModelPos.y + translation.y;
-				me.modelGroup.position.z = me.currentModelPos.z + translation.z;
+				me.modelGroup.position = me.cp.clone().add(new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize()));
 			} else if ((mode == 0 || me.mouseButton == 1)) { // Rotate
 				var r = Math.sqrt(dx * dx + dy * dy);
 				var rs = Math.sin(r * Math.PI) / r;
@@ -1070,16 +1066,16 @@ var iview = (function () {
 
 		switch (this.options.surface) {
 			case 'vdw surface':
-				this.drawSurface(this.all, 1, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.peptides, 1, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent excluded surface':
-				this.drawSurface(this.all, 2, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.peptides, 2, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent accessible surface':
-				this.drawSurface(this.all, 3, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.peptides, 3, this.options.wireframe, this.options.opacity);
 				break;
 			case 'molecular surface':
-				this.drawSurface(this.all, 4, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.peptides, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
 
@@ -1228,14 +1224,14 @@ var iview = (function () {
 				}
 			}
 		}
-		this.all = [];
+//		this.all = [];
 		this.peptides = [];
 		this.ligands = [];
 		this.waters = [];
 		this.ions = [];
 		for (var i in this.atoms) {
 			var atom = this.atoms[i];
-			this.all.push(atom.serial);
+//			this.all.push(atom.serial);
 			if (atom.serial < this.lastTER) {
 				this.peptides.push(atom.serial);
 			} else {
