@@ -38,16 +38,28 @@ $(function () {
 		reader.readAsText(file.files[0]);
 	});
 
+	var rf = new Worker('rf.js');
+	rf.onmessage = function (ev) {
+		if (ev.data === undefined) {
+			rf.postMessage(JSON.stringify({
+				x: [2097,673,710,17,125,39,39,0,499,167,164,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,585,174,183,6]
+			}));
+		} else {
+			console.log(ev.data);
+		}
+	};
 	$.get('trainx.csv', function (trainxcsv) {
 	$.get('trainy.csv', function (trainycsv) {
-		var trainx = trainxcsv.split('\n').map(function (line) {
-			return line.split(',').map(function (token) {
-				return parseFloat(token);
-			});
-		});
-		var trainy = trainycsv.split('\n').map(function (line) {
-			return parseFloat(line);
-		});
+		rf.postMessage(JSON.stringify({
+			x: trainxcsv.split('\n').map(function (line) {
+				return line.split(',').map(function (token) {
+					return parseFloat(token);
+				});
+			}),
+			y: trainycsv.split('\n').map(function (line) {
+				return parseFloat(line);
+			}),
+		}));
 	});
 	});
 });
