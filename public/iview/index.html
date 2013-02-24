@@ -103,13 +103,13 @@
               <label class="control-label">Color by</label>
               <div class="controls">
                 <div class="btn-group" data-toggle="buttons-radio" id="colorBy">
-                  <button type="button" class="btn btn-info active">spectrum</button>
+                  <button type="button" class="btn btn-info">spectrum</button>
                   <button type="button" class="btn btn-info">chain</button>
                   <button type="button" class="btn btn-info">secondary structure</button>
                   <button type="button" class="btn btn-info">B factor</button>
                   <button type="button" class="btn btn-info">residue</button>
                   <button type="button" class="btn btn-info">polarity</button>
-                  <button type="button" class="btn btn-info">atom</button>
+                  <button type="button" class="btn btn-info active">atom</button>
                 </div>
               </div>
             </div>
@@ -121,11 +121,11 @@
               <label class="control-label">Display primary structure as</label>
               <div class="controls">
                 <div class="btn-group" data-toggle="buttons-radio" id="primaryStructure">
-                  <button type="button" class="btn btn-info">lines</button>
+                  <button type="button" class="btn btn-info active">line</button>
                   <button type="button" class="btn btn-info">stick</button>
                   <button type="button" class="btn btn-info">ball and stick</button>
                   <button type="button" class="btn btn-info">sphere</button>
-                  <button type="button" class="btn btn-info active">nothing</button>
+                  <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
             </div>
@@ -137,10 +137,10 @@
                 <div class="btn-group" data-toggle="buttons-radio" id="secondaryStructure">
                   <button type="button" class="btn btn-info">ribbon</button>
                   <button type="button" class="btn btn-info">strand</button>
-                  <button type="button" class="btn btn-info active">cylinder & plate</button>
+                  <button type="button" class="btn btn-info">cylinder & plate</button>
                   <button type="button" class="btn btn-info">C alpha trace</button>
                   <button type="button" class="btn btn-info">B factor tube</button>
-                  <button type="button" class="btn btn-info">nothing</button>
+                  <button type="button" class="btn btn-info active">nothing</button>
                 </div>
               </div>
             </div>
@@ -191,9 +191,9 @@
         <div class="row">
           <div class="span4">
             <div class="control-group">
-              <label class="control-label">Display ligands as</label>
+              <label class="control-label">Display ligand as</label>
               <div class="controls">
-                <div class="btn-group" data-toggle="buttons-radio" id="ligands">
+                <div class="btn-group" data-toggle="buttons-radio" id="ligand">
                   <button type="button" class="btn btn-info">line</button>
                   <button type="button" class="btn btn-info active">stick</button>
                   <button type="button" class="btn btn-info">ball and stick</button>
@@ -205,23 +205,11 @@
           </div>
           <div class="span2">
             <div class="control-group">
-              <label class="control-label">Display waters as</label>
+              <label class="control-label">Display solvents as</label>
               <div class="controls">
-                <div class="btn-group" data-toggle="buttons-radio" id="waters">
+                <div class="btn-group" data-toggle="buttons-radio" id="solvents">
                   <button type="button" class="btn btn-info">sphere</button>
                   <button type="button" class="btn btn-info active">dot</button>
-                  <button type="button" class="btn btn-info">nothing</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="span2">
-            <div class="control-group">
-              <label class="control-label">Display ions as</label>
-              <div class="controls">
-                <div class="btn-group" data-toggle="buttons-radio" id="ions">
-                  <button type="button" class="btn btn-info active">sphere</button>
-                  <button type="button" class="btn btn-info">dot</button>
                   <button type="button" class="btn btn-info">nothing</button>
                 </div>
               </div>
@@ -251,7 +239,6 @@
             </ul>
 	        <p>iview supports the following functions</p>
             <ul>
-              <li>Load PDB ID <input class="span1" id="loadPDB"></li>
               <li><a href="#" id="resetView">Reset the canvas view</a></li>
               <li><a href="#" id="exportView">Export the canvas to png</a></li>
             </ul>

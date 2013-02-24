@@ -1,12 +1,10 @@
 $(function () {
 	var iv = new iview('iview');
-	$.get('2DHB.pdb', function (src) {
-		iv.loadReceptor(src);
+	$.get('2ZD1_protein.pdb', function (p) {
+	$.get('2ZD1_ligand.pdb', function (l) {
+		iv.loadProtein(p);
+		iv.loadLigand(l);
 	});
-	$('#loadPDB').change(function () {
-		$.get('http://www.pdb.org/pdb/files/' + $(this).val() + '.pdb', function (src) {
-			iv.loadReceptor(src);
-		});
 	});
 
 	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligands', 'waters', 'ions', 'effect'].forEach(function (opt) {

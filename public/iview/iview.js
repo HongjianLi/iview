@@ -465,15 +465,14 @@ var iview = (function () {
 		this.options = {
 			camera: 'perspective',
 			background: 'black',
-			colorBy: 'spectrum',
-			primaryStructure: 'nothing',
-			secondaryStructure: 'cylinder & plate',
+			colorBy: 'atom',
+			primaryStructure: 'line',
+			secondaryStructure: 'nothing',
 			surface: 'nothing',
 			wireframe: 'no',
 			opacity: '0.8',
-			ligands: 'stick',
-			waters: 'dot',
-			ions: 'sphere',
+			ligand: 'stick',
+			solvents: 'dot',
 			effect: 'none',
 		};
 
@@ -1008,7 +1007,7 @@ var iview = (function () {
 		}
 
 		switch (this.options.primaryStructure) {
-			case 'lines':
+			case 'line':
 				this.drawBondsAsLine(this.peptides, this.lineWidth);
 				break;
 			case 'stick':
@@ -1066,37 +1065,28 @@ var iview = (function () {
 				this.drawSurface(this.peptides, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
-
-		switch (this.options.ligands) {
+/*
+		switch (this.options.ligand) {
 			case 'line':
-				this.drawBondsAsLine(this.ligands, this.curveWidth);
+				this.drawBondsAsLine(this.ligand, this.lineWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(this.ligands, this.cylinderRadius, this.cylinderRadius);
+				this.drawBondsAsStick(this.ligand, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.ligands, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.ligand, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
-				this.drawAtomsAsSphere(this.ligands, this.sphereRadius);
+				this.drawAtomsAsSphere(this.ligand, this.sphereRadius);
 				break;
 		}
-
-		switch (this.options.waters) {
+*/
+		switch (this.options.solvents) {
 			case 'sphere':
-				this.drawAtomsAsSphere(this.waters, this.sphereRadius);
+				this.drawAtomsAsSphere(this.solvents, this.sphereRadius);
 				break;
 			case 'dot':
-				this.drawAtomsAsSphere(this.waters, 0.3, true);
-				break;
-		}
-
-		switch (this.options.ions) {
-			case 'sphere':
-				this.drawAtomsAsSphere(this.ions, this.sphereRadius);
-				break;
-			case 'dot':
-				this.drawAtomsAsSphere(this.ions, 0.3, true);
+				this.drawAtomsAsSphere(this.solvents, 0.3, true);
 				break;
 		}
 
@@ -1104,7 +1094,7 @@ var iview = (function () {
 		this.effect.setSize(this.container.width(), this.container.height());
 	};
 
-	iview.prototype.loadReceptor = function (src) {
+	iview.prototype.loadProtein = function (src) {
 		var helices = [], sheets = [];
 		this.atoms = [];
 		var lines = src.split('\n');
@@ -1212,26 +1202,14 @@ var iview = (function () {
 				}
 			}
 		}
-//		this.all = [];
 		this.peptides = [];
-		this.ligands = [];
-		this.waters = [];
-		this.ions = [];
+		this.solvents = [];
 		for (var i in this.atoms) {
 			var atom = this.atoms[i];
-//			this.all.push(atom.serial);
-			if (atom.serial < this.lastTER) {
+			if (atom.bonds.length) {
 				this.peptides.push(atom.serial);
 			} else {
-				if (atom.bonds.length) {
-					this.ligands.push(atom.serial);
-				} else {
-					if (atom.resn == 'HOH') {
-						this.waters.push(atom.serial);
-					} else {
-						this.ions.push(atom.serial);
-					}
-				}
+				this.solvents.push(atom.serial);
 			}
 		}
 		this.surfaces = {
@@ -1243,6 +1221,41 @@ var iview = (function () {
 		this.rebuildScene();
 		this.resetView();
 	};
+
+	iview.prototype.loadLigand = function (src) {
+		this.ligand = [];
+		var lines = src.split('\n');
+		for (var i in lines) {
+			var line = lines[i];
+			var record = line.substr(0, 6);
+			if (record == 'ATOM  ' || record == 'HETATM') {
+				if (!(line[16] == ' ' || line[16] == 'A')) continue;
+				var serial = parseInt(line.substr(6, 5));
+				this.ligand[serial] = {
+					het: record[0] == 'H',
+					serial: serial,
+					name: line.substr(12, 4).replace(/ /g, ''),
+					resn: line.substr(17, 3),
+					chain: line.substr(21, 1),
+					resi: parseInt(line.substr(22, 4)),
+					insc: line.substr(26, 1),
+					x: parseFloat(line.substr(30, 8)),
+					y: parseFloat(line.substr(38, 8)),
+					z: parseFloat(line.substr(46, 8)),
+					b: parseFloat(line.substr(60, 8)),
+					elem: line.substr(76, 2).replace(/ /g, ''),
+					bonds: [],
+				};
+			} else if (record == 'CONECT') {
+				var from = parseInt(line.substr(6, 5));
+				for (var j = 0; j < 4; ++j) {
+					var to = parseInt(line.substr([11, 16, 21, 26][j], 5));
+					if (isNaN(to)) continue;
+					this.ligand[from].bonds.push(to);
+				}
+			}
+		}
+	}
 
 	iview.prototype.render = function () {
 		var center = this.rotationGroup.position.z - this.camera.position.z;
