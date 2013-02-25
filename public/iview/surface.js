@@ -16,22 +16,20 @@ by Euclidean Distance Transform. PLoS ONE 4(12): e8140.
 
 */
 
-iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
-	var atomsToShow = this.removeSolvents(atomlist);
+iview.prototype.drawSurface = function (atoms, type, wireframe, opacity) {
 	if (!this.surfaces[type]) {
-		var extent = this.getExtent(atomsToShow);
 		var ps = new ProteinSurface();
-		ps.initparm(extent, (type == 1) ? false : true);
-		ps.fillvoxels(this.atoms, atomsToShow);
+		ps.initparm(this.getExtent(atoms), (type == 1) ? false : true);
+		ps.fillvoxels(atoms);
 		ps.buildboundary();
 		if (type == 4 || type == 2) ps.fastdistancemap();
-		if (type == 2) { ps.boundingatom(false); ps.fillvoxelswaals(this.atoms, atomsToShow); }
+		if (type == 2) { ps.boundingatom(false); ps.fillvoxelswaals(atoms); }
 		ps.marchingcube(type);
 		ps.laplaciansmooth(1);
 		ps.transformVertices();
 		this.surfaces[type] = ps;
 	}
-	var mesh = new THREE.Mesh(this.surfaces[type].getModel(this.atoms, atomsToShow), new THREE.MeshLambertMaterial({
+	var mesh = new THREE.Mesh(this.surfaces[type].getModel(atoms), new THREE.MeshLambertMaterial({
 		vertexColors: THREE.VertexColors,
 		wireframe: wireframe,
 		opacity: opacity,
@@ -41,21 +39,12 @@ iview.prototype.drawSurface = function (atomlist, type, wireframe, opacity) {
 	this.modelGroup.add(mesh);
 };
 
-iview.prototype.removeSolvents = function (atomlist) {
-	var ret = [];
-	for (var i in atomlist) {
-		var atom = this.atoms[atomlist[i]];
-		if (atom.resn != 'HOH') ret.push(atom.serial);
-	}
-	return ret;
-};
-
-iview.prototype.getExtent = function (atomlist) {
+iview.prototype.getExtent = function (atoms) {
 	var xmin = ymin = zmin = 9999;
 	var xmax = ymax = zmax = -9999;
 	var xsum = ysum = zsum = cnt = 0;
-	for (var i in atomlist) {
-		var atom = this.atoms[atomlist[i]];
+	for (var i in atoms) {
+		var atom = atoms[i];
 		cnt++;
 		xsum += atom.x;
 		ysum += atom.y;
@@ -98,9 +87,9 @@ var ProteinSurface = (function () {
 		}
 	};
 
-	this.getModel = function (atoms, atomlist) {
+	this.getModel = function (atoms) {
 		var atomsToShow = new Object();
-		for (var i = 0, lim = atomlist.length; i < lim; i++) atomsToShow[atomlist[i]] = true;
+		for (var i in atoms) atomsToShow[atoms[i].serial] = true;
 		var v = [], vertices = this.verts;
 		for (i = 0; i < vertnumber; i++) {
 			v.push(new THREE.Vector3(vertices[i].x, vertices[i].y, vertices[i].z));
@@ -335,14 +324,13 @@ var ProteinSurface = (function () {
 		}
 	}
 
-	this.fillvoxels = function (atoms, atomlist) { //(int seqinit,int seqterm,bool atomtype,atom* proseq,bool bcolor)
+	this.fillvoxels = function (atoms) { //(int seqinit,int seqterm,bool atomtype,atom* proseq,bool bcolor)
 		for (var i = 0, lim = vp.length; i < lim; i++) {
 			vp[i] = { inout: false, isdone: false, isbound: false, distance: -1, atomid: -1 };
 		}
 
-		for (i in atomlist) {
-			atom = atoms[atomlist[i]]; if (atom.het) continue;
-			this.fillAtom(atom, atoms);
+		for (i in atoms) {
+			this.fillAtom(atoms[i], atoms);
 		}
 
 		for (i = 0, lim = vp.length; i < lim; i++)
@@ -423,13 +411,11 @@ var ProteinSurface = (function () {
 		}//i
 	};
 
-	this.fillvoxelswaals = function (atoms, atomlist) {
+	this.fillvoxelswaals = function (atoms) {
 		for (var i = 0, lim = vp.length; i < lim; i++) vp[i].isdone = false;
 
-		for (i in atomlist) {
-			atom = atoms[atomlist[i]]; if (atom.het) continue;
-
-			this.fillAtomWaals(atom, atoms);
+		for (i in atoms) {
+			this.fillAtomWaals(atoms[i], atoms);
 		}
 	};
 
