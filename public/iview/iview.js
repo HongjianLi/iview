@@ -466,13 +466,13 @@ var iview = (function () {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'atom',
+			solvents: 'dot',
 			primaryStructure: 'line',
 			secondaryStructure: 'nothing',
 			surface: 'nothing',
-			wireframe: 'no',
 			opacity: '0.8',
+			wireframe: 'no',
 			ligand: 'stick',
-			solvents: 'dot',
 			effect: 'none',
 		};
 
@@ -988,6 +988,15 @@ var iview = (function () {
 			atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
 		}
 
+		switch (this.options.solvents) {
+			case 'sphere':
+				this.drawAtomsAsSphere(this.solvents, this.sphereRadius);
+				break;
+			case 'dot':
+				this.drawAtomsAsSphere(this.solvents, 0.3, true);
+				break;
+		}
+
 		switch (this.options.primaryStructure) {
 			case 'line':
 				this.drawBondsAsLine(this.peptides, this.lineWidth);
@@ -1022,6 +1031,8 @@ var iview = (function () {
 				break;
 		}
 
+		this.options.opacity = parseFloat(this.options.opacity);
+
 		switch (this.options.wireframe) {
 			case 'yes':
 				this.options.wireframe = true;
@@ -1030,8 +1041,6 @@ var iview = (function () {
 				this.options.wireframe = false;
 				break;
 		}
-
-		this.options.opacity = parseFloat(this.options.opacity);
 
 		switch (this.options.surface) {
 			case 'vdw surface':
@@ -1060,15 +1069,6 @@ var iview = (function () {
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(this.ligand, this.sphereRadius);
-				break;
-		}
-
-		switch (this.options.solvents) {
-			case 'sphere':
-				this.drawAtomsAsSphere(this.solvents, this.sphereRadius);
-				break;
-			case 'dot':
-				this.drawAtomsAsSphere(this.solvents, 0.3, true);
 				break;
 		}
 
@@ -1266,27 +1266,29 @@ var iview = (function () {
 	iview.prototype.resetView = function () {
 		var xmin = ymin = zmin = 9999;
 		var xmax = ymax = zmax = -9999;
-		var xsum = ysum = zsum = cnt = 0;
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			xsum += atom.x;
-			ysum += atom.y;
-			zsum += atom.z;
 			xmin = (xmin < atom.x) ? xmin : atom.x;
 			ymin = (ymin < atom.y) ? ymin : atom.y;
 			zmin = (zmin < atom.z) ? zmin : atom.z;
 			xmax = (xmax > atom.x) ? xmax : atom.x;
 			ymax = (ymax > atom.y) ? ymax : atom.y;
 			zmax = (zmax > atom.z) ? zmax : atom.z;
+		}
+		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
+		this.slabNear = -maxD / 1.9;
+		this.slabFar = maxD / 3;
+		this.rotationGroup.position.z = maxD * 0.08 / Math.tan(Math.PI / 180.0 * this.camera.fov * 0.5) - 150;
+		this.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
+		var xsum = ysum = zsum = cnt = 0;
+		for (var i in this.ligand) {
+			var atom = this.ligand[i];
+			xsum += atom.x;
+			ysum += atom.y;
+			zsum += atom.z;
 			++cnt;
 		}
 		this.modelGroup.position = new THREE.Vector3(xsum / cnt, ysum / cnt, zsum / cnt).multiplyScalar(-1);
-		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
-		if (maxD < 25) maxD = 25;
-		this.slabNear = -maxD / 1.9;
-		this.slabFar = maxD / 3;
-		this.rotationGroup.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * this.camera.fov * 0.5) - 150;
-		this.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
 		this.render();
 	};
 

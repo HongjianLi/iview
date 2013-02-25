@@ -9,7 +9,7 @@ $(function () {
 	});
 	});
 
-	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligand', 'solvents', 'effect'].forEach(function (opt) {
+	['camera', 'background', 'colorBy', 'solvents', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligand', 'effect'].forEach(function (opt) {
 		$('#' + opt).click(function (e) {
 			var options = {};
 			options[opt] = e.target.innerText;
