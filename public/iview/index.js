@@ -4,10 +4,12 @@ $(function () {
 	$.get('2ZD1_ligand.pdb', function (l) {
 		iv.loadProtein(p);
 		iv.loadLigand(l);
+		iv.rebuildScene();
+		iv.resetView();
 	});
 	});
 
-	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligands', 'waters', 'ions', 'effect'].forEach(function (opt) {
+	['camera', 'background', 'colorBy', 'primaryStructure', 'secondaryStructure', 'surface', 'opacity', 'wireframe', 'ligand', 'solvents', 'effect'].forEach(function (opt) {
 		$('#' + opt).click(function (e) {
 			var options = {};
 			options[opt] = e.target.innerText;

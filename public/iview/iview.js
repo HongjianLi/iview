@@ -596,9 +596,9 @@ var iview = (function () {
 		this.modelGroup.add(sphere);
 	};
 
-	iview.prototype.drawAtomsAsSphere = function (atomlist, defaultRadius, forceDefault, scale) {
-		for (var i in atomlist) {
-			this.drawSphere(this.atoms[atomlist[i]], defaultRadius, forceDefault, scale);
+	iview.prototype.drawAtomsAsSphere = function (atoms, defaultRadius, forceDefault, scale) {
+		for (var i in atoms) {
+			this.drawSphere(atoms[i], defaultRadius, forceDefault, scale);
 		}
 	};
 
@@ -620,24 +620,11 @@ var iview = (function () {
 		this.drawCylinder(p2, mp, bondR, atom2.color);
 	};
 
-	iview.prototype.drawBondsAsStick = function (atomlist, bondR, atomR, scale) {
-		var nAtoms = atomlist.length;
-		for (var _i = 0; _i < nAtoms; _i++) {
-			var i = atomlist[_i];
-			var atom1 = this.atoms[i];
-			for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
-				var j = atomlist[_j];
-				var atom2 = this.atoms[j];
-				if (atom1.bonds.indexOf(atom2.serial) == -1) continue;
-				atom1.connected = atom2.connected = true;
-				this.drawBondAsStickSub(atom1, atom2, bondR);
-			}
-			for (var _j = 0; _j < atom1.bonds.length; _j++) {
-				var j = atom1.bonds[_j];
-				if (j < i + 30) continue; // be conservative!
-				if (atomlist.indexOf(j) == -1) continue;
-				var atom2 = this.atoms[j];
-				atom1.connected = atom2.connected = true;
+	iview.prototype.drawBondsAsStick = function (atoms, bondR, atomR, scale) {
+		for (var i in atoms) {
+			var atom1 = atoms[i];
+			for (var j in atom1.bonds) {
+				var atom2 = atoms[atom1.bonds[j]];
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
 			this.drawSphere(atom1, atomR, !scale, scale);
@@ -654,23 +641,12 @@ var iview = (function () {
 		geo.vertices.push(p2); geo.colors.push(c2); geo.vertices.push(mp); geo.colors.push(c2);
 	};
 
-	iview.prototype.drawBondsAsLine = function (atomlist, lineWidth) {
+	iview.prototype.drawBondsAsLine = function (atoms, lineWidth) {
 		var geo = new THREE.Geometry();
-		var nAtoms = atomlist.length;
-		for (var _i = 0; _i < nAtoms; _i++) {
-			var i = atomlist[_i];
-			var atom1 = this.atoms[i];
-			for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
-				var j = atomlist[_j];
-				var atom2 = this.atoms[j];
-				if (atom1.bonds.indexOf(atom2.serial) == -1) continue;
-				this.drawBondsAsLineSub(geo, atom1, atom2);
-			}
-			for (var _j = 0; _j < atom1.bonds.length; _j++) {
-				var j = atom1.bonds[_j];
-				if (j < i + 30) continue; // be conservative!
-				if (atomlist.indexOf(j) == -1) continue;
-				var atom2 = this.atoms[j];
+		for (var i in atoms) {
+			var atom1 = atoms[i];
+			for (var j in atom1.bonds) {
+				var atom2 = atoms[atom1.bonds[j]];
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 		}
@@ -689,13 +665,14 @@ var iview = (function () {
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: width, vertexColors: true }), THREE.LineStrip));
 	};
 
-	iview.prototype.drawMainchainCurve = function (atomlist, curveWidth, atomName, div) {
+	iview.prototype.drawMainchainCurve = function (atoms, curveWidth, atomName, div) {
 		var points = [], colors = [];
 		var currentChain, currentResi;
 		div = div || 5;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if ((atom.name == atomName) && !atom.het) {
+		for (var i in atoms) {
+			var atom = atoms[i];
+			if (atom.serial > this.lastTER) continue;
+			if (atom.name == atomName) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothCurve(points, curveWidth, colors, div);
 					points = [];
@@ -763,7 +740,7 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawStrand = function (atomlist, num, div, fill, coilWidth, helixSheetWidth, doNotSmoothen, thickness) {
+	iview.prototype.drawStrand = function (atoms, num, div, fill, coilWidth, helixSheetWidth, doNotSmoothen, thickness) {
 		num = num || this.strandDIV;
 		div = div || this.axisDIV;
 		coilWidth = coilWidth || this.coilWidth;
@@ -773,36 +750,35 @@ var iview = (function () {
 		var colors = [];
 		var currentChain, currentResi, currentCA;
 		var prevCO = null, ss = null, ssborder = false;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if ((atom.name == 'O' || atom.name == 'CA') && !atom.het) {
-				if (atom.name == 'CA') {
-					if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-						for (var j = 0; !thickness && j < num; ++j)
-							this.drawSmoothCurve(points[j], 1, colors, div);
-						if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
-						var points = []; for (var k = 0; k < num; k++) points[k] = [];
-						colors = [];
-						prevCO = null; ss = null; ssborder = false;
-					}
-					currentCA = new THREE.Vector3(atom.x, atom.y, atom.z);
-					currentChain = atom.chain;
-					currentResi = atom.resi;
-					ss = atom.ss; ssborder = atom.ssstart || atom.ssend;
-					colors.push(atom.color);
-				} else { // O
-					var O = new THREE.Vector3(atom.x, atom.y, atom.z);
-					O.sub(currentCA);
-					O.normalize(); // can be omitted for performance
-					O.multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
-					if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
-					prevCO = O;
-					for (var j = 0; j < num; j++) {
-						var delta = -1 + 2 / (num - 1) * j;
-						var v = new THREE.Vector3(currentCA.x + prevCO.x * delta, currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta);
-						if (!doNotSmoothen && ss == 'sheet') v.smoothen = true;
-						points[j].push(v);
-					}
+		for (var i in atoms) {
+			var atom = atoms[i];
+			if (atom.serial > this.lastTER) continue;
+			if (atom.name == 'CA') {
+				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
+					for (var j = 0; !thickness && j < num; ++j)
+						this.drawSmoothCurve(points[j], 1, colors, div);
+					if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
+					var points = []; for (var k = 0; k < num; k++) points[k] = [];
+					colors = [];
+					prevCO = null; ss = null; ssborder = false;
+				}
+				currentCA = new THREE.Vector3(atom.x, atom.y, atom.z);
+				currentChain = atom.chain;
+				currentResi = atom.resi;
+				ss = atom.ss; ssborder = atom.ssstart || atom.ssend;
+				colors.push(atom.color);
+			} else if (atom.name == 'O') {
+				var O = new THREE.Vector3(atom.x, atom.y, atom.z);
+				O.sub(currentCA);
+				O.normalize(); // can be omitted for performance
+				O.multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
+				if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
+				prevCO = O;
+				for (var j = 0; j < num; j++) {
+					var delta = -1 + 2 / (num - 1) * j;
+					var v = new THREE.Vector3(currentCA.x + prevCO.x * delta, currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta);
+					if (!doNotSmoothen && ss == 'sheet') v.smoothen = true;
+					points[j].push(v);
 				}
 			}
 		}
@@ -870,12 +846,13 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawMainchainTube = function (atomlist, atomName, radius) {
+	iview.prototype.drawMainchainTube = function (atoms, atomName, radius) {
 		var points = [], colors = [], radii = [];
 		var currentChain, currentResi;
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if ((atom.name == atomName) && !atom.het) {
+		for (var i in atoms) {
+			var atom = atoms[i];
+			if (atom.serial > this.lastTER) continue;
+			if (atom.name == atomName) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothTube(points, colors, radii);
 					points = []; colors = []; radii = [];
@@ -890,15 +867,15 @@ var iview = (function () {
 		this.drawSmoothTube(points, colors, radii);
 	};
 
-	iview.prototype.drawHelixAsCylinder = function (atomlist, radius) {
+	iview.prototype.drawHelixAsCylinder = function (atoms, radius) {
 		var start = null;
 		var currentChain, currentResi;
 		var others = [], beta = [];
-		for (var i in atomlist) {
-			var atom = this.atoms[atomlist[i]];
-			if (atom.het) continue;
-			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others.push(atom.serial);
-			if (atom.ss == 'sheet') beta.push(atom.serial);
+		for (var i in atoms) {
+			var atom = atoms[i];
+			if (atom.serial > this.lastTER) continue;
+			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others[atom.serial] = atom;
+			if (atom.ss == 'sheet') beta[atom.serial] = atom;
 			if (atom.name != 'CA') continue;
 			if (atom.ss == 'helix' && atom.ssend) {
 				if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
@@ -952,28 +929,28 @@ var iview = (function () {
 		switch (this.options.colorBy) {
 			case 'spectrum':
 				var idx = 0;
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSL(2 / 3 * (1 - idx++ / this.peptides.length), 1, 0.45).getHex();
+				for (var i in this.protein) {
+					var atom = this.protein[i];
+					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSL(2 / 3 * (1 - idx++ / this.peptides.length), 1, 0.45).getHex();
 				}
 				break;
 			case 'chain':
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
-					atom.color = (atom.het ? this.hetChainColors : this.stdChainColors)[atom.chain];
+				for (var i in this.protein) {
+					var atom = this.protein[i];
+					atom.color = (atom.serial > this.lastTER ? this.hetChainColors : this.stdChainColors)[atom.chain];
 				}
 				break;
 			case 'secondary structure':
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.ssColors[atom.ss];
+				for (var i in this.protein) {
+					var atom = this.protein[i];
+					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.ssColors[atom.ss];
 				}
 				break;
 			case 'B factor':
 				if (!this.middB) {
 					var minB = 1000, maxB = -1000;
-					for (var i in this.atoms) {
-						var atom = this.atoms[i];
+					for (var i in this.protein) {
+						var atom = this.protein[i];
 						if (minB > atom.b) minB = atom.b;
 						if (maxB < atom.b) maxB = atom.b;
 					}
@@ -981,29 +958,34 @@ var iview = (function () {
 					this.spanB = (maxB - minB) * 0.5;
 					this.spanBinv = 1.0 / this.spanB;
 				}
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
+				for (var i in this.protein) {
+					var atom = this.protein[i];
 					atom.color = atom.b < this.middB ? new THREE.Color().setRGB(1 - (s = (this.middB - atom.b) * this.spanBinv), 1 - s, 1).getHex() : new THREE.Color().setRGB(1, 1 - (s = (atom.b - this.middB) * this.spanBinv), 1 - s).getHex();
 				}
 				break;
 			case 'residue':
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.residueColors[atom.resn] || this.defaultResidueColor;
+				for (var i in this.protein) {
+					var atom = this.protein[i];
+					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.residueColors[atom.resn] || this.defaultResidueColor;
 				}
 				break;
 			case 'polarity':
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
-					atom.color = atom.het ? this.atomColors[atom.elem] || this.defaultAtomColor : this.polarityColors[atom.resn] || this.defaultResidueColor;
+				for (var i in this.protein) {
+					var atom = this.protein[i];
+					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.polarityColors[atom.resn] || this.defaultResidueColor;
 				}
 				break;
 			case 'atom':
-				for (var i in this.atoms) {
-					var atom = this.atoms[i];
+				for (var i in this.protein) {
+					var atom = this.protein[i];
 					atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
 				}
 				break;
+		}
+
+		for (var i in this.ligand) {
+			var atom = this.ligand[i];
+			atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
 		}
 
 		switch (this.options.primaryStructure) {
@@ -1065,7 +1047,7 @@ var iview = (function () {
 				this.drawSurface(this.peptides, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
-/*
+
 		switch (this.options.ligand) {
 			case 'line':
 				this.drawBondsAsLine(this.ligand, this.lineWidth);
@@ -1080,7 +1062,7 @@ var iview = (function () {
 				this.drawAtomsAsSphere(this.ligand, this.sphereRadius);
 				break;
 		}
-*/
+
 		switch (this.options.solvents) {
 			case 'sphere':
 				this.drawAtomsAsSphere(this.solvents, this.sphereRadius);
@@ -1096,7 +1078,7 @@ var iview = (function () {
 
 	iview.prototype.loadProtein = function (src) {
 		var helices = [], sheets = [];
-		this.atoms = [];
+		this.protein = [];
 		var lines = src.split('\n');
 		for (var i in lines) {
 			var line = lines[i];
@@ -1120,7 +1102,7 @@ var iview = (function () {
 			} else if (record == 'ATOM  ' || record == 'HETATM') {
 				if (!(line[16] == ' ' || line[16] == 'A')) continue;
 				var serial = parseInt(line.substr(6, 5));
-				this.atoms[serial] = {
+				this.protein[serial] = {
 					het: record[0] == 'H',
 					serial: serial,
 					name: line.substr(12, 4).replace(/ /g, ''),
@@ -1143,12 +1125,12 @@ var iview = (function () {
 				for (var j = 0; j < 4; ++j) {
 					var to = parseInt(line.substr([11, 16, 21, 26][j], 5));
 					if (isNaN(to)) continue;
-					this.atoms[from].bonds.push(to);
+					this.protein[from].bonds.push(to);
 				}
 			}
 		}
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
 			for (var j in helices) {
 				var helix = helices[j];
 				if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
@@ -1167,15 +1149,15 @@ var iview = (function () {
 			}
 		}
 		var curChain, curResi, curInsc, curResAtoms = [];
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
 			if (atom.het) continue;
 			if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
 				for (var j in curResAtoms) {
-					var from = this.atoms[curResAtoms[j]];
+					var from = this.protein[curResAtoms[j]];
 					for (var k in curResAtoms) {
 						if (j == k) continue;
-						var to = this.atoms[curResAtoms[k]];
+						var to = this.protein[curResAtoms[k]];
 						if (this.hasCovalentBond(from, to)) {
 							from.bonds.push(to.serial);
 						}
@@ -1193,10 +1175,10 @@ var iview = (function () {
 			curResAtoms.push(atom.serial);
 		}
 		for (var j in curResAtoms) {
-			var from = this.atoms[curResAtoms[j]];
+			var from = this.protein[curResAtoms[j]];
 			for (var k in curResAtoms) {
 				if (j == k) continue;
-				var to = this.atoms[curResAtoms[k]];
+				var to = this.protein[curResAtoms[k]];
 				if (this.hasCovalentBond(from, to)) {
 					from.bonds.push(to.serial);
 				}
@@ -1204,12 +1186,12 @@ var iview = (function () {
 		}
 		this.peptides = [];
 		this.solvents = [];
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
 			if (atom.bonds.length) {
-				this.peptides.push(atom.serial);
+				this.peptides[atom.serial] = atom;
 			} else {
-				this.solvents.push(atom.serial);
+				this.solvents[atom.serial] = atom;
 			}
 		}
 		this.surfaces = {
@@ -1218,8 +1200,6 @@ var iview = (function () {
 			3: undefined,
 			4: undefined,
 		};
-		this.rebuildScene();
-		this.resetView();
 	};
 
 	iview.prototype.loadLigand = function (src) {
@@ -1287,8 +1267,8 @@ var iview = (function () {
 		var xmin = ymin = zmin = 9999;
 		var xmax = ymax = zmax = -9999;
 		var xsum = ysum = zsum = cnt = 0;
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
 			xsum += atom.x;
 			ysum += atom.y;
 			zsum += atom.z;
