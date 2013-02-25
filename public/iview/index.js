@@ -1,7 +1,7 @@
 $(function () {
 	var iv = new iview('iview');
-	$.get('2ZD1_protein.pdb', function (p) {
-	$.get('2ZD1_ligand.pdb', function (l) {
+	$.get('4TMN_protein.pdb', function (p) {
+	$.get('4TMN_ligand.pdb', function (l) {
 		iv.loadProtein(p);
 		iv.loadLigand(l);
 		iv.rebuildScene();
