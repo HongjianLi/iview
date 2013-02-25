@@ -1242,6 +1242,33 @@ var iview = (function () {
 		}
 	};
 
+	iview.prototype.loadLigandInMOL2 = function(src) {
+		this.ligand = [];
+		var lines = src.split('\n');
+		var atomCount = parseInt(lines[2].substr(0, 5));
+		var bondCount = parseInt(lines[2].substr(5, 6));
+		var offset = 8;
+		for (var i = 1; i <= atomCount; ++i) {
+			var line = lines[offset++];
+			this.ligand[i] = {
+				serial: i,
+				x: parseFloat(line.substr(16, 10)),
+				y: parseFloat(line.substr(26, 10)),
+				z: parseFloat(line.substr(36, 10)),
+				elem: line.substr(47, 2).replace(/\./g, '').toUpperCase(),
+				bonds: [],
+			};
+		}
+		++offset;
+		for (var i = 1; i <= bondCount; ++i) {
+			var line = lines[offset++];
+			var atom1 = parseInt(line.substr(6, 5));
+			var atom2 = parseInt(line.substr(11, 5));
+			this.ligand[atom1].bonds.push(atom2);
+			this.ligand[atom2].bonds.push(atom1);
+		}
+	};
+
 	iview.prototype.loadLigandInSDF = function(src) {
 		this.ligand = [];
 		var lines = src.split('\n');
@@ -1261,10 +1288,10 @@ var iview = (function () {
 		}
 		for (var i = 1; i <= bondCount; ++i) {
 			var line = lines[offset++];
-			var from = parseInt(line.substr(0, 3));
-			var to = parseInt(line.substr(3, 3));
-			this.ligand[from].bonds.push(to);
-			this.ligand[to].bonds.push(from);
+			var atom1 = parseInt(line.substr(0, 3));
+			var atom2 = parseInt(line.substr(3, 3));
+			this.ligand[atom1].bonds.push(atom2);
+			this.ligand[atom2].bonds.push(atom1);
 		}
 	};
 
