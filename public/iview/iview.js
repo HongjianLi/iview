@@ -466,7 +466,7 @@ var iview = (function () {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'atom',
-			solvents: 'dot',
+			nonBondedHetAtoms: 'dot',
 			primaryStructure: 'line',
 			secondaryStructure: 'nothing',
 			surface: 'nothing',
@@ -671,7 +671,6 @@ var iview = (function () {
 		div = div || 5;
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.serial > this.lastTER) continue;
 			if (atom.name == atomName) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothCurve(points, curveWidth, colors, div);
@@ -752,7 +751,6 @@ var iview = (function () {
 		var prevCO = null, ss = null, ssborder = false;
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.serial > this.lastTER) continue;
 			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					for (var j = 0; !thickness && j < num; ++j)
@@ -851,7 +849,6 @@ var iview = (function () {
 		var currentChain, currentResi;
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.serial > this.lastTER) continue;
 			if (atom.name == atomName) {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					this.drawSmoothTube(points, colors, radii);
@@ -873,7 +870,6 @@ var iview = (function () {
 		var others = [], beta = [];
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.serial > this.lastTER) continue;
 			if ((atom.ss != 'helix' && atom.ss != 'sheet') || atom.ssend || atom.ssbegin) others[atom.serial] = atom;
 			if (atom.ss == 'sheet') beta[atom.serial] = atom;
 			if (atom.name != 'CA') continue;
@@ -897,6 +893,13 @@ var iview = (function () {
 		geo.computeLineDistances();
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': color, dashSize: 0.5, gapSize: 0.25 })));
 	};
+
+	iview.prototype.colorByElement = function (atoms) {
+		for (var i in atoms) {
+			var atom = atoms[i];
+			atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
+		}
+	}
 
 	iview.prototype.rebuildScene = function (options) {
 		this.scene = new THREE.Scene();
@@ -929,22 +932,28 @@ var iview = (function () {
 		switch (this.options.colorBy) {
 			case 'spectrum':
 				var idx = 0;
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : new THREE.Color().setHSL(2 / 3 * (1 - idx++ / this.peptides.length), 1, 0.45).getHex();
+				for (var i in this.stdAtoms) {
+					var atom = this.stdAtoms[i];
+					atom.color = new THREE.Color().setHSL(2 / 3 * (1 - idx++ / this.stdAtoms.length), 1, 0.45).getHex();
 				}
+				this.colorByElement(this.hetAtoms);
 				break;
 			case 'chain':
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = (atom.serial > this.lastTER ? this.hetChainColors : this.stdChainColors)[atom.chain];
+				for (var i in this.stdAtoms) {
+					var atom = this.stdAtoms[i];
+					atom.color = this.stdChainColors[atom.chain];
+				}
+				for (var i in this.hetAtoms) {
+					var atom = this.hetAtoms[i];
+					atom.color = this.hetChainColors[atom.chain];
 				}
 				break;
 			case 'secondary structure':
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.ssColors[atom.ss];
+				for (var i in this.stdAtoms) {
+					var atom = this.stdAtoms[i];
+					atom.color = this.ssColors[atom.ss];
 				}
+				this.colorByElement(this.hetAtoms);
 				break;
 			case 'B factor':
 				if (!this.middB) {
@@ -964,70 +973,66 @@ var iview = (function () {
 				}
 				break;
 			case 'residue':
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.residueColors[atom.resn] || this.defaultResidueColor;
+				for (var i in this.stdAtoms) {
+					var atom = this.stdAtoms[i];
+					atom.color = this.residueColors[atom.resn] || this.defaultResidueColor;
 				}
+				this.colorByElement(this.hetAtoms);
 				break;
 			case 'polarity':
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = atom.serial > this.lastTER ? this.atomColors[atom.elem] || this.defaultAtomColor : this.polarityColors[atom.resn] || this.defaultResidueColor;
+				for (var i in this.stdAtoms) {
+					var atom = this.stdAtoms[i];
+					atom.color = this.polarityColors[atom.resn] || this.defaultResidueColor;
 				}
+				this.colorByElement(this.hetAtoms);
 				break;
 			case 'atom':
-				for (var i in this.protein) {
-					var atom = this.protein[i];
-					atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
-				}
+				this.colorByElement(this.protein);
 				break;
 		}
 
-		for (var i in this.ligand) {
-			var atom = this.ligand[i];
-			atom.color = this.atomColors[atom.elem] || this.defaultAtomColor;
-		}
+		this.colorByElement(this.ligand);
 
-		switch (this.options.solvents) {
+		switch (this.options.nonBondedHetAtoms) {
 			case 'sphere':
-				this.drawAtomsAsSphere(this.solvents, this.sphereRadius);
+				this.drawAtomsAsSphere(this.nonBondedHetAtoms, this.sphereRadius);
 				break;
 			case 'dot':
-				this.drawAtomsAsSphere(this.solvents, 0.3, true);
+				this.drawAtomsAsSphere(this.nonBondedHetAtoms, 0.3, true);
 				break;
 		}
 
 		switch (this.options.primaryStructure) {
 			case 'line':
-				this.drawBondsAsLine(this.peptides, this.lineWidth);
+				this.drawBondsAsLine(this.bondedAtoms, this.lineWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(this.peptides, this.cylinderRadius, this.cylinderRadius);
+				this.drawBondsAsStick(this.bondedAtoms, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.peptides, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.bondedAtoms, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
-				this.drawAtomsAsSphere(this.peptides, this.sphereRadius);
+				this.drawAtomsAsSphere(this.bondedAtoms, this.sphereRadius);
 				break;
 		}
 
 		var doNotSmoothen = false;
 		switch (this.options.secondaryStructure) {
 			case 'ribbon':
-				this.drawStrand(this.peptides, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
+				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
 				break;
 			case 'strand':
-				this.drawStrand(this.peptides, null, null, null, null, null, doNotSmoothen);
+				this.drawStrand(this.stdAtoms, null, null, null, null, null, doNotSmoothen);
 				break;
 			case 'cylinder & plate':
-				this.drawHelixAsCylinder(this.peptides, 1.6);
+				this.drawHelixAsCylinder(this.stdAtoms, 1.6);
 				break;
 			case 'C alpha trace':
-				this.drawMainchainCurve(this.peptides, this.curveWidth, 'CA', 1);
+				this.drawMainchainCurve(this.stdAtoms, this.curveWidth, 'CA', 1);
 				break;
 			case 'B factor tube':
-				this.drawMainchainTube(this.peptides, 'CA');
+				this.drawMainchainTube(this.stdAtoms, 'CA');
 				break;
 		}
 
@@ -1044,16 +1049,16 @@ var iview = (function () {
 
 		switch (this.options.surface) {
 			case 'vdw surface':
-				this.drawSurface(this.peptides, 1, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.stdAtoms, 1, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent excluded surface':
-				this.drawSurface(this.peptides, 2, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.stdAtoms, 2, this.options.wireframe, this.options.opacity);
 				break;
 			case 'solvent accessible surface':
-				this.drawSurface(this.peptides, 3, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.stdAtoms, 3, this.options.wireframe, this.options.opacity);
 				break;
 			case 'molecular surface':
-				this.drawSurface(this.peptides, 4, this.options.wireframe, this.options.opacity);
+				this.drawSurface(this.stdAtoms, 4, this.options.wireframe, this.options.opacity);
 				break;
 		}
 
@@ -1116,7 +1121,6 @@ var iview = (function () {
 					b: parseFloat(line.substr(60, 8)),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
-					ss: 'coil',
 				};
 			} else if (record == 'TER   ') {
 				this.lastTER = parseInt(line.substr(6, 5));
@@ -1126,25 +1130,6 @@ var iview = (function () {
 					var to = parseInt(line.substr([11, 16, 21, 26][j], 5));
 					if (isNaN(to)) continue;
 					this.protein[from].bonds.push(to);
-				}
-			}
-		}
-		for (var i in this.protein) {
-			var atom = this.protein[i];
-			for (var j in helices) {
-				var helix = helices[j];
-				if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
-					atom.ss = 'helix';
-					if (atom.resi == helix.initialResidue && atom.insc == helix.initialInscode) atom.ssbegin = true;
-					if (atom.resi == helix.terminalResidue && atom.insc == helix.terminalInscode) atom.ssend = true;
-				}
-			}
-			for (var j in sheets) {
-				var sheet = sheets[j];
-				if (atom.chain == sheet.chain && (atom.resi > sheet.initialResidue || (atom.resi == sheet.initialResidue && atom.insc >= sheet.initialInscode)) && (atom.resi < sheet.terminalResidue || (atom.resi == sheet.terminalResidue && atom.insc <= sheet.terminalInscode))) {
-					atom.ss = 'sheet';
-					if (atom.resi == sheet.initialResidue && atom.insc == sheet.initialInscode) atom.ssbegin = true;
-					if (atom.resi == sheet.terminalResidue && atom.insc == sheet.terminalInscode) atom.ssend = true;
 				}
 			}
 		}
@@ -1184,14 +1169,42 @@ var iview = (function () {
 				}
 			}
 		}
-		this.peptides = [];
-		this.solvents = [];
+		this.stdAtoms = [];
+		this.hetAtoms = [];
+		this.nonBondedHetAtoms = [];
+		this.bondedAtoms = [];
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			if (atom.bonds.length) {
-				this.peptides[atom.serial] = atom;
+			if (atom.serial < this.lastTER) {
+				this.stdAtoms[atom.serial] = atom;
+				this.bondedAtoms[atom.serial] = atom;
 			} else {
-				this.solvents[atom.serial] = atom;
+				this.hetAtoms[atom.serial] = atom;
+				if (atom.bonds.length) {
+					this.bondedAtoms[atom.serial] = atom;
+				} else {
+					this.nonBondedHetAtoms[atom.serial] = atom;
+				}
+			}
+		}
+		for (var i in this.stdAtoms) {
+			var atom = this.stdAtoms[i];
+			atom.ss = 'coil';
+			for (var j in helices) {
+				var helix = helices[j];
+				if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
+					atom.ss = 'helix';
+					if (atom.resi == helix.initialResidue && atom.insc == helix.initialInscode) atom.ssbegin = true;
+					if (atom.resi == helix.terminalResidue && atom.insc == helix.terminalInscode) atom.ssend = true;
+				}
+			}
+			for (var j in sheets) {
+				var sheet = sheets[j];
+				if (atom.chain == sheet.chain && (atom.resi > sheet.initialResidue || (atom.resi == sheet.initialResidue && atom.insc >= sheet.initialInscode)) && (atom.resi < sheet.terminalResidue || (atom.resi == sheet.terminalResidue && atom.insc <= sheet.terminalInscode))) {
+					atom.ss = 'sheet';
+					if (atom.resi == sheet.initialResidue && atom.insc == sheet.initialInscode) atom.ssbegin = true;
+					if (atom.resi == sheet.terminalResidue && atom.insc == sheet.terminalInscode) atom.ssend = true;
+				}
 			}
 		}
 		this.surfaces = {
