@@ -1081,7 +1081,7 @@ var iview = (function () {
 		this.effect.setSize(this.container.width(), this.container.height());
 	};
 
-	iview.prototype.loadProtein = function (src) {
+	iview.prototype.loadProteinInPDB = function (src) {
 		var helices = [], sheets = [];
 		this.protein = [];
 		var lines = src.split('\n');
@@ -1215,27 +1215,19 @@ var iview = (function () {
 		};
 	};
 
-	iview.prototype.loadLigand = function (src) {
+	iview.prototype.loadLigandInPDB = function (src) {
 		this.ligand = [];
 		var lines = src.split('\n');
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
 			if (record == 'ATOM  ' || record == 'HETATM') {
-				if (!(line[16] == ' ' || line[16] == 'A')) continue;
 				var serial = parseInt(line.substr(6, 5));
 				this.ligand[serial] = {
-					het: record[0] == 'H',
 					serial: serial,
-					name: line.substr(12, 4).replace(/ /g, ''),
-					resn: line.substr(17, 3),
-					chain: line.substr(21, 1),
-					resi: parseInt(line.substr(22, 4)),
-					insc: line.substr(26, 1),
 					x: parseFloat(line.substr(30, 8)),
 					y: parseFloat(line.substr(38, 8)),
 					z: parseFloat(line.substr(46, 8)),
-					b: parseFloat(line.substr(60, 8)),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
 				};
@@ -1248,7 +1240,62 @@ var iview = (function () {
 				}
 			}
 		}
-	}
+	};
+
+	iview.prototype.loadLigandInSDF = function(src) {
+		this.ligand = [];
+		var lines = src.split('\n');
+		var atomCount = parseInt(lines[3].substr(0, 3));
+		var bondCount = parseInt(lines[3].substr(3, 3));
+		var offset = 4;
+		for (var i = 1; i <= atomCount; ++i) {
+			var line = lines[offset++];
+			this.ligand[i] = {
+				serial: i,
+				x: parseFloat(line.substr( 0, 10)),
+				y: parseFloat(line.substr(10, 10)),
+				z: parseFloat(line.substr(20, 10)),
+				elem: line.substr(31, 2).replace(/ /g, '').toUpperCase(),
+				bonds: [],
+			};
+		}
+		for (var i = 1; i <= bondCount; ++i) {
+			var line = lines[offset++];
+			var from = parseInt(line.substr(0, 3));
+			var to = parseInt(line.substr(3, 3));
+			this.ligand[from].bonds.push(to);
+			this.ligand[to].bonds.push(from);
+		}
+	};
+
+	iview.prototype.loadLigandInXYZ = function(src) {
+		this.ligand = [];
+		var lines = src.split('n');
+		var atomCount = parseInt(lines[0].substr(0, 3));
+		var offset = 2;
+		for (var i = 1; i <= atomCount; ++i) {
+			var line = lines[offset++];
+			var tokens = line.replace(/^\s+/, '').replace(/\s+/g, ' ').split(' ');
+			this.ligand[i] = {
+				serial: i,
+				elem: tokens[0].toUpperCase(),
+				x: parseFloat(tokens[1]),
+				y: parseFloat(tokens[2]),
+				z: parseFloat(tokens[3]),
+				bonds: [],
+			};
+		}
+		for (var i = 1; i < atomCount; ++i) {
+			var atom1 = this.ligand[i];
+			for (var j = i + 1; j <= atomCount; ++j) {
+				var atom2 = this.ligand[j];
+				if (this.hasCovalentBond(atom1, atom2)) {
+					atom1.bonds.push(j);
+					atom2.bonds.push(i);
+				}
+			}
+		}
+	};
 
 	iview.prototype.render = function () {
 		var center = this.rotationGroup.position.z - this.camera.position.z;
