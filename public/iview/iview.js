@@ -623,15 +623,16 @@ var iview = (function () {
 	iview.prototype.drawBondsAsStick = function (atoms, bondR, atomR, scale) {
 		for (var i in atoms) {
 			var atom1 = atoms[i];
-			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
-			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
-			this.drawSphere(atom1, atomR, !scale, scale);
+			if (atom1.solvent) {
+				this.drawSphere(atom1, 0.3, true);
+			} else {
+				this.drawSphere(atom1, atomR, !scale, scale);
+			}
 		}
 	};
 
@@ -649,21 +650,13 @@ var iview = (function () {
 		var geo = new THREE.Geometry();
 		for (var i in atoms) {
 			var atom1 = atoms[i];
-			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
-			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				if (atom1.solvent) {
-					var geo2 = new THREE.Geometry();
-					geo2.vertices.push(new THREE.Vector3(atom1.x, atom1.y, atom1.z));
-					geo2.vertices.push(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
-					geo2.computeLineDistances();
-					this.modelGroup.add(new THREE.Line(geo2, new THREE.LineDashedMaterial({ 'color': atom1.color, dashSize: 0.25, gapSize: 0.125 })));
-				} else {
-					this.drawBondsAsLineSub(geo, atom1, atom2);
-				}
+				this.drawBondsAsLineSub(geo, atom1, atom2);
+			}
+			if (atom1.solvent) {
+				this.drawSphere(atom1, 0.3, true);
 			}
 		}
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: lineWidth, vertexColors: true }), THREE.LinePieces));
@@ -902,12 +895,12 @@ var iview = (function () {
 		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
 	};
 
-	iview.prototype.drawDashLines = function (atom1, atom2, color) {
+	iview.prototype.drawDashedLine = function (atom1, atom2, color) {
 		var geo = new THREE.Geometry();
 		geo.vertices.push(new THREE.Vector3(atom1.x, atom1.y, atom1.z));
 		geo.vertices.push(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
 		geo.computeLineDistances();
-		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': atom1.color, dashSize: 0.5, gapSize: 0.25 })));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': color, dashSize: 0.25, gapSize: 0.125 })));
 	};
 
 	iview.prototype.colorByElement = function (atoms) {
