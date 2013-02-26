@@ -466,7 +466,7 @@ var iview = (function () {
 			camera: 'perspective',
 			background: 'black',
 			colorBy: 'atom',
-			nonBondedHetAtoms: 'dot',
+			solvents: 'dot',
 			primaryStructure: 'line',
 			secondaryStructure: 'nothing',
 			surface: 'nothing',
@@ -623,8 +623,12 @@ var iview = (function () {
 	iview.prototype.drawBondsAsStick = function (atoms, bondR, atomR, scale) {
 		for (var i in atoms) {
 			var atom1 = atoms[i];
+			if (atom1.solvent) {
+				this.drawSphere(atom1, 0.3, true);
+			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
+				if (atom2.serial < atom1.serial) continue;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
 			this.drawSphere(atom1, atomR, !scale, scale);
@@ -645,8 +649,12 @@ var iview = (function () {
 		var geo = new THREE.Geometry();
 		for (var i in atoms) {
 			var atom1 = atoms[i];
+			if (atom1.solvent) {
+				this.drawSphere(atom1, 0.3, true);
+			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
+				if (atom2.serial < atom1.serial) continue;
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 		}
@@ -993,27 +1001,18 @@ var iview = (function () {
 
 		this.colorByElement(this.ligand);
 
-		switch (this.options.nonBondedHetAtoms) {
-			case 'sphere':
-				this.drawAtomsAsSphere(this.nonBondedHetAtoms, this.sphereRadius);
-				break;
-			case 'dot':
-				this.drawAtomsAsSphere(this.nonBondedHetAtoms, 0.3, true);
-				break;
-		}
-
 		switch (this.options.primaryStructure) {
 			case 'line':
-				this.drawBondsAsLine(this.bondedAtoms, this.lineWidth);
+				this.drawBondsAsLine(this.protein, this.lineWidth);
 				break;
 			case 'stick':
-				this.drawBondsAsStick(this.bondedAtoms, this.cylinderRadius, this.cylinderRadius);
+				this.drawBondsAsStick(this.protein, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.bondedAtoms, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.protein, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
 				break;
 			case 'sphere':
-				this.drawAtomsAsSphere(this.bondedAtoms, this.sphereRadius);
+				this.drawAtomsAsSphere(this.protein, this.sphereRadius);
 				break;
 		}
 
@@ -1171,19 +1170,14 @@ var iview = (function () {
 		}
 		this.stdAtoms = [];
 		this.hetAtoms = [];
-		this.nonBondedHetAtoms = [];
-		this.bondedAtoms = [];
 		for (var i in this.protein) {
 			var atom = this.protein[i];
 			if (atom.serial < this.lastTER) {
 				this.stdAtoms[atom.serial] = atom;
-				this.bondedAtoms[atom.serial] = atom;
 			} else {
 				this.hetAtoms[atom.serial] = atom;
-				if (atom.bonds.length) {
-					this.bondedAtoms[atom.serial] = atom;
-				} else {
-					this.nonBondedHetAtoms[atom.serial] = atom;
+				if ((this.protein[i-1] === undefined || this.protein[i-1].resi !== atom.resi) && (this.protein[i+1] === undefined || this.protein[i+1].resi !== atom.resi)) {
+					atom.solvent = true;
 				}
 			}
 		}
