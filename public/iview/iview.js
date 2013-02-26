@@ -628,11 +628,7 @@ var iview = (function () {
 				if (atom2.serial < atom1.serial) continue;
 				this.drawBondAsStickSub(atom1, atom2, bondR);
 			}
-			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
-			} else {
-				this.drawSphere(atom1, atomR, !scale, scale);
-			}
+			this.drawSphere(atom1, atomR, !scale, scale);
 		}
 	};
 
@@ -656,7 +652,7 @@ var iview = (function () {
 				this.drawBondsAsLineSub(geo, atom1, atom2);
 			}
 			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
+				this.drawSphere(atom1, this.sphereRadius, false, 0.2);
 			}
 		}
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: lineWidth, vertexColors: true }), THREE.LinePieces));
