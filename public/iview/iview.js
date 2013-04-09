@@ -526,24 +526,21 @@ var iview = (function () {
 			var dx = (x - me.mouseStartX) / me.container.width();
 			var dy = (y - me.mouseStartY) / me.container.height();
 			if (!dx && !dy) return;
-			if (ev.ctrlKey) { // Apply to ligand only
-			} else {
-				if (me.mouseButton == 3 && ev.shiftKey) { // Slab
-					me.slabNear = me.cslabNear + dx * 100;
-					me.slabFar = me.cslabFar + dy * 100;
-				} else if (me.mouseButton == 3) { // Translate
-					var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
-					if (scaleFactor < 20) scaleFactor = 20;
-					me.modelGroup.position = me.cp.clone().add(new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize()));
-				} else if (me.mouseButton == 2) { // Zoom
-					var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
-					if (scaleFactor < 80) scaleFactor = 80;
-					me.rotationGroup.position.z = me.cz - dy * scaleFactor;
-				} else if (me.mouseButton == 1) { // Rotate
-					var r = Math.sqrt(dx * dx + dy * dy);
-					var rs = Math.sin(r * Math.PI) / r;
-					me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0).multiply(new THREE.Quaternion(Math.cos(r * Math.PI), 0, rs * dx, rs * dy)).multiply(me.cq);
-				}
+			if (me.mouseButton == 3 && ev.shiftKey) { // Slab
+				me.slabNear = me.cslabNear + dx * 100;
+				me.slabFar = me.cslabFar + dy * 100;
+			} else if (me.mouseButton == 3) { // Translate
+				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
+				if (scaleFactor < 20) scaleFactor = 20;
+				me.modelGroup.position = me.cp.clone().add(new THREE.Vector3(-dx * scaleFactor, -dy * scaleFactor, 0).applyQuaternion(me.rotationGroup.quaternion.clone().inverse().normalize()));
+			} else if (me.mouseButton == 2) { // Zoom
+				var scaleFactor = (me.rotationGroup.position.z - me.CAMERA_Z) * 0.85;
+				if (scaleFactor < 80) scaleFactor = 80;
+				me.rotationGroup.position.z = me.cz - dy * scaleFactor;
+			} else if (me.mouseButton == 1) { // Rotate
+				var r = Math.sqrt(dx * dx + dy * dy);
+				var rs = Math.sin(r * Math.PI) / r;
+				me.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0).multiply(new THREE.Quaternion(Math.cos(r * Math.PI), 0, rs * dx, rs * dy)).multiply(me.cq);
 			}
 			me.render();
 		});
@@ -612,24 +609,17 @@ var iview = (function () {
 		this.modelGroup.add(cylinder);
 	};
 
-	iview.prototype.drawBondAsStickSub = function (atom1, atom2, bondR) {
-		var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
-		var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
-		var mp = p1.clone().add(p2).multiplyScalar(0.5);
-		this.drawCylinder(p1, mp, bondR, atom1.color);
-		this.drawCylinder(p2, mp, bondR, atom2.color);
-	};
-
 	iview.prototype.drawBondsAsStick = function (atoms, bondR, atomR, scale) {
 		for (var i in atoms) {
 			var atom1 = atoms[i];
-			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
-			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				this.drawBondAsStickSub(atom1, atom2, bondR);
+				var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
+				var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
+				var mp = p1.clone().add(p2).multiplyScalar(0.5);
+				this.drawCylinder(p1, mp, bondR, atom1.color);
+				this.drawCylinder(p2, mp, bondR, atom2.color);
 			}
 			this.drawSphere(atom1, atomR, !scale, scale);
 		}
@@ -649,21 +639,13 @@ var iview = (function () {
 		var geo = new THREE.Geometry();
 		for (var i in atoms) {
 			var atom1 = atoms[i];
-			if (atom1.solvent) {
-				this.drawSphere(atom1, 0.3, true);
-			}
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				if (atom1.solvent) {
-					var geo2 = new THREE.Geometry();
-					geo2.vertices.push(new THREE.Vector3(atom1.x, atom1.y, atom1.z));
-					geo2.vertices.push(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
-					geo2.computeLineDistances();
-					this.modelGroup.add(new THREE.Line(geo2, new THREE.LineDashedMaterial({ 'color': atom1.color, dashSize: 0.25, gapSize: 0.125 })));
-				} else {
-					this.drawBondsAsLineSub(geo, atom1, atom2);
-				}
+				this.drawBondsAsLineSub(geo, atom1, atom2);
+			}
+			if (atom1.solvent) {
+				this.drawSphere(atom1, this.sphereRadius, false, 0.2);
 			}
 		}
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: lineWidth, vertexColors: true }), THREE.LinePieces));
@@ -902,12 +884,12 @@ var iview = (function () {
 		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
 	};
 
-	iview.prototype.drawDashLines = function (atom1, atom2, color) {
+	iview.prototype.drawDashedLine = function (atom1, atom2, color) {
 		var geo = new THREE.Geometry();
 		geo.vertices.push(new THREE.Vector3(atom1.x, atom1.y, atom1.z));
 		geo.vertices.push(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
 		geo.computeLineDistances();
-		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': atom1.color, dashSize: 0.5, gapSize: 0.25 })));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': color, dashSize: 0.25, gapSize: 0.125 })));
 	};
 
 	iview.prototype.colorByElement = function (atoms) {
