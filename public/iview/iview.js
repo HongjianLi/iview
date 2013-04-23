@@ -924,7 +924,7 @@ var iview = (function () {
 		this.camera = this.cameras[this.options.camera];
 
 		var background = this.backgroundColors[this.options.background];
-		this.renderer.setClearColorHex(background);
+		this.renderer.setClearColor(background);
 		this.scene.fog = new THREE.Fog(background, 100, 200);
 
 		switch (this.options.colorBy) {
