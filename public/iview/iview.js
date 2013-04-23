@@ -605,7 +605,7 @@ var iview = (function () {
 		cylinder.matrixAutoUpdate = false;
 		cylinder.lookAt(p1);
 		cylinder.updateMatrix();
-		cylinder.matrix.multiply(new THREE.Matrix4().makeScale(radius, radius, p1.distanceTo(p2)).rotateX(Math.PI * 0.5));
+		cylinder.matrix.multiply(new THREE.Matrix4().makeScale(radius, radius, p1.distanceTo(p2))).multiply(new THREE.Matrix4().makeRotationX(Math.PI * 0.5));
 		this.modelGroup.add(cylinder);
 	};
 
