@@ -548,33 +548,21 @@ var iview = (function () {
 		return atom1.c.distanceToSquared(atom2.c) < 1.2 * r * r;
 	}
 
-	iview.prototype.subdivide = function (_points, DIV) { // Catmull-Rom subdivision
-		var ret = [];
-		var points = new Array(); // Smoothing test
-		points.push(_points[0]);
-		for (var i = 1, lim = _points.length - 1; i < lim; ++i) {
-			var p1 = _points[i], p2 = _points[i + 1];
-			points.push(p1.smoothen ? p1.clone().add(p2).multiplyScalar(0.5) : p1);
-		}
-		points.push(_points[_points.length - 1]);
+	iview.prototype.subdivide = function (points, DIV) { // Catmull-Rom subdivision
+		var ret = [], DIVinv = 1.0 / DIV;
 		for (var i = -1, size = points.length; i <= size - 3; ++i) {
-			var p0 = points[(i == -1) ? 0 : i];
-			var p1 = points[i + 1], p2 = points[i + 2];
-			var p3 = points[(i == size - 3) ? size - 1 : i + 3];
+			var p0 = points[i == -1 ? 0 : i];
+			var p1 = points[i + 1];
+			var p2 = points[i + 2];
+			var p3 = points[i == size - 3 ? size - 1 : i + 3];
 			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
 			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
 			for (var j = 0; j < DIV; ++j) {
-				var t = 1.0 / DIV * j;
-				var x = p1.x + t * v0.x
-						 + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x)
-						 + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x);
-				var y = p1.y + t * v0.y
-						 + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y)
-						 + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y);
-				var z = p1.z + t * v0.z
-						 + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z)
-						 + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z);
-				ret.push(new THREE.Vector3(x, y, z));
+				var t = DIVinv * j;
+				ret.push(new THREE.Vector3(
+					p1.x + t * v0.x + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x) + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x),
+					p1.y + t * v0.y + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y) + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y),
+					p1.z + t * v0.z + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z) + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z)));
 			}
 		}
 		ret.push(points[points.length - 1]);
@@ -618,44 +606,40 @@ var iview = (function () {
 		}
 	};
 
-	iview.prototype.drawBondsAsLineSub = function (geo, atom1, atom2) {
-		var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
-		geo.vertices.push(atom1.c);
-		geo.vertices.push(mp);
-		geo.vertices.push(atom2.c);
-		geo.vertices.push(mp);
-		geo.colors.push(atom1.color);
-		geo.colors.push(atom1.color);
-		geo.colors.push(atom2.color);
-		geo.colors.push(atom2.color);
-	};
-
-	iview.prototype.drawBondsAsLine = function (atoms, lineWidth) {
+	iview.prototype.drawBondsAsLine = function (atoms) {
 		var geo = new THREE.Geometry();
 		for (var i in atoms) {
 			var atom1 = atoms[i];
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				this.drawBondsAsLineSub(geo, atom1, atom2);
+				var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
+				geo.vertices.push(atom1.c);
+				geo.vertices.push(mp);
+				geo.vertices.push(atom2.c);
+				geo.vertices.push(mp);
+				geo.colors.push(atom1.color);
+				geo.colors.push(atom1.color);
+				geo.colors.push(atom2.color);
+				geo.colors.push(atom2.color);
 			}
 			if (atom1.solvent) {
 				this.drawSphere(atom1, this.sphereRadius, false, 0.2);
 			}
 		}
-		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: lineWidth, vertexColors: true }), THREE.LinePieces));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: this.lineWidth, vertexColors: true }), THREE.LinePieces));
 	};
 
-	iview.prototype.drawSmoothCurve = function (_points, width, colors, div) {
+	iview.prototype.drawSmoothCurve = function (_points, linewidth, colors, div) {
 		if (_points.length == 0) return;
 		div = div || 5;
 		var points = this.subdivide(_points, div);
 		var geo = new THREE.Geometry();
-		for (var i = 0; i < points.length; i++) {
+		for (var i in points) {
 			geo.vertices.push(points[i]);
-			geo.colors.push(new THREE.Color(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
+			geo.colors.push(colors[i == 0 ? 0 : Math.round((i - 1) / div)]);
 		}
-		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: width, vertexColors: true }), THREE.LineStrip));
+		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: linewidth, vertexColors: true }), THREE.LineStrip));
 	};
 
 	iview.prototype.drawMainchainCurve = function (atoms, curveWidth, atomName, div) {
@@ -680,7 +664,7 @@ var iview = (function () {
 	};
 
 	iview.prototype.drawStrip = function (p1, p2, colors, div, thickness) {
-		if ((p1.length) < 2) return;
+		if (p1.length < 2) return;
 		div = div || this.axisDIV;
 		p1 = this.subdivide(p1, div);
 		p2 = this.subdivide(p2, div);
@@ -691,7 +675,7 @@ var iview = (function () {
 				geo.vertices.push(p2[i]); // 2i + 1
 			}
 			for (var i = 1, lim = p1.length; i < lim; ++i) {
-				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, new THREE.Color(colors[Math.round((i - 1) / div)])));
+				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, colors[Math.round((i - 1) / div)]));
 			}
 		} else {
 			var vs = geo.vertices, fs = geo.faces;
@@ -711,7 +695,7 @@ var iview = (function () {
 			}
 			var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
 			for (var i = 1, lim = p1.length; i < lim; ++i) {
-				var offset = 8 * i, color = new THREE.Color(colors[Math.round((i - 1) / div)]);
+				var offset = 8 * i, color = colors[Math.round((i - 1) / div)];
 				for (var j = 0; j < 4; ++j) {
 					fs.push(new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color));
 				}
@@ -732,11 +716,10 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawStrand = function (atoms, num, div, fill, coilWidth, helixSheetWidth, doNotSmoothen, thickness) {
+	iview.prototype.drawStrand = function (atoms, num, div, fill, coilWidth, helixSheetWidth, thickness) {
 		num = num || this.strandDIV;
 		div = div || this.axisDIV;
 		coilWidth = coilWidth || this.coilWidth;
-		doNotSmoothen = doNotSmoothen || false;
 		helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
 		var points = []; for (var k = 0; k < num; k++) points[k] = [];
 		var colors = [];
@@ -756,7 +739,8 @@ var iview = (function () {
 				currentCA = atom.c.clone();
 				currentChain = atom.chain;
 				currentResi = atom.resi;
-				ss = atom.ss; ssborder = atom.ssstart || atom.ssend;
+				ss = atom.ss;
+				ssborder = atom.ssstart || atom.ssend;
 				colors.push(atom.color);
 			} else if (atom.name == 'O') {
 				var O = atom.c.clone();
@@ -767,9 +751,7 @@ var iview = (function () {
 				prevCO = O;
 				for (var j = 0; j < num; j++) {
 					var delta = -1 + 2 / (num - 1) * j;
-					var v = new THREE.Vector3(currentCA.x + prevCO.x * delta, currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta);
-					if (!doNotSmoothen && ss == 'sheet') v.smoothen = true;
-					points[j].push(v);
+					points[j].push(new THREE.Vector3(currentCA.x + prevCO.x * delta, currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta));
 				}
 			}
 		}
@@ -876,7 +858,7 @@ var iview = (function () {
 		}
 		if (start != null) this.drawCylinder(start.c, atom.c, radius, atom.color);
 		this.drawMainchainTube(others, 'CA', 0.3);
-		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
+		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, this.thickness * 2);
 	};
 
 	iview.prototype.drawDashedLine = function (p1, p2, color) {
@@ -1001,13 +983,12 @@ var iview = (function () {
 				break;
 		}
 
-		var doNotSmoothen = false;
 		switch (this.options.secondaryStructure) {
 			case 'ribbon':
-				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, doNotSmoothen, this.thickness);
+				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, this.thickness);
 				break;
 			case 'strand':
-				this.drawStrand(this.stdAtoms, null, null, null, null, null, doNotSmoothen);
+				this.drawStrand(this.stdAtoms, null, null, null, null, null);
 				break;
 			case 'cylinder & plate':
 				this.drawHelixAsCylinder(this.stdAtoms, 1.6);
@@ -1066,9 +1047,8 @@ var iview = (function () {
 	};
 
 	iview.prototype.loadProteinInPDB = function (src) {
-		var helices = [], sheets = [];
 		this.protein = [];
-		var lines = src.split('\n');
+		var lines = src.split('\n'), helices = [], sheets = [], lastTER;
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
@@ -1105,7 +1085,7 @@ var iview = (function () {
 					bonds: [],
 				};
 			} else if (record == 'TER   ') {
-				this.lastTER = parseInt(line.substr(6, 5));
+				lastTER = parseInt(line.substr(6, 5));
 			} else if (record == 'CONECT') {
 				var from = parseInt(line.substr(6, 5));
 				for (var j = 0; j < 4; ++j) {
@@ -1155,7 +1135,7 @@ var iview = (function () {
 		this.hetAtoms = [];
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			if (atom.serial < this.lastTER) {
+			if (atom.serial < lastTER) {
 				this.stdAtoms[atom.serial] = atom;
 			} else {
 				this.hetAtoms[atom.serial] = atom;
