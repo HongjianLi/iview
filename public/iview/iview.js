@@ -1248,7 +1248,7 @@ var iview = (function () {
 
 	iview.prototype.loadLigandInXYZ = function(src) {
 		this.ligand = [];
-		var lines = src.split('n');
+		var lines = src.split('\n');
 		var atomCount = parseInt(lines[0].substr(0, 3));
 		var offset = 2;
 		for (var i = 1; i <= atomCount; ++i) {
