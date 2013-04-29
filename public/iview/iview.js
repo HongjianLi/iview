@@ -611,7 +611,7 @@ var iview = (function () {
 
 	iview.prototype.subdivide = function (points, div) { // Catmull-Rom subdivision
 		if (div == 1) return points;
-		var ret = [], div_inv = 1.0 / div;
+		var ret = [], divInv = 1.0 / div;
 		for (var i = -1, size = points.length; i <= size - 3; ++i) {
 			var p0 = points[i == -1 ? 0 : i];
 			var p1 = points[i + 1];
@@ -620,7 +620,7 @@ var iview = (function () {
 			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
 			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
 			for (var j = 0; j < div; ++j) {
-				var t = div_inv * j;
+				var t = divInv * j;
 				ret.push(new THREE.Vector3(
 					p1.x + t * v0.x + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x) + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x),
 					p1.y + t * v0.y + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y) + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y),
@@ -670,22 +670,22 @@ var iview = (function () {
 		p2 = this.subdivide(p2, div);
 		var geo = new THREE.Geometry();
 		if (!thickness) {
-			for (var i = 0, lim = p1.length; i < lim; ++i) {
+			for (var i = 0, len = p1.length; i < len; ++i) {
 				geo.vertices.push(p1[i]); // 2i
 				geo.vertices.push(p2[i]); // 2i + 1
 			}
-			for (var i = 1, lim = p1.length; i < lim; ++i) {
+			for (var i = 1, len = p1.length; i < len; ++i) {
 				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, colors[Math.round((i - 1) / div)]));
 			}
 		} else {
 			var vs = geo.vertices, fs = geo.faces;
 			var axis, p1v, p2v, a1v, a2v;
-			for (var i = 0, lim = p1.length; i < lim; ++i) {
+			for (var i = 0, len = p1.length; i < len; ++i) {
 				vs.push(p1v = p1[i]); // 0
 				vs.push(p1v); // 1
 				vs.push(p2v = p2[i]); // 2
 				vs.push(p2v); // 3
-				if (i < lim - 1) {
+				if (i < len - 1) {
 					axis = p2[i].clone().sub(p1[i]).cross(p1[i + 1].clone().sub(p1[i])).normalize().multiplyScalar(thickness);
 				}
 				vs.push(a1v = p1[i].clone().add(axis)); // 4
@@ -694,7 +694,7 @@ var iview = (function () {
 				vs.push(a2v); // 7
 			}
 			var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
-			for (var i = 1, lim = p1.length; i < lim; ++i) {
+			for (var i = 1, len = p1.length; i < len; ++i) {
 				var offset = 8 * i, color = colors[Math.round((i - 1) / div)];
 				for (var j = 0; j < 4; ++j) {
 					fs.push(new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color));
@@ -716,12 +716,12 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawStrand = function (atoms, num, div, fill, coilWidth, helixSheetWidth, thickness) {
-		num = num || this.strandDIV;
-		div = div || this.axisDIV;
+	iview.prototype.drawStrand = function (atoms, strandDIV, axisDIV, fill, coilWidth, helixSheetWidth, thickness) {
+		strandDIV = strandDIV || this.strandDIV;
+		axisDIV = axisDIV || this.axisDIV;
 		coilWidth = coilWidth || this.coilWidth;
 		helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
-		var points = []; for (var k = 0; k < num; k++) points[k] = [];
+		var points = []; for (var k = 0; k < strandDIV; ++k) points[k] = [];
 		var colors = [];
 		var currentChain, currentResi, currentCA;
 		var prevCO = null, ss = null, ssborder = false;
@@ -729,35 +729,34 @@ var iview = (function () {
 			var atom = atoms[i];
 			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					for (var j = 0; !thickness && j < num; ++j)
-						this.drawChainCurve(points[j], 1, colors, div);
-					if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
-					var points = []; for (var k = 0; k < num; k++) points[k] = [];
+					for (var j = 0; !thickness && j < strandDIV; ++j) {
+						this.drawChainCurve(points[j], 1, colors, axisDIV);
+					}
+					if (fill) this.drawStrip(points[0], points[strandDIV - 1], colors, axisDIV, thickness);
+					var points = []; for (var k = 0; k < strandDIV; ++k) points[k] = [];
 					colors = [];
 					prevCO = null; ss = null; ssborder = false;
 				}
-				currentCA = atom.c.clone();
+				currentCA = atom.c;
 				currentChain = atom.chain;
 				currentResi = atom.resi;
 				ss = atom.ss;
 				ssborder = atom.ssstart || atom.ssend;
 				colors.push(atom.color);
 			} else if (atom.name == 'O') {
-				var O = atom.c.clone();
-				O.sub(currentCA);
-				O.normalize(); // can be omitted for performance
-				O.multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
+				var O = atom.c.clone().sub(currentCA).normalize().multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
 				if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
 				prevCO = O;
-				for (var j = 0; j < num; j++) {
-					var delta = -1 + 2 / (num - 1) * j;
-					points[j].push(new THREE.Vector3(currentCA.x + prevCO.x * delta, currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta));
+				for (var j = 0; j < strandDIV; ++j) {
+					var delta = -1 + 2 / (strandDIV - 1) * j;
+					points[j].push(currentCA.clone().add(prevCO.clone().multiplyScalar(delta)));
 				}
 			}
 		}
-		for (var j = 0; !thickness && j < num; j++)
-			this.drawChainCurve(points[j], 1, colors, div);
-		if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
+		for (var j = 0; !thickness && j < strandDIV; ++j) {
+			this.drawChainCurve(points[j], 1, colors, axisDIV);
+		}
+		if (fill) this.drawStrip(points[0], points[strandDIV - 1], colors, axisDIV, thickness);
 	};
 
 	iview.prototype.drawChainTube = function (_points, colors, radii) {
@@ -766,7 +765,7 @@ var iview = (function () {
 		var geo = new THREE.Geometry();
 		var points = this.subdivide(_points, axisDiv);
 		var prevAxis1 = new THREE.Vector3(), prevAxis2;
-		for (var i = 0, lim = points.length; i < lim; i++) {
+		for (var i = 0, lim = points.length; i < lim; ++i) {
 			var r, idx = (i - 1) / axisDiv;
 			if (i == 0) r = radii[0];
 			else {
@@ -790,7 +789,7 @@ var iview = (function () {
 			} else {
 				axis1 = prevAxis1; axis2 = prevAxis2;
 			}
-			for (var j = 0; j < circleDiv; j++) {
+			for (var j = 0; j < circleDiv; ++j) {
 				var angle = 2 * Math.PI / circleDiv * j; //* dir  + offset;
 				var c = Math.cos(angle), s = Math.sin(angle);
 				geo.vertices.push(new THREE.Vector3(
@@ -800,13 +799,13 @@ var iview = (function () {
 			}
 		}
 		var offset = 0;
-		for (var i = 0, lim = points.length - 1; i < lim; i++) {
+		for (var i = 0, lim = points.length - 1; i < lim; ++i) {
 			var c = new THREE.Color(colors[Math.round((i - 1) / axisDiv)]);
 			var reg = 0;
 			var r1 = geo.vertices[offset].clone().sub(geo.vertices[offset + circleDiv]).lengthSq();
 			var r2 = geo.vertices[offset].clone().sub(geo.vertices[offset + circleDiv + 1]).lengthSq();
 			if (r1 > r2) { r1 = r2; reg = 1; };
-			for (var j = 0; j < circleDiv; j++) {
+			for (var j = 0; j < circleDiv; ++j) {
 				geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv, undefined, c));
 				geo.faces.push(new THREE.Face3(offset + (j + 1) % circleDiv, offset + (j + reg) % circleDiv + circleDiv, offset + (j + reg + 1) % circleDiv + circleDiv, undefined, c));
 			}
