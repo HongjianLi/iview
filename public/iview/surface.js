@@ -102,16 +102,13 @@ var ProteinSurface = (function () {
 			var f = this.faces[i];
 			var a = vertices[f.a].atomid, b = vertices[f.b].atomid, c = vertices[f.c].atomid;
 			if (!atomsToShow[a] && !atomsToShow[b] && !atomsToShow[c]) continue;
-			f.vertexColors = [new THREE.Color(atoms[a].color),
-							  new THREE.Color(atoms[b].color),
-							  new THREE.Color(atoms[c].color)];
+			f.vertexColors = [atoms[a].color, atoms[b].color, atoms[c].color];
 			faces.push(f);
 		}
 		geo.computeFaceNormals();
 		geo.computeVertexNormals(false);
 		return geo;
 	};
-
 
 	this.laplaciansmooth = function (numiter) {
 		var tps = new Array(vertnumber);
