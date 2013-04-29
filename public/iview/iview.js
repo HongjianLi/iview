@@ -548,27 +548,6 @@ var iview = (function () {
 		return atom1.c.distanceToSquared(atom2.c) < 1.2 * r * r;
 	}
 
-	iview.prototype.subdivide = function (points, DIV) { // Catmull-Rom subdivision
-		var ret = [], DIVinv = 1.0 / DIV;
-		for (var i = -1, size = points.length; i <= size - 3; ++i) {
-			var p0 = points[i == -1 ? 0 : i];
-			var p1 = points[i + 1];
-			var p2 = points[i + 2];
-			var p3 = points[i == size - 3 ? size - 1 : i + 3];
-			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
-			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
-			for (var j = 0; j < DIV; ++j) {
-				var t = DIVinv * j;
-				ret.push(new THREE.Vector3(
-					p1.x + t * v0.x + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x) + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x),
-					p1.y + t * v0.y + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y) + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y),
-					p1.z + t * v0.z + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z) + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z)));
-			}
-		}
-		ret.push(points[points.length - 1]);
-		return ret;
-	};
-
 	iview.prototype.drawSphere = function (atom, defaultRadius, forceDefault, scale) {
 		var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
 		sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
@@ -630,7 +609,29 @@ var iview = (function () {
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: this.lineWidth, vertexColors: true }), THREE.LinePieces));
 	};
 
-	iview.prototype.drawSmoothCurve = function (_points, linewidth, colors, div) {
+	iview.prototype.subdivide = function (points, div) { // Catmull-Rom subdivision
+		if (div == 1) return points;
+		var ret = [], div_inv = 1.0 / div;
+		for (var i = -1, size = points.length; i <= size - 3; ++i) {
+			var p0 = points[i == -1 ? 0 : i];
+			var p1 = points[i + 1];
+			var p2 = points[i + 2];
+			var p3 = points[i == size - 3 ? size - 1 : i + 3];
+			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
+			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
+			for (var j = 0; j < div; ++j) {
+				var t = div_inv * j;
+				ret.push(new THREE.Vector3(
+					p1.x + t * v0.x + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x) + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x),
+					p1.y + t * v0.y + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y) + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y),
+					p1.z + t * v0.z + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z) + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z)));
+			}
+		}
+		ret.push(points[points.length - 1]);
+		return ret;
+	};
+
+	iview.prototype.drawChainCurve = function (_points, linewidth, colors, div) {
 		if (_points.length == 0) return;
 		div = div || 5;
 		var points = this.subdivide(_points, div);
@@ -642,15 +643,14 @@ var iview = (function () {
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: linewidth, vertexColors: true }), THREE.LineStrip));
 	};
 
-	iview.prototype.drawMainchainCurve = function (atoms, curveWidth, atomName, div) {
+	iview.prototype.drawChainCurves = function (atoms, curveWidth) {
 		var points = [], colors = [];
 		var currentChain, currentResi;
-		div = div || 5;
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.name == atomName) {
+			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					this.drawSmoothCurve(points, curveWidth, colors, div);
+					this.drawChainCurve(points, curveWidth, colors, 1);
 					points = [];
 					colors = [];
 				}
@@ -660,7 +660,7 @@ var iview = (function () {
 				currentResi = atom.resi;
 			}
 		}
-		this.drawSmoothCurve(points, curveWidth, colors, div);
+		this.drawChainCurve(points, curveWidth, colors, 1);
 	};
 
 	iview.prototype.drawStrip = function (p1, p2, colors, div, thickness) {
@@ -730,7 +730,7 @@ var iview = (function () {
 			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
 					for (var j = 0; !thickness && j < num; ++j)
-						this.drawSmoothCurve(points[j], 1, colors, div);
+						this.drawChainCurve(points[j], 1, colors, div);
 					if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
 					var points = []; for (var k = 0; k < num; k++) points[k] = [];
 					colors = [];
@@ -756,11 +756,11 @@ var iview = (function () {
 			}
 		}
 		for (var j = 0; !thickness && j < num; j++)
-			this.drawSmoothCurve(points[j], 1, colors, div);
+			this.drawChainCurve(points[j], 1, colors, div);
 		if (fill) this.drawStrip(points[0], points[num - 1], colors, div, thickness);
 	};
 
-	iview.prototype.drawSmoothTube = function (_points, colors, radii) {
+	iview.prototype.drawChainTube = function (_points, colors, radii) {
 		if (_points.length < 2) return;
 		var circleDiv = this.tubeDIV, axisDiv = this.axisDIV;
 		var geo = new THREE.Geometry();
@@ -819,14 +819,14 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawMainchainTube = function (atoms, atomName, radius) {
+	iview.prototype.drawChainTubes = function (atoms, radius) {
 		var points = [], colors = [], radii = [];
 		var currentChain, currentResi;
 		for (var i in atoms) {
 			var atom = atoms[i];
-			if (atom.name == atomName) {
+			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					this.drawSmoothTube(points, colors, radii);
+					this.drawChainTube(points, colors, radii);
 					points = []; colors = []; radii = [];
 				}
 				points.push(atom.c);
@@ -836,7 +836,7 @@ var iview = (function () {
 				currentResi = atom.resi;
 			}
 		}
-		this.drawSmoothTube(points, colors, radii);
+		this.drawChainTube(points, colors, radii);
 	};
 
 	iview.prototype.drawHelixAsCylinder = function (atoms, radius) {
@@ -857,7 +857,7 @@ var iview = (function () {
 			if (start == null && atom.ss == 'helix' && atom.ssbegin) start = atom;
 		}
 		if (start != null) this.drawCylinder(start.c, atom.c, radius, atom.color);
-		this.drawMainchainTube(others, 'CA', 0.3);
+		this.drawChainTubes(others, 0.3);
 		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, this.thickness * 2);
 	};
 
@@ -994,10 +994,10 @@ var iview = (function () {
 				this.drawHelixAsCylinder(this.stdAtoms, 1.6);
 				break;
 			case 'C alpha trace':
-				this.drawMainchainCurve(this.stdAtoms, this.curveWidth, 'CA', 1);
+				this.drawChainCurves(this.stdAtoms, this.curveWidth);
 				break;
 			case 'B factor tube':
-				this.drawMainchainTube(this.stdAtoms, 'CA');
+				this.drawChainTubes(this.stdAtoms);
 				break;
 		}
 
@@ -1300,16 +1300,16 @@ var iview = (function () {
 	};
 
 	iview.prototype.resetView = function () {
-		var xmin = ymin = zmin = 9999;
+		var xmin = ymin = zmin =  9999;
 		var xmax = ymax = zmax = -9999;
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			xmin = (xmin < atom.c.x) ? xmin : atom.c.x;
-			ymin = (ymin < atom.c.y) ? ymin : atom.c.y;
-			zmin = (zmin < atom.c.z) ? zmin : atom.c.z;
-			xmax = (xmax > atom.c.x) ? xmax : atom.c.x;
-			ymax = (ymax > atom.c.y) ? ymax : atom.c.y;
-			zmax = (zmax > atom.c.z) ? zmax : atom.c.z;
+			if (atom.c.x < xmin) xmin = atom.c.x;
+			if (atom.c.y < ymin) ymin = atom.c.y;
+			if (atom.c.z < zmin) zmin = atom.c.z;
+			if (atom.c.x > xmax) xmax = atom.c.x;
+			if (atom.c.y > ymax) ymax = atom.c.y;
+			if (atom.c.z > zmax) zmax = atom.c.z;
 		}
 		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
 		this.slabNear = -maxD / 1.9;
@@ -1324,7 +1324,7 @@ var iview = (function () {
 			zsum += atom.c.z;
 			++cnt;
 		}
-		this.modelGroup.position = new THREE.Vector3(xsum / cnt, ysum / cnt, zsum / cnt).multiplyScalar(-1);
+		this.modelGroup.position = new THREE.Vector3(xsum, ysum, zsum).multiplyScalar(-1 / cnt);
 		this.render();
 	};
 
