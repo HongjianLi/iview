@@ -1187,6 +1187,25 @@ var iview = (function () {
 		}
 	};
 
+	iview.prototype.loadLigandInPDBQT = function (src) {
+		this.ligand = [];
+		var lines = src.split('\n');
+		for (var i in lines) {
+			var line = lines[i];
+			var record = line.substr(0, 6);
+			if (record == 'ATOM  ' || record == 'HETATM') {
+				var atom = {
+					serial: serialparseInt(line.substr(6, 5)),
+					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					elem: line.substr(77, 2).replace(/ /g, ''), // Map elements, e.g. 'A' to 'C', 'HD' to 'H'
+					bonds: [],
+				};
+				this.ligand[atom.serial] = atom;
+			} else if (record == 'BRANCH') {
+			}
+		}
+	};
+
 	iview.prototype.loadLigandInMOL2 = function(src) {
 		this.ligand = [];
 		var lines = src.split('\n');
