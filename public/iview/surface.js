@@ -46,15 +46,15 @@ iview.prototype.getExtent = function (atoms) {
 	for (var i in atoms) {
 		var atom = atoms[i];
 		cnt++;
-		xsum += atom.x;
-		ysum += atom.y;
-		zsum += atom.z;
-		xmin = (xmin < atom.x) ? xmin : atom.x;
-		ymin = (ymin < atom.y) ? ymin : atom.y;
-		zmin = (zmin < atom.z) ? zmin : atom.z;
-		xmax = (xmax > atom.x) ? xmax : atom.x;
-		ymax = (ymax > atom.y) ? ymax : atom.y;
-		zmax = (zmax > atom.z) ? zmax : atom.z;
+		xsum += atom.c.x;
+		ysum += atom.c.y;
+		zsum += atom.c.z;
+		xmin = (xmin < atom.c.x) ? xmin : atom.c.x;
+		ymin = (ymin < atom.c.y) ? ymin : atom.c.y;
+		zmin = (zmin < atom.c.z) ? zmin : atom.c.z;
+		xmax = (xmax > atom.c.x) ? xmax : atom.c.x;
+		ymax = (ymax > atom.c.y) ? ymax : atom.c.y;
+		zmax = (zmax > atom.c.z) ? zmax : atom.c.z;
 	}
 	return [[xmin, ymin, zmin], [xmax, ymax, zmax], [xsum / cnt, ysum / cnt, zsum / cnt]];
 };
@@ -361,9 +361,9 @@ var ProteinSurface = (function () {
 
 	this.fillAtom = function (atom, atoms) {
 		var cx, cy, cz, ox, oy, oz;
-		cx = Math.floor(0.5 + scaleFactor * (atom.x + ptranx));
-		cy = Math.floor(0.5 + scaleFactor * (atom.y + ptrany));
-		cz = Math.floor(0.5 + scaleFactor * (atom.z + ptranz));
+		cx = Math.floor(0.5 + scaleFactor * (atom.c.x + ptranx));
+		cy = Math.floor(0.5 + scaleFactor * (atom.c.y + ptrany));
+		cz = Math.floor(0.5 + scaleFactor * (atom.c.z + ptranz));
 
 		var at = this.getAtomType(atom);
 		var nind = 0;
@@ -421,9 +421,9 @@ var ProteinSurface = (function () {
 
 	this.fillAtomWaals = function (atom, atoms) {
 		var cx, cy, cz, ox, oy, oz, nind = 0;
-		cx = Math.floor(0.5 + scaleFactor * (atom.x + ptranx));
-		cy = Math.floor(0.5 + scaleFactor * (atom.y + ptrany));
-		cz = Math.floor(0.5 + scaleFactor * (atom.z + ptranz));
+		cx = Math.floor(0.5 + scaleFactor * (atom.c.x + ptranx));
+		cy = Math.floor(0.5 + scaleFactor * (atom.c.y + ptrany));
+		cz = Math.floor(0.5 + scaleFactor * (atom.c.z + ptranz));
 
 		var at = this.getAtomType(atom);
 

@@ -548,7 +548,7 @@ var iview = (function () {
 
 	iview.prototype.hasCovalentBond = function (atom1, atom2) {
 		var r = this.covalentRadii[atom1.elem] + this.covalentRadii[atom2.elem];
-		return new THREE.Vector3(atom1.x, atom1.y, atom1.z).distanceToSquared(new THREE.Vector3(atom2.x, atom2.y, atom2.z)) < 1.2 * r * r;
+		return atom1.c.distanceToSquared(atom2.c) < 1.2 * r * r;
 	}
 
 	iview.prototype.subdivide = function (_points, DIV) { // Catmull-Rom subdivision
@@ -557,7 +557,7 @@ var iview = (function () {
 		points.push(_points[0]);
 		for (var i = 1, lim = _points.length - 1; i < lim; ++i) {
 			var p1 = _points[i], p2 = _points[i + 1];
-			points.push(p1.smoothen ? new THREE.Vector3(p1.x, p1.y, p1.z).add(new THREE.Vector3(p2.x, p2.y, p2.z)).multiplyScalar(0.5) : p1);
+			points.push(p1.smoothen ? p1.clone().add(p2).multiplyScalar(0.5) : p1);
 		}
 		points.push(_points[_points.length - 1]);
 		for (var i = -1, size = points.length; i <= size - 3; ++i) {
@@ -587,9 +587,7 @@ var iview = (function () {
 	iview.prototype.drawSphere = function (atom, defaultRadius, forceDefault, scale) {
 		var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
 		sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
-		sphere.position.x = atom.x;
-		sphere.position.y = atom.y;
-		sphere.position.z = atom.z;
+		sphere.position.copy(atom.c);
 		this.modelGroup.add(sphere);
 	};
 
@@ -615,8 +613,8 @@ var iview = (function () {
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
-				var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
+				var p1 = atom1.c.clone();
+				var p2 = atom2.c.clone();
 				var mp = p1.clone().add(p2).multiplyScalar(0.5);
 				this.drawCylinder(p1, mp, bondR, atom1.color);
 				this.drawCylinder(p2, mp, bondR, atom2.color);
@@ -626,8 +624,8 @@ var iview = (function () {
 	};
 
 	iview.prototype.drawBondsAsLineSub = function (geo, atom1, atom2) {
-		var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
-		var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
+		var p1 = atom1.c.clone();
+		var p2 = atom2.c.clone();
 		var mp = p1.clone().add(p2).multiplyScalar(0.5);
 		var c1 = new THREE.Color(atom1.color);
 		var c2 = new THREE.Color(atom2.color);
@@ -675,7 +673,7 @@ var iview = (function () {
 					points = [];
 					colors = [];
 				}
-				points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
+				points.push(atom.c);
 				colors.push(atom.color);
 				currentChain = atom.chain;
 				currentResi = atom.resi;
@@ -758,13 +756,13 @@ var iview = (function () {
 					colors = [];
 					prevCO = null; ss = null; ssborder = false;
 				}
-				currentCA = new THREE.Vector3(atom.x, atom.y, atom.z);
+				currentCA = atom.c.clone();
 				currentChain = atom.chain;
 				currentResi = atom.resi;
 				ss = atom.ss; ssborder = atom.ssstart || atom.ssend;
 				colors.push(atom.color);
 			} else if (atom.name == 'O') {
-				var O = new THREE.Vector3(atom.x, atom.y, atom.z);
+				var O = atom.c.clone();
 				O.sub(currentCA);
 				O.normalize(); // can be omitted for performance
 				O.multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
@@ -852,7 +850,7 @@ var iview = (function () {
 					this.drawSmoothTube(points, colors, radii);
 					points = []; colors = []; radii = [];
 				}
-				points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
+				points.push(atom.c);
 				radii.push(radius || atom.b > 0 ? atom.b * 0.01 : 0.3);
 				colors.push(atom.color);
 				currentChain = atom.chain;
@@ -872,22 +870,22 @@ var iview = (function () {
 			if (atom.ss == 'sheet') beta[atom.serial] = atom;
 			if (atom.name != 'CA') continue;
 			if (atom.ss == 'helix' && atom.ssend) {
-				if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
+				if (start != null) this.drawCylinder(start.c, atom.c, radius, atom.color, true);
 				start = null;
 			}
 			currentChain = atom.chain;
 			currentResi = atom.resi;
 			if (start == null && atom.ss == 'helix' && atom.ssbegin) start = atom;
 		}
-		if (start != null) this.drawCylinder(new THREE.Vector3(start.x, start.y, start.z), new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color);
+		if (start != null) this.drawCylinder(start.c, atom.c, radius, atom.color);
 		this.drawMainchainTube(others, 'CA', 0.3);
 		this.drawStrand(beta, undefined, undefined, true, 0, this.helixSheetWidth, false, this.thickness * 2);
 	};
 
 	iview.prototype.drawDashedLine = function (atom1, atom2, color) {
 		var geo = new THREE.Geometry();
-		geo.vertices.push(new THREE.Vector3(atom1.x, atom1.y, atom1.z));
-		geo.vertices.push(new THREE.Vector3(atom2.x, atom2.y, atom2.z));
+		geo.vertices.push(atom1.c);
+		geo.vertices.push(atom2.c);
 		geo.computeLineDistances();
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineDashedMaterial({ 'color': color, dashSize: 0.25, gapSize: 0.125 })));
 	};
@@ -1104,9 +1102,7 @@ var iview = (function () {
 					chain: line.substr(21, 1),
 					resi: parseInt(line.substr(22, 4)),
 					insc: line.substr(26, 1),
-					x: parseFloat(line.substr(30, 8)),
-					y: parseFloat(line.substr(38, 8)),
-					z: parseFloat(line.substr(46, 8)),
+					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					b: parseFloat(line.substr(60, 8)),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
@@ -1209,9 +1205,7 @@ var iview = (function () {
 				var serial = parseInt(line.substr(6, 5));
 				this.ligand[serial] = {
 					serial: serial,
-					x: parseFloat(line.substr(30, 8)),
-					y: parseFloat(line.substr(38, 8)),
-					z: parseFloat(line.substr(46, 8)),
+					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
 				};
@@ -1236,9 +1230,7 @@ var iview = (function () {
 			var line = lines[offset++];
 			this.ligand[i] = {
 				serial: i,
-				x: parseFloat(line.substr(16, 10)),
-				y: parseFloat(line.substr(26, 10)),
-				z: parseFloat(line.substr(36, 10)),
+				c: new THREE.Vector3(parseFloat(line.substr(16, 10)), parseFloat(line.substr(26, 10)), parseFloat(line.substr(36, 10))),
 				elem: line.substr(47, 2).replace(/\./g, '').toUpperCase(),
 				bonds: [],
 			};
@@ -1263,9 +1255,7 @@ var iview = (function () {
 			var line = lines[offset++];
 			this.ligand[i] = {
 				serial: i,
-				x: parseFloat(line.substr( 0, 10)),
-				y: parseFloat(line.substr(10, 10)),
-				z: parseFloat(line.substr(20, 10)),
+				c: new THREE.Vector3(parseFloat(line.substr( 0, 10)), parseFloat(line.substr(10, 10)), parseFloat(line.substr(20, 10))),
 				elem: line.substr(31, 2).replace(/ /g, '').toUpperCase(),
 				bonds: [],
 			};
@@ -1290,9 +1280,7 @@ var iview = (function () {
 			this.ligand[i] = {
 				serial: i,
 				elem: tokens[0].toUpperCase(),
-				x: parseFloat(tokens[1]),
-				y: parseFloat(tokens[2]),
-				z: parseFloat(tokens[3]),
+				c: new THREE.Vector3(parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])),
 				bonds: [],
 			};
 		}
@@ -1339,12 +1327,12 @@ var iview = (function () {
 		var xmax = ymax = zmax = -9999;
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			xmin = (xmin < atom.x) ? xmin : atom.x;
-			ymin = (ymin < atom.y) ? ymin : atom.y;
-			zmin = (zmin < atom.z) ? zmin : atom.z;
-			xmax = (xmax > atom.x) ? xmax : atom.x;
-			ymax = (ymax > atom.y) ? ymax : atom.y;
-			zmax = (zmax > atom.z) ? zmax : atom.z;
+			xmin = (xmin < atom.c.x) ? xmin : atom.c.x;
+			ymin = (ymin < atom.c.y) ? ymin : atom.c.y;
+			zmin = (zmin < atom.c.z) ? zmin : atom.c.z;
+			xmax = (xmax > atom.c.x) ? xmax : atom.c.x;
+			ymax = (ymax > atom.c.y) ? ymax : atom.c.y;
+			zmax = (zmax > atom.c.z) ? zmax : atom.c.z;
 		}
 		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
 		this.slabNear = -maxD / 1.9;
@@ -1354,9 +1342,9 @@ var iview = (function () {
 		var xsum = ysum = zsum = cnt = 0;
 		for (var i in this.ligand) {
 			var atom = this.ligand[i];
-			xsum += atom.x;
-			ysum += atom.y;
-			zsum += atom.z;
+			xsum += atom.c.x;
+			ysum += atom.c.y;
+			zsum += atom.c.z;
 			++cnt;
 		}
 		this.modelGroup.position = new THREE.Vector3(xsum / cnt, ysum / cnt, zsum / cnt).multiplyScalar(-1);
