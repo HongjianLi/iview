@@ -587,7 +587,7 @@ var iview = (function () {
 	iview.prototype.drawSphere = function (atom, defaultRadius, forceDefault, scale) {
 		var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
 		sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
-		sphere.position.copy(atom.c);
+		sphere.position = atom.c;
 		this.modelGroup.add(sphere);
 	};
 
@@ -613,24 +613,20 @@ var iview = (function () {
 			for (var j in atom1.bonds) {
 				var atom2 = atoms[atom1.bonds[j]];
 				if (atom2.serial < atom1.serial) continue;
-				var p1 = atom1.c.clone();
-				var p2 = atom2.c.clone();
-				var mp = p1.clone().add(p2).multiplyScalar(0.5);
-				this.drawCylinder(p1, mp, bondR, atom1.color);
-				this.drawCylinder(p2, mp, bondR, atom2.color);
+				var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
+				this.drawCylinder(atom1.c, mp, bondR, atom1.color);
+				this.drawCylinder(atom2.c, mp, bondR, atom2.color);
 			}
 			this.drawSphere(atom1, atomR, !scale, scale);
 		}
 	};
 
 	iview.prototype.drawBondsAsLineSub = function (geo, atom1, atom2) {
-		var p1 = atom1.c.clone();
-		var p2 = atom2.c.clone();
-		var mp = p1.clone().add(p2).multiplyScalar(0.5);
+		var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
 		var c1 = new THREE.Color(atom1.color);
 		var c2 = new THREE.Color(atom2.color);
-		geo.vertices.push(p1); geo.colors.push(c1); geo.vertices.push(mp); geo.colors.push(c1);
-		geo.vertices.push(p2); geo.colors.push(c2); geo.vertices.push(mp); geo.colors.push(c2);
+		geo.vertices.push(atom1.c); geo.colors.push(c1); geo.vertices.push(mp); geo.colors.push(c1);
+		geo.vertices.push(atom2.c); geo.colors.push(c2); geo.vertices.push(mp); geo.colors.push(c2);
 	};
 
 	iview.prototype.drawBondsAsLine = function (atoms, lineWidth) {
