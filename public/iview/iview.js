@@ -200,7 +200,7 @@ var iview = (function () {
 			AM: 1.80,
 			CM: 1.69,
 		};
-		this.atomColors = {
+		this.atomColors = { // http://jmol.sourceforge.net/jscolors
 			 H: new THREE.Color(0xFFFFFF),
 			HE: new THREE.Color(0xD9FFFF),
 			LI: new THREE.Color(0xCC80FF),
@@ -382,7 +382,6 @@ var iview = (function () {
 			orthographic: this.orthographicCamera,
 		};
 		this.camera = this.perspectiveCamera;
-
 		this.slabNear = -50; // relative to the center of rotationGroup
 		this.slabFar  = +50;
 
@@ -396,7 +395,7 @@ var iview = (function () {
 		this.helixSheetWidth = 1.3;
 		this.coilWidth = 0.3;
 		this.thickness = 0.4;
-		this.axisDiv = 5; // 3
+		this.axisDiv = 5;
 		this.strandDiv = 6;
 		this.tubeDiv = 8;
 		this.fov = 20;
@@ -458,6 +457,12 @@ var iview = (function () {
 			helix: new THREE.Color(0xFF0080),
 			sheet: new THREE.Color(0xFFC800),
 			 coil: new THREE.Color(0x6080FF),
+		};
+		this.surfaces = {
+			1: undefined,
+			2: undefined,
+			3: undefined,
+			4: undefined,
 		};
 		this.options = {
 			camera: 'perspective',
@@ -619,9 +624,10 @@ var iview = (function () {
 			var p3 = points[i == len - 3 ? len - 1 : i + 3];
 			var v0 = p2.clone().sub(p0).multiplyScalar(0.5);
 			var v1 = p3.clone().sub(p1).multiplyScalar(0.5);
+			var v2 = p2.clone().sub(p1);
 			for (var j = 0; j < div; ++j) {
 				var t = divInv * j;
-				ret.push(p1.clone().add(v0.clone().multiplyScalar(t)).add((p1.clone().multiplyScalar(-3).add(p2.clone().multiplyScalar(3)).sub(v0.clone().multiplyScalar(2)).sub(v1)).multiplyScalar(t * t)).add((p1.clone().multiplyScalar(2).sub(p2.clone().multiplyScalar(2)).add(v0).add(v1)).multiplyScalar(t * t * t)));
+				ret.push(p1.clone().add(v0.clone().multiplyScalar(t)).add((v2.clone().multiplyScalar(3).sub(v0.clone().multiplyScalar(2)).sub(v1)).multiplyScalar(t * t)).add((v2.clone().multiplyScalar(-2).add(v0).add(v1)).multiplyScalar(t * t * t)));
 //				ret.push(new THREE.Vector3(
 //					p1.x + t * v0.x + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x) + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x),
 //					p1.y + t * v0.y + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y) + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y),
@@ -1154,12 +1160,6 @@ var iview = (function () {
 				}
 			}
 		}
-		this.surfaces = {
-			1: undefined,
-			2: undefined,
-			3: undefined,
-			4: undefined,
-		};
 	};
 
 	iview.prototype.loadLigandInPDB = function (src) {
@@ -1280,7 +1280,7 @@ var iview = (function () {
 		}
 		this.camera.updateProjectionMatrix();
 		this.scene.fog.near = this.camera.near + 0.4 * (this.camera.far - this.camera.near);
-		//if (this.scene.fog.near > center) this.scene.fog.near = center;
+//		if (this.scene.fog.near > center) this.scene.fog.near = center;
 		this.scene.fog.far = this.camera.far;
 		this.effect.render(this.scene, this.camera);
 		if (!this.effect.init) {
