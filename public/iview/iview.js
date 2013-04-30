@@ -477,6 +477,13 @@ var iview = (function () {
 			ligand: 'stick',
 			effect: 'none',
 		};
+		this.pdbqtElemMap = {
+			HD: H,
+			A : C,
+			NA: N,
+			OA: O,
+			SA: S,
+		};
 
 		var me = this;
 		$('body').bind('mouseup touchend', function (ev) {
@@ -1162,6 +1169,87 @@ var iview = (function () {
 		}
 	};
 
+	iview.prototype.loadProteinInPDBQT = function (src) {
+		this.protein = [];
+		var lines = src.split('\n'), helices = [], sheets = [], lastTER;
+		for (var i in lines) {
+			var line = lines[i];
+			var record = line.substr(0, 6);
+			if (record == 'ATOM  ' || record == 'HETATM') {
+				if (!(line[16] == ' ' || line[16] == 'A')) continue;
+				var serial = parseInt(line.substr(6, 5));
+				this.protein[serial] = {
+					het: record[0] == 'H',
+					serial: serial,
+					name: line.substr(12, 4).replace(/ /g, ''),
+					resn: line.substr(17, 3),
+					chain: line.substr(21, 1),
+					resi: parseInt(line.substr(22, 4)),
+					insc: line.substr(26, 1),
+					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					b: parseFloat(line.substr(60, 8)),
+					elem: line.substr(76, 2).replace(/ /g, '').toUpperCase(),
+					bonds: [],
+				};
+			} else if (record == 'TER   ') {
+				lastTER = parseInt(line.substr(6, 5));
+			}
+		}
+		var curChain, curResi, curInsc, curResAtoms = [];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
+			if (atom.het) continue;
+			if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
+				for (var j in curResAtoms) {
+					var from = this.protein[curResAtoms[j]];
+					for (var k in curResAtoms) {
+						if (j == k) continue;
+						var to = this.protein[curResAtoms[k]];
+						if (this.hasCovalentBond(from, to)) {
+							from.bonds.push(to.serial);
+						}
+					}
+					if (from.name == 'C' && atom.name == 'N' && this.hasCovalentBond(from, atom)) {
+						from.bonds.push(atom.serial);
+						atom.bonds.push(from.serial);
+					}
+				}
+				curChain = atom.chain;
+				curResi = atom.resi;
+				curInsc = atom.insc;
+				curResAtoms.length = 0;
+			}
+			curResAtoms.push(atom.serial);
+		}
+		for (var j in curResAtoms) {
+			var from = this.protein[curResAtoms[j]];
+			for (var k in curResAtoms) {
+				if (j == k) continue;
+				var to = this.protein[curResAtoms[k]];
+				if (this.hasCovalentBond(from, to)) {
+					from.bonds.push(to.serial);
+				}
+			}
+		}
+		this.stdAtoms = [];
+		this.hetAtoms = [];
+		for (var i in this.protein) {
+			var atom = this.protein[i];
+			if (atom.serial < lastTER) {
+				this.stdAtoms[atom.serial] = atom;
+			} else {
+				this.hetAtoms[atom.serial] = atom;
+				if ((this.protein[i - 1] === undefined || this.protein[i - 1].resi !== atom.resi) && (this.protein[i + 1] === undefined || this.protein[i + 1].resi !== atom.resi)) {
+					atom.solvent = true;
+				}
+			}
+		}
+		for (var i in this.stdAtoms) {
+			var atom = this.stdAtoms[i];
+			atom.ss = 'coil';
+		}
+	};
+
 	iview.prototype.loadLigandInPDB = function (src) {
 		this.ligand = [];
 		var lines = src.split('\n');
@@ -1197,7 +1285,7 @@ var iview = (function () {
 				var atom = {
 					serial: serialparseInt(line.substr(6, 5)),
 					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
-					elem: line.substr(77, 2).replace(/ /g, ''), // Map elements, e.g. 'A' to 'C', 'HD' to 'H'
+					elem: line.substr(77, 2).replace(/ /g, '').toUpperCase(), // Map elements, e.g. 'A' to 'C', 'HD' to 'H'
 					bonds: [],
 				};
 				this.ligand[atom.serial] = atom;
