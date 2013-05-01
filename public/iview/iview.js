@@ -477,12 +477,12 @@ var iview = (function () {
 			ligand: 'stick',
 			effect: 'none',
 		};
-		this.pdbqtElemMap = {
-			HD: H,
-			A : C,
-			NA: N,
-			OA: O,
-			SA: S,
+		this.elemMapInPDBQT = {
+			HD: 'H',
+			A : 'C',
+			NA: 'N',
+			OA: 'O',
+			SA: 'S',
 		};
 
 		var me = this;
@@ -991,7 +991,7 @@ var iview = (function () {
 				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, this.thickness);
 				break;
 			case 'strand':
-				this.drawStrand(this.stdAtoms, null, null, null, null, null);
+				this.drawStrand(this.stdAtoms);
 				break;
 			case 'cylinder & plate':
 				this.drawCylinderPlate(this.stdAtoms, 1.6);
