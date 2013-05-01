@@ -645,9 +645,7 @@ var iview = (function () {
 		return ret;
 	};
 
-	iview.prototype.drawChainCurve = function (_points, linewidth, colors, div) {
-		if (_points.length == 0) return;
-		div = div || 5;
+	iview.prototype.drawChainCurve = function (_points, colors, linewidth, div) {
 		var points = this.subdivide(_points, div);
 		var geo = new THREE.Geometry();
 		for (var i in points) {
@@ -657,14 +655,14 @@ var iview = (function () {
 		this.modelGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ linewidth: linewidth, vertexColors: true }), THREE.LineStrip));
 	};
 
-	iview.prototype.drawChainCurves = function (atoms, curveWidth) {
+	iview.prototype.drawChainCurves = function (atoms) {
 		var points = [], colors = [];
 		var currentChain, currentResi;
 		for (var i in atoms) {
 			var atom = atoms[i];
 			if (atom.name == 'CA') {
 				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					this.drawChainCurve(points, curveWidth, colors, 1);
+					this.drawChainCurve(points, colors, this.curveWidth, 1);
 					points = [];
 					colors = [];
 				}
@@ -674,14 +672,12 @@ var iview = (function () {
 				currentResi = atom.resi;
 			}
 		}
-		this.drawChainCurve(points, curveWidth, colors, 1);
+		this.drawChainCurve(points, colors, this.curveWidth, 1);
 	};
 
-	iview.prototype.drawStrip = function (p1, p2, colors, div, thickness) {
-		if (p1.length < 2) return;
-		div = div || this.axisDiv;
-		p1 = this.subdivide(p1, div);
-		p2 = this.subdivide(p2, div);
+	iview.prototype.drawStrip = function (p1, p2, colors, thickness) {
+		p1 = this.subdivide(p1, this.axisDiv);
+		p2 = this.subdivide(p2, this.axisDiv);
 		var geo = new THREE.Geometry();
 		if (!thickness) {
 			for (var i = 0, len = p1.length; i < len; ++i) {
@@ -689,7 +685,7 @@ var iview = (function () {
 				geo.vertices.push(p2[i]); // 2i + 1
 			}
 			for (var i = 1, len = p1.length; i < len; ++i) {
-				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, colors[Math.round((i - 1) / div)]));
+				geo.faces.push(new THREE.Face4(2 * i, 2 * i + 1, 2 * i - 1, 2 * i - 2, undefined, colors[Math.round((i - 1) / this.axisDiv)]));
 			}
 		} else {
 			var vs = geo.vertices, fs = geo.faces;
@@ -709,7 +705,7 @@ var iview = (function () {
 			}
 			var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
 			for (var i = 1, len = p1.length; i < len; ++i) {
-				var offset = 8 * i, color = colors[Math.round((i - 1) / div)];
+				var offset = 8 * i, color = colors[Math.round((i - 1) / this.axisDiv)];
 				for (var j = 0; j < 4; ++j) {
 					fs.push(new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color));
 				}
@@ -730,23 +726,21 @@ var iview = (function () {
 		this.modelGroup.add(mesh);
 	};
 
-	iview.prototype.drawStrand = function (atoms, strandDiv, axisDiv, fill, coilWidth, helixSheetWidth, thickness) {
-		strandDiv = strandDiv || this.strandDiv;
-		axisDiv = axisDiv || this.axisDiv;
-		coilWidth = coilWidth || this.coilWidth;
-		helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
-		var points = []; for (var k = 0; k < strandDiv; ++k) points[k] = [];
+	iview.prototype.drawStrand = function (atoms, fill, thickness) {
+		var points = []; for (var k = 0; k < this.strandDiv; ++k) points[k] = [];
 		var colors = [], prevCO = null, ss = null, ssborder = false;
 		var currentChain, currentResi, currentCA;
 		for (var i in atoms) {
 			var atom = atoms[i];
 			if (atom.name == 'CA') {
-				if (currentChain != atom.chain || currentResi + 1 != atom.resi) {
-					for (var j = 0; !thickness && j < strandDiv; ++j) {
-						this.drawChainCurve(points[j], 1, colors, axisDiv);
+				if (currentChain && (currentChain != atom.chain || currentResi + 1 != atom.resi)) {
+					if (!thickness) {
+						for (var j = 0; j < this.strandDiv; ++j) {
+							this.drawChainCurve(points[j], colors, 1, this.axisDiv);
+						}
 					}
-					if (fill) this.drawStrip(points[0], points[strandDiv - 1], colors, axisDiv, thickness);
-					points = []; for (var k = 0; k < strandDiv; ++k) points[k] = [];
+					if (fill) this.drawStrip(points[0], points[this.strandDiv - 1], colors, thickness);
+					points = []; for (var k = 0; k < this.strandDiv; ++k) points[k] = [];
 					colors = [], prevCO = null; ss = null; ssborder = false;
 				}
 				currentChain = atom.chain;
@@ -756,19 +750,21 @@ var iview = (function () {
 				ssborder = atom.ssstart || atom.ssend;
 				colors.push(atom.color);
 			} else if (atom.name == 'O') {
-				var O = atom.c.clone().sub(currentCA).normalize().multiplyScalar(ss == 'coil' ? coilWidth : helixSheetWidth);
+				var O = atom.c.clone().sub(currentCA).normalize().multiplyScalar(ss == 'coil' ? this.coilWidth : this.helixSheetWidth);
 				if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
 				prevCO = O;
-				for (var j = 0; j < strandDiv; ++j) {
-					var delta = -1 + 2 / (strandDiv - 1) * j;
+				for (var j = 0; j < this.strandDiv; ++j) {
+					var delta = -1 + 2 / (this.strandDiv - 1) * j;
 					points[j].push(currentCA.clone().add(prevCO.clone().multiplyScalar(delta)));
 				}
 			}
 		}
-		for (var j = 0; !thickness && j < strandDiv; ++j) {
-			this.drawChainCurve(points[j], 1, colors, axisDiv);
+		if (!thickness) {
+			for (var j = 0; j < this.strandDiv; ++j) {
+				this.drawChainCurve(points[j], colors, 1, this.axisDiv);
+			}
 		}
-		if (fill) this.drawStrip(points[0], points[strandDiv - 1], colors, axisDiv, thickness);
+		if (fill) this.drawStrip(points[0], points[this.strandDiv - 1], colors, thickness);
 	};
 
 	iview.prototype.drawChainTube = function (_points, colors, radii) {
@@ -861,7 +857,7 @@ var iview = (function () {
 		}
 		if (start != null) this.drawCylinder(start.c, atom.c, radius, atom.color);
 		this.drawChainTubes(tube, 0.3);
-		this.drawStrand(sheet, undefined, undefined, true, 0, this.helixSheetWidth, this.thickness * 2);
+		this.drawStrand(sheet, true, this.thickness * 2);
 	};
 
 	iview.prototype.drawDashedLine = function (p1, p2, color) {
@@ -988,7 +984,7 @@ var iview = (function () {
 
 		switch (this.options.secondaryStructure) {
 			case 'ribbon':
-				this.drawStrand(this.stdAtoms, 2, undefined, true, undefined, undefined, this.thickness);
+				this.drawStrand(this.stdAtoms, true, this.thickness);
 				break;
 			case 'strand':
 				this.drawStrand(this.stdAtoms);
@@ -997,7 +993,7 @@ var iview = (function () {
 				this.drawCylinderPlate(this.stdAtoms, 1.6);
 				break;
 			case 'C alpha trace':
-				this.drawChainCurves(this.stdAtoms, this.curveWidth);
+				this.drawChainCurves(this.stdAtoms);
 				break;
 			case 'B factor tube':
 				this.drawChainTubes(this.stdAtoms);
