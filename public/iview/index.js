@@ -1,8 +1,8 @@
 $(function () {
 	var iv = new iview('iview');
-	$.get('4TMN_protein.pdb', function (p) {
+	$.get('4TMN_protein.pdbqt', function (p) {
 	$.get('4TMN_ligand.pdbqt', function (l) {
-		iv.loadProteinInPDB(p);
+		iv.loadProteinInPDBQT(p);
 		iv.loadLigandInPDBQT(l);
 		iv.rebuildScene();
 		iv.resetView();

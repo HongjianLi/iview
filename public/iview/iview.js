@@ -1167,7 +1167,7 @@ var iview = (function () {
 
 	iview.prototype.loadProteinInPDBQT = function (src) {
 		this.protein = [];
-		var lines = src.split('\n'), start, lastTER;
+		var lines = src.split('\n');
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
@@ -1187,23 +1187,12 @@ var iview = (function () {
 				};
 				var elem = this.elemMapInPDBQT[atom.elem];
 				if (elem) atom.elem = elem;
-				if (!start) start = atom.serial;
-				for (var j = start; j < atom.serial; ++j) {
-					var a = this.ligand[j];
-					if (this.hasCovalentBond(a, atom)) {
-						a.bonds.push(atom.serial);
-						atom.bonds.push(a.serial);
-					}
-				}
-				this.protein[serial] = atom;
-			} else if (record == 'TER   ') {
-				lastTER = parseInt(line.substr(6, 5));
+				this.protein[atom.serial] = atom;
 			}
 		}
 		var curChain, curResi, curInsc, curResAtoms = [];
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			if (atom.het) continue;
 			if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
 				for (var j in curResAtoms) {
 					var from = this.protein[curResAtoms[j]];
@@ -1236,6 +1225,7 @@ var iview = (function () {
 				}
 			}
 		}
+		var lastTER = 9999;
 		this.stdAtoms = [];
 		this.hetAtoms = [];
 		for (var i in this.protein) {
