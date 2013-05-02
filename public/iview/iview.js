@@ -975,7 +975,7 @@ var iview = (function () {
 				this.drawBondsAsStick(this.protein, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.protein, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.protein, this.cylinderRadius * 0.5, this.cylinderRadius, 1.0);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(this.protein, this.sphereRadius);
@@ -1034,7 +1034,7 @@ var iview = (function () {
 				this.drawBondsAsStick(this.ligand, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.ligand, this.cylinderRadius * 0.5, this.cylinderRadius, 0.3);
+				this.drawBondsAsStick(this.ligand, this.cylinderRadius * 0.5, this.cylinderRadius, 1.0);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(this.ligand, this.sphereRadius);
@@ -1167,16 +1167,14 @@ var iview = (function () {
 
 	iview.prototype.loadProteinInPDBQT = function (src) {
 		this.protein = [];
-		var lines = src.split('\n'), helices = [], sheets = [], lastTER;
+		var lines = src.split('\n'), start, lastTER;
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
 			if (record == 'ATOM  ' || record == 'HETATM') {
 				if (!(line[16] == ' ' || line[16] == 'A')) continue;
-				var serial = parseInt(line.substr(6, 5));
-				this.protein[serial] = {
-					het: record[0] == 'H',
-					serial: serial,
+				var atom = {
+					serial: parseInt(line.substr(6, 5)),
 					name: line.substr(12, 4).replace(/ /g, ''),
 					resn: line.substr(17, 3),
 					chain: line.substr(21, 1),
@@ -1187,6 +1185,17 @@ var iview = (function () {
 					elem: line.substr(76, 2).replace(/ /g, '').toUpperCase(),
 					bonds: [],
 				};
+				var elem = this.elemMapInPDBQT[atom.elem];
+				if (elem) atom.elem = elem;
+				if (!start) start = atom.serial;
+				for (var j = start; j < atom.serial; ++j) {
+					var a = this.ligand[j];
+					if (this.hasCovalentBond(a, atom)) {
+						a.bonds.push(atom.serial);
+						atom.bonds.push(a.serial);
+					}
+				}
+				this.protein[serial] = atom;
 			} else if (record == 'TER   ') {
 				lastTER = parseInt(line.substr(6, 5));
 			}
@@ -1273,20 +1282,40 @@ var iview = (function () {
 
 	iview.prototype.loadLigandInPDBQT = function (src) {
 		this.ligand = [];
-		var lines = src.split('\n');
+		var lines = src.split('\n'), rotors = [], start;
 		for (var i in lines) {
 			var line = lines[i];
 			var record = line.substr(0, 6);
 			if (record == 'ATOM  ' || record == 'HETATM') {
 				var atom = {
-					serial: serialparseInt(line.substr(6, 5)),
+					serial: parseInt(line.substr(6, 5)),
 					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
-					elem: line.substr(77, 2).replace(/ /g, '').toUpperCase(), // Map elements, e.g. 'A' to 'C', 'HD' to 'H'
+					elem: line.substr(77, 2).replace(/ /g, '').toUpperCase(),
 					bonds: [],
 				};
+				var elem = this.elemMapInPDBQT[atom.elem];
+				if (elem) atom.elem = elem;
+				if (!start) start = atom.serial;
+				for (var j = start; j < atom.serial; ++j) {
+					var a = this.ligand[j];
+					if (this.hasCovalentBond(a, atom)) {
+						a.bonds.push(atom.serial);
+						atom.bonds.push(a.serial);
+					}
+				}
 				this.ligand[atom.serial] = atom;
 			} else if (record == 'BRANCH') {
+				rotors.push({
+					x: parseInt(line.substr( 6, 4)),
+					y: parseInt(line.substr(10, 4)),
+				});
+				start = undefined;
 			}
+		}
+		for (var i in rotors) {
+			var r = rotors[i];
+			this.ligand[r.x].bonds.push(r.y);
+			this.ligand[r.y].bonds.push(r.x);
 		}
 	};
 
