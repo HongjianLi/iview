@@ -1288,7 +1288,7 @@ var iview = (function () {
 				if (!start) start = atom.serial;
 				for (var j = start; j < atom.serial; ++j) {
 					var a = this.ligand[j];
-					if (this.hasCovalentBond(a, atom)) {
+					if (a && this.hasCovalentBond(a, atom)) {
 						a.bonds.push(atom.serial);
 						atom.bonds.push(a.serial);
 					}
