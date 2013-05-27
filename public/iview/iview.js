@@ -1041,7 +1041,7 @@ var iview = (function () {
 				this.drawBondsAsStick(this.protein, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.protein, this.cylinderRadius * 0.5, this.cylinderRadius, 1.0);
+				this.drawBondsAsStick(this.protein, this.cylinderRadius * 0.5, this.cylinderRadius);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(this.protein, this.sphereRadius);
@@ -1100,7 +1100,7 @@ var iview = (function () {
 				this.drawBondsAsStick(this.ligand, this.cylinderRadius, this.cylinderRadius);
 				break;
 			case 'ball and stick':
-				this.drawBondsAsStick(this.ligand, this.cylinderRadius * 0.5, this.cylinderRadius, 1.0);
+				this.drawBondsAsStick(this.ligand, this.cylinderRadius * 0.5, this.cylinderRadius);
 				break;
 			case 'sphere':
 				this.drawAtomsAsSphere(this.ligand, this.sphereRadius);
