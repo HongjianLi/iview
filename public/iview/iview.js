@@ -642,13 +642,13 @@ var iview = (function () {
 
 	iview.prototype.hasCovalentBond = function (atom1, atom2) {
 		var r = this.covalentRadii[atom1.elem] + this.covalentRadii[atom2.elem];
-		return atom1.c.distanceToSquared(atom2.c) < 1.2 * r * r;
+		return atom1.coord.distanceToSquared(atom2.coord) < 1.2 * r * r;
 	}
 
 	iview.prototype.drawSphere = function (obj, atom, defaultRadius, forceDefault, scale) {
 		var sphere = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));
 		sphere.scale.x = sphere.scale.y = sphere.scale.z = forceDefault ? defaultRadius : (this.vdwRadii[atom.elem] || defaultRadius) * (scale ? scale : 1);
-		sphere.position = atom.c;
+		sphere.position = atom.coord;
 		obj.add(sphere);
 	};
 
@@ -699,9 +699,9 @@ var iview = (function () {
 	            for (var j in atom1.bonds) {
 	                var atom2 = atoms[atom1.bonds[j]];
 	                if (atom2.serial < atom1.serial) continue;
-	                var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
-	                this.drawCylinder(obj, atom1.c, mp, bondR, atom1.color);
-	                this.drawCylinder(obj, atom2.c, mp, bondR, atom2.color);
+	                var mp = atom1.coord.clone().add(atom2.coord).multiplyScalar(0.5);
+	                this.drawCylinder(obj, atom1.coord, mp, bondR, atom1.color);
+	                this.drawCylinder(obj, atom2.coord, mp, bondR, atom2.color);
 	            }
 	            this.drawSphere(obj, atom1, atomR, !scale, scale);
 	        }
@@ -737,10 +737,10 @@ var iview = (function () {
 	            for (var j in atom1.bonds) {
 	                var atom2 = atoms[atom1.bonds[j]];
 	                if (atom2.serial < atom1.serial) continue;
-	                var mp = atom1.c.clone().add(atom2.c).multiplyScalar(0.5);
-	                geo.vertices.push(atom1.c);
+	                var mp = atom1.coord.clone().add(atom2.coord).multiplyScalar(0.5);
+	                geo.vertices.push(atom1.coord);
 	                geo.vertices.push(mp);
-	                geo.vertices.push(atom2.c);
+	                geo.vertices.push(atom2.coord);
 	                geo.vertices.push(mp);
 	                geo.colors.push(atom1.color);
 	                geo.colors.push(atom1.color);
@@ -799,7 +799,7 @@ var iview = (function () {
 					points = [];
 					colors = [];
 				}
-				points.push(atom.c);
+				points.push(atom.coord);
 				colors.push(atom.color);
 				curChain = atom.chain;
 				curResi = atom.resi;
@@ -878,11 +878,11 @@ var iview = (function () {
 				}
 				curChain = atom.chain;
 				curResi = atom.resi;
-				curCA = atom.c;
+				curCA = atom.coord;
 				ss = atom.ss;
 				colors.push(atom.color);
 			} else if (atom.name == 'O') {
-				var O = atom.c.clone().sub(curCA).normalize().multiplyScalar(ss == 'coil' ? this.coilWidth : this.helixSheetWidth);
+				var O = atom.coord.clone().sub(curCA).normalize().multiplyScalar(ss == 'coil' ? this.coilWidth : this.helixSheetWidth);
 				if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
 				prevCO = O;
 				for (var j = 0; j < this.strandDiv; ++j) {
@@ -964,7 +964,7 @@ var iview = (function () {
 				}
 				curChain = atom.chain;
 				curResi = atom.resi;
-				points.push(atom.c);
+				points.push(atom.coord);
 				colors.push(atom.color);
 				radii.push(radius || atom.b > 0 ? atom.b * 0.01 : 0.3);
 			}
@@ -983,7 +983,7 @@ var iview = (function () {
 			if (atom.name == 'CA') {
 				if (atom.ss == 'helix' && atom.ssend) {
 					if (start != null) {
-						this.drawCylinder(obj, start.c, atom.c, radius, atom.color);
+						this.drawCylinder(obj, start.coord, atom.coord, radius, atom.color);
 					}
 					start = null;
 				}
@@ -993,7 +993,7 @@ var iview = (function () {
 			}
 		}
 		if (start != null) {
-			this.drawCylinder(obj, start.c, atom.c, radius, atom.color);
+			this.drawCylinder(obj, start.coord, atom.coord, radius, atom.color);
 		}
 		this.drawTubes(obj, tube, 0.3);
 		this.drawStrand(obj, sheet, true, this.thickness * 2);
@@ -1223,7 +1223,7 @@ var iview = (function () {
 					chain: line.substr(21, 1),
 					resi: parseInt(line.substr(22, 4)),
 					insc: line.substr(26, 1),
-					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					b: parseFloat(line.substr(60, 8)),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
@@ -1330,7 +1330,7 @@ var iview = (function () {
 					chain: line.substr(21, 1),
 					resi: parseInt(line.substr(22, 4)),
 					insc: line.substr(26, 1),
-					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					b: parseFloat(line.substr(60, 8)),
 					elem: line.substr(76, 2).replace(/ /g, '').toUpperCase(),
 					bonds: [],
@@ -1410,7 +1410,7 @@ var iview = (function () {
 				var serial = parseInt(line.substr(6, 5));
 				this.ligand[serial] = {
 					serial: serial,
-					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					elem: line.substr(76, 2).replace(/ /g, ''),
 					bonds: [],
 				};
@@ -1434,7 +1434,7 @@ var iview = (function () {
 			if (record == 'ATOM  ' || record == 'HETATM') {
 				var atom = {
 					serial: parseInt(line.substr(6, 5)),
-					c: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+					coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
 					elem: line.substr(77, 2).replace(/ /g, '').toUpperCase(),
 					bonds: [],
 				};
@@ -1474,7 +1474,7 @@ var iview = (function () {
 			var line = lines[offset++];
 			this.ligand[i] = {
 				serial: i,
-				c: new THREE.Vector3(parseFloat(line.substr(16, 10)), parseFloat(line.substr(26, 10)), parseFloat(line.substr(36, 10))),
+				coord: new THREE.Vector3(parseFloat(line.substr(16, 10)), parseFloat(line.substr(26, 10)), parseFloat(line.substr(36, 10))),
 				elem: line.substr(47, 2).replace(/\./g, '').toUpperCase(),
 				bonds: [],
 			};
@@ -1499,7 +1499,7 @@ var iview = (function () {
 			var line = lines[offset++];
 			this.ligand[i] = {
 				serial: i,
-				c: new THREE.Vector3(parseFloat(line.substr( 0, 10)), parseFloat(line.substr(10, 10)), parseFloat(line.substr(20, 10))),
+				coord: new THREE.Vector3(parseFloat(line.substr( 0, 10)), parseFloat(line.substr(10, 10)), parseFloat(line.substr(20, 10))),
 				elem: line.substr(31, 2).replace(/ /g, '').toUpperCase(),
 				bonds: [],
 			};
@@ -1524,7 +1524,7 @@ var iview = (function () {
 			this.ligand[i] = {
 				serial: i,
 				elem: tokens[0].toUpperCase(),
-				c: new THREE.Vector3(parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])),
+				coord: new THREE.Vector3(parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])),
 				bonds: [],
 			};
 		}
@@ -1571,12 +1571,12 @@ var iview = (function () {
 		var xmax = ymax = zmax = -9999;
 		for (var i in this.protein) {
 			var atom = this.protein[i];
-			if (atom.c.x < xmin) xmin = atom.c.x;
-			if (atom.c.y < ymin) ymin = atom.c.y;
-			if (atom.c.z < zmin) zmin = atom.c.z;
-			if (atom.c.x > xmax) xmax = atom.c.x;
-			if (atom.c.y > ymax) ymax = atom.c.y;
-			if (atom.c.z > zmax) zmax = atom.c.z;
+			if (atom.coord.x < xmin) xmin = atom.coord.x;
+			if (atom.coord.y < ymin) ymin = atom.coord.y;
+			if (atom.coord.z < zmin) zmin = atom.coord.z;
+			if (atom.coord.x > xmax) xmax = atom.coord.x;
+			if (atom.coord.y > ymax) ymax = atom.coord.y;
+			if (atom.coord.z > zmax) zmax = atom.coord.z;
 		}
 		var maxD = new THREE.Vector3(xmax, ymax, zmax).distanceTo(new THREE.Vector3(xmin, ymin, zmin));
 		this.slabNear = -maxD / 1.9;
@@ -1586,9 +1586,9 @@ var iview = (function () {
 		var xsum = ysum = zsum = cnt = 0;
 		for (var i in this.ligand) {
 			var atom = this.ligand[i];
-			xsum += atom.c.x;
-			ysum += atom.c.y;
-			zsum += atom.c.z;
+			xsum += atom.coord.x;
+			ysum += atom.coord.y;
+			zsum += atom.coord.z;
 			++cnt;
 		}
 		this.modelGroup.position = new THREE.Vector3(xsum, ysum, zsum).multiplyScalar(-1 / cnt);
