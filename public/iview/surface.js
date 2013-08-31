@@ -46,15 +46,15 @@ iview.prototype.getExtent = function (atoms) {
 	for (var i in atoms) {
 		var atom = atoms[i];
 		cnt++;
-		xsum += atom.c.x;
-		ysum += atom.c.y;
-		zsum += atom.c.z;
-		xmin = (xmin < atom.c.x) ? xmin : atom.c.x;
-		ymin = (ymin < atom.c.y) ? ymin : atom.c.y;
-		zmin = (zmin < atom.c.z) ? zmin : atom.c.z;
-		xmax = (xmax > atom.c.x) ? xmax : atom.c.x;
-		ymax = (ymax > atom.c.y) ? ymax : atom.c.y;
-		zmax = (zmax > atom.c.z) ? zmax : atom.c.z;
+		xsum += atom.coord.x;
+		ysum += atom.coord.y;
+		zsum += atom.coord.z;
+		xmin = (xmin < atom.coord.x) ? xmin : atom.coord.x;
+		ymin = (ymin < atom.coord.y) ? ymin : atom.coord.y;
+		zmin = (zmin < atom.coord.z) ? zmin : atom.coord.z;
+		xmax = (xmax > atom.coord.x) ? xmax : atom.coord.x;
+		ymax = (ymax > atom.coord.y) ? ymax : atom.coord.y;
+		zmax = (zmax > atom.coord.z) ? zmax : atom.coord.z;
 	}
 	return [[xmin, ymin, zmin], [xmax, ymax, zmax], [xsum / cnt, ysum / cnt, zsum / cnt]];
 };
@@ -358,9 +358,9 @@ var ProteinSurface = (function () {
 
 	this.fillAtom = function (atom, atoms) {
 		var cx, cy, cz, ox, oy, oz;
-		cx = Math.floor(0.5 + scaleFactor * (atom.c.x + ptranx));
-		cy = Math.floor(0.5 + scaleFactor * (atom.c.y + ptrany));
-		cz = Math.floor(0.5 + scaleFactor * (atom.c.z + ptranz));
+		cx = Math.floor(0.5 + scaleFactor * (atom.coord.x + ptranx));
+		cy = Math.floor(0.5 + scaleFactor * (atom.coord.y + ptrany));
+		cz = Math.floor(0.5 + scaleFactor * (atom.coord.z + ptranz));
 
 		var at = this.getAtomType(atom);
 		var nind = 0;
@@ -418,9 +418,9 @@ var ProteinSurface = (function () {
 
 	this.fillAtomWaals = function (atom, atoms) {
 		var cx, cy, cz, ox, oy, oz, nind = 0;
-		cx = Math.floor(0.5 + scaleFactor * (atom.c.x + ptranx));
-		cy = Math.floor(0.5 + scaleFactor * (atom.c.y + ptrany));
-		cz = Math.floor(0.5 + scaleFactor * (atom.c.z + ptranz));
+		cx = Math.floor(0.5 + scaleFactor * (atom.coord.x + ptranx));
+		cy = Math.floor(0.5 + scaleFactor * (atom.coord.y + ptrany));
+		cz = Math.floor(0.5 + scaleFactor * (atom.coord.z + ptranz));
 
 		var at = this.getAtomType(atom);
 
