@@ -390,9 +390,9 @@ var ProteinSurface = (function () {
 												vpSISJSK.atomid = atom.serial;
 											} else if (vpSISJSK.inout) {
 												var atom2 = atoms[vpSISJSK.atomid];
-												ox = Math.floor(0.5 + scaleFactor * (atom2.x + ptranx));
-												oy = Math.floor(0.5 + scaleFactor * (atom2.y + ptrany));
-												oz = Math.floor(0.5 + scaleFactor * (atom2.z + ptranz));
+												ox = Math.floor(0.5 + scaleFactor * (atom2.coord.x + ptranx));
+												oy = Math.floor(0.5 + scaleFactor * (atom2.coord.y + ptrany));
+												oz = Math.floor(0.5 + scaleFactor * (atom2.coord.z + ptranz));
 												if (mi * mi + mj * mj + mk * mk < ox * ox + oy * oy + oz * oz)
 													vpSISJSK.atomid = atom.serial;
 											}
@@ -450,9 +450,9 @@ var ProteinSurface = (function () {
 											}
 											else if (vpSISJSK.isdone) {
 												var atom2 = atoms[vpSISJSK.atomid];
-												ox = Math.floor(0.5 + scaleFactor * (atom2.x + ptranx));
-												oy = Math.floor(0.5 + scaleFactor * (atom2.y + ptrany));
-												oz = Math.floor(0.5 + scaleFactor * (atom2.z + ptranz));
+												ox = Math.floor(0.5 + scaleFactor * (atom2.coord.x + ptranx));
+												oy = Math.floor(0.5 + scaleFactor * (atom2.coord.y + ptrany));
+												oz = Math.floor(0.5 + scaleFactor * (atom2.coord.z + ptranz));
 												if (mi * mi + mj * mj + mk * mk < ox * ox + oy * oy + oz * oz)
 													vpSISJSK.atomid = atom.serial;
 											}
