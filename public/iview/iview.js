@@ -1029,7 +1029,6 @@ var iview = (function () {
 		this.modelGroup = new THREE.Object3D();
 		this.modelGroup.position = mp;
 		this.rotationGroup = new THREE.Object3D();
-		this.rotationGroup.useQuaternion = true;
 		this.rotationGroup.position.z = rz;
 		this.rotationGroup.quaternion = rq;
 		this.rotationGroup.add(this.modelGroup);
