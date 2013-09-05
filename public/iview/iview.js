@@ -725,7 +725,9 @@ var iview = (function () {
 	                colors[ib++] = atom2.color;
 	            }
 	            if (atom1.solvent) {
-	                obj.children[ia++].material.color = atom1.color;
+	                var mesh = obj.children[ia++];
+	                mesh.__webglActive = undefined;
+	                mesh.material.color = atom1.color;
 	            }
 	        }
 	    }
